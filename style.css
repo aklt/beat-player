@@ -1,0 +1,15 @@
+.beat-player {
+    color: red;
+}
+
+.beat-player i {
+    color: green;
+    background-color: magenta;
+    font-weight: bold;
+}
+
+.beat-player b {
+    color: #A8B;
+    background-color: #A90;
+    font-weight: bold;
+}

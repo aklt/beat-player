@@ -19,8 +19,10 @@ beat1:
       sound: hat
     s:
       sound: sd
-  score:
+  pattern:
     bd:  o... o... o... o...
     hat: x.x. x.x. x.x. x.x.
     sd:  .... s... .... s...
+  score:
+
 

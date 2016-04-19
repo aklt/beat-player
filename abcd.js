@@ -483,6 +483,56 @@
     })
   }
   
+  // ### append(root[, child || body])
+  // Append dom elements
+  function append (root, child) {
+    console.warn('append', root, child);
+    if (typeof root === 'string') root = qs(root)
+    if (typeof child === 'string') child = qs(child)
+    if (!root) root = __document.body
+    var err = function () {
+      throw new Error('cannot append to root: ' + root + ', child: ' + child)
+    }
+    if (root.nodeType === 1) {
+      if (!Array.isArray(child)) child = [child]
+      var i = 0
+      while (i < child.length) {
+        var c1 = child[i]
+        if (c1.nodeType && c1.nodeType === 1) {
+          root.appendChild(c1)
+        }
+        i += 1
+      }
+    }
+  }
+  
+  // ### dom(html[, html, ...])
+  // Create dom elements from html strings
+  function createDomArray(o) {
+    var h = __document.createElement('div')
+    h.innerHTML = o.html
+    return __slice.call(h.childNodes)
+  }
+  
+  function dom(/* htmlText0, htmlText1, ..., options{css} */) {
+    var args = __slice.call(arguments)
+    var options =args[args.length - 1];
+    if ('object' === typeof options) {
+      args.pop()
+    }
+    var result = []
+    args.forEach(function (arg) {
+      var domArray = createDomArray({html: arg})
+      domArray.forEach(function (dom1) {
+        if (dom1) {
+          if (options.css) css(dom1, options.css)
+        }
+      });
+      result = result.concat(domArray)
+    });
+    return result.length === 1 ? result[0] : result
+  }
+  
   function xhr (o) {
   }
   
@@ -493,6 +543,8 @@
   b.css = css
   b.ready = ready
   b.attrs = attrs
+  b.dom = dom
+  b.append = append
   b.xhr = xhr
   
   
