@@ -10,17 +10,17 @@ beat1:
       sample: bd.wav
     hat:
       sample: hat.wav
-    snare:
-      sample: snare.wav
+    sd:
+      sample: sd.wav
   keys:
     b:
       sound: bd
     h:
       sound: hat
     s:
-      sound: snare
+      sound: sd
   score:
-    bd:    o... o... o... o...
-    hat:   x.x. x.x. x.x. x.x.
-    snare: .... s... .... s...
+    bd:  o... o... o... o...
+    hat: x.x. x.x. x.x. x.x.
+    sd:  .... s... .... s...
 
