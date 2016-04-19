@@ -1,0 +1,28 @@
+{
+  "name": "Beat player",
+  "description": "",
+  "version": "0.0.1",
+  "author": "Anders Thøgersen <anders@bladre.dk>",
+  "licenses": [
+    "MIT"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/aklt/"
+  },
+  "main": "gather",
+  "engines": {
+    "node": ">= 0.6.0"
+  },
+  "homepage": "http://bladre.dk/scripts",
+  "dependencies": {
+    "coffee-script": "~1.1.3",
+    "vows": "~0.5.13"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-sugar": "^0.6.1",
+    "gulp-sugar-simple": "^0.3.1",
+    "schyml": "^1.0.1"
+  }
+}

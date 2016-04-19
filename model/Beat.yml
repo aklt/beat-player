@@ -1,0 +1,26 @@
+# Beat 1
+beat1:
+  bpm: 108
+  # Lines Per Beat: Smallest subdivision of a beat
+  lpb: 3
+  # Bar: The length of a bar in lpb, so bar * lpb == number of subdivisions
+  bar: 2
+  sounds:
+    bd:
+      sample: bd.wav
+    hat:
+      sample: hat.wav
+    snare:
+      sample: snare.wav
+  keys:
+    b:
+      sound: bd
+    h:
+      sound: hat
+    s:
+      sound: snare
+  score:
+    bd:    o... o... o... o...
+    hat:   x.x. x.x. x.x. x.x.
+    snare: .... s... .... s...
+
