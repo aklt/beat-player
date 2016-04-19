@@ -1,0 +1,8 @@
+#
+# This is a config file for schyml
+#
+schyml:
+  name: beat-player
+  description: Play some samples in a player in the browser, yay!
+  # Read model files from this directory
+  modelDir: ./model
