@@ -1,15 +1,67 @@
-.beat-player {
-    color: red;
+
+.player div {
+    font: 2em "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    float: left;
 }
 
-.beat-player i {
-    color: green;
-    background-color: magenta;
-    font-weight: bold;
+.player .left {
+    text-align: center;
+    margin: 1.5rem 0rem 0rem 0rem;
 }
 
-.beat-player b {
-    color: #A8B;
-    background-color: #A90;
-    font-weight: bold;
+.player .left p {
+    position: relative;
+    height: 2.8rem;
 }
+
+.player .score {
+    text-align: left;
+    border: 1px solid yellow;
+    display: block;
+    margin: 0px;
+    padding: 0px;
+    float: left;
+}
+.player .score p {
+    margin: 0px;
+    float: left;
+    display: block;
+}
+
+
+.player .score b {
+    width: 4rem;
+    text-align: center;
+    /*border: 1px solid blue;*/
+    display: block;
+    float: left;
+    margin-left: 0.05rem;
+}
+
+.player .score span {
+    clear: left;
+    display: block;
+}
+
+.player .score-columns {
+    display: block;
+    float: left;
+}
+
+.player .score-columns b {
+    margin: 0px;
+    display: block;
+    clear: left;
+}
+
+.player .score-columns b {
+    color: #444;
+    display: block;
+    text-align: center;
+    border-left: 1px solid #DED;
+}
+
+.player .score-columns .active {
+    background-color: lightblue;
+}
+
