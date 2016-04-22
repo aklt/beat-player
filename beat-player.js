@@ -1,10 +1,11 @@
+/*global Audio*/
 (function (win) {
   var ab = abcd
   var bp = win.beatPlayer = {}
   bp.sounds = {
-    bd: new Audio("samples/bd.wav"),
-    sd: new Audio("samples/sd.wav"),
-    hat: new Audio("samples/hat.wav")
+    bd: new Audio('samples/bd.wav'),
+    sd: new Audio('samples/sd.wav'),
+    hat: new Audio('samples/hat.wav')
   }
 
   function ScoreColumns (el) {
