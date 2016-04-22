@@ -1,0 +1,71 @@
+
+@col-width: 1rem;
+
+.player {
+    font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+    position: absolute;
+    cursor: pointer;
+    border: 1px solid blue;
+    .instruments {
+        text-align: center;
+        margin: 0.8rem 0 1rem 0;
+        float: left;
+        padding-top: 0.2rem;
+        p {
+            margin: 0;
+            display: block;
+            clear: left;
+            height: @col-width;
+            // border: 1px solid blue;
+        }
+    }
+    .score {
+        text-align: left;
+        display: block;
+        margin: 0;
+        padding: 0;
+        float: left;
+        p {
+            margin: 0;
+            float: left;
+            display: block;
+        }
+        i {
+            margin: 0;
+            padding: 0;
+            width: @col-width;
+            text-align: center;
+            display: block;
+            float: left;
+        }
+        span {
+            clear: left;
+            display: block;
+        }
+    }
+    .score-columns {
+        display: block;
+        float: left;
+        b {
+            margin: 0;
+            padding: 0;
+            display: block;
+            clear: left;
+            width: @col-width;
+            height: 1rem;
+            text-align: center;
+            // border: 1px solid red;
+        }
+
+        .active {
+            background-color: lightblue;
+            /*border-left: 1px solid blue;*/
+        }
+    }
+}
+
+.foo {
+    position: absolute;
+    top: 12rem;
+}
+

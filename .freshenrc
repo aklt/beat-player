@@ -25,7 +25,7 @@ report:
 # expressions in deps changes.
 # The value of `deps` can be a string of suffix names or an Array of RegExps
 build:
-  command: 'gulp'
+  command: 'make'
   deps: 'less md html'
 
 # Where to access server

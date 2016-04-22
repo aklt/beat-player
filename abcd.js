@@ -483,16 +483,40 @@
     })
   }
   
+  // ### dom(html[, html, ...])
+  // Create dom elements from html strings
+  function createDomArray (o) {
+    var h = __document.createElement('div')
+    h.innerHTML = o.html
+    return __slice.call(h.childNodes)
+  }
+  
+  function dom (/* htmlText0, htmlText1, ..., options{css} */) {
+    var args = __slice.call(arguments)
+    var options = args[args.length - 1]
+    if (typeof options === 'object') {
+      args.pop()
+    }
+    var result = []
+    args.forEach(function (arg) {
+      var domArray = createDomArray({html: arg})
+      domArray.forEach(function (dom1) {
+        if (dom1) {
+          if (options.css) css(dom1, options.css)
+        }
+      })
+      result = result.concat(domArray)
+    })
+    return result.length === 1 ? result[0] : result
+  }
+  
   // ### append(root[, child || body])
   // Append dom elements
   function append (root, child) {
-    console.warn('append', root, child);
+    console.warn('append', root, child)
     if (typeof root === 'string') root = qs(root)
     if (typeof child === 'string') child = qs(child)
     if (!root) root = __document.body
-    var err = function () {
-      throw new Error('cannot append to root: ' + root + ', child: ' + child)
-    }
     if (root.nodeType === 1) {
       if (!Array.isArray(child)) child = [child]
       var i = 0
@@ -506,31 +530,65 @@
     }
   }
   
-  // ### dom(html[, html, ...])
-  // Create dom elements from html strings
-  function createDomArray(o) {
-    var h = __document.createElement('div')
-    h.innerHTML = o.html
-    return __slice.call(h.childNodes)
+  // Adapted from http://www.quirksmode.org/js/events_properties.html
+  function eventTarget (e) {
+    e = e || __window.event
+    var targ = e.target || e.srcElement
+    if (targ.nodeType === 3) { // defeat Safari bug
+      targ = targ.parentNode
+    }
+    return targ
   }
   
-  function dom(/* htmlText0, htmlText1, ..., options{css} */) {
-    var args = __slice.call(arguments)
-    var options =args[args.length - 1];
-    if ('object' === typeof options) {
-      args.pop()
+  function addEvents (el, events, handlerContext, capture) {
+    console.warn('addEvents', el, events)
+    for (var i = 0; i < events.length; i += 1) {
+      console.warn('add ev', events[i])
+      el.addEventListener(events[i], handlerContext, capture)
     }
-    var result = []
-    args.forEach(function (arg) {
-      var domArray = createDomArray({html: arg})
-      domArray.forEach(function (dom1) {
-        if (dom1) {
-          if (options.css) css(dom1, options.css)
-        }
-      });
-      result = result.concat(domArray)
-    });
-    return result.length === 1 ? result[0] : result
+  }
+  
+  function removeEvents (el, events, handlerContext, capture) {
+    for (var i = 0; i < events.length; i += 1) {
+      el.removeEventListener(events[i], handlerContext, capture)
+    }
+  }
+  
+  var __proto = 'prototype'
+  /** Mixin
+  
+  Implement the eventhandler interface on a Class and add event methods
+  on the prototype
+  
+  Calling this function on a class causes it to implement
+  the function:
+      handleEvent
+  
+  Also adds the functions
+      eventsAttach: Attach all events
+      eventsDetach: Stop handling events
+  */
+  // TODO See food/page for more of this technique
+  function eventHandlers (AClass, events,capture) {
+    AClass[__proto].handleEvent = function (ev) {
+      var fn = this['on' + ev.type]
+      if (fn) return fn.call(this, ev, eventTarget(ev))
+    }
+    var evs = Object.keys(events)
+    for (var i = 0; i < evs.length; i += 1) {
+      var ev = evs[i]
+      AClass[__proto]['on' + ev] = events[ev]
+    }
+    AClass[__proto].eventsAttach = function () {
+      console.warn('Add events', evs)
+      if (!this.el) {
+        throw new Error('Need this.el')
+      }
+      addEvents(this.el, evs, this, capture)
+    }
+    AClass[__proto].eventsDetach = function () {
+      removeEvents(this.el, evs, this, capture)
+    }
   }
   
   function xhr (o) {
@@ -545,6 +603,7 @@
   b.attrs = attrs
   b.dom = dom
   b.append = append
+  b.eventHandlers = eventHandlers
   b.xhr = xhr
   
   
