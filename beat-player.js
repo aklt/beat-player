@@ -1,6 +1,5 @@
 /*global Audio*/
 (function (win) {
-  var ab = abcd
   var bp = win.beatPlayer = {}
   bp.sounds = {
     bd: new Audio('samples/bd.wav'),
@@ -35,14 +34,20 @@
 
 
   function Player (o) {
+    o = o || {}
     this.el = ab.qs('#' + o.id)
   }
 
-  ab.eventHandlers(Player, {
+  ab.mix.dom(Player)
+  ab.mix.handlers(Player, {
     click: function (ev, el) {
       console.warn('You clicked', ev, el);
     }
   })
+  var ab1 = Player.create({template: function (o) {
+    return '<div>' + o + '</div>'
+  }})
+
 
 
   var scEl = ab.qs('.score-columns')
@@ -59,7 +64,7 @@
       })
     }, 80)
 
-    var player = new Player({id: 'player1'})
+    var player = new Player({id: 'player0'})
     player.eventsAttach()
 
   })
