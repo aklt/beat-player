@@ -1,11 +1,17 @@
 
 @col-width: 1rem;
 
+ * {
+     box-sizing: border-box;
+ }
+
 .player {
     font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif;
     position: absolute;
+    top: 12rem;
+    left: 12rem;
     cursor: pointer;
-    border: 1px solid blue;
+    // border: 1px solid blue;
     .instruments {
         text-align: center;
         margin: 0.8rem 0 1rem 0;
@@ -64,11 +70,27 @@
     }
 }
 
+.instrument-editor {
+    // border: 1px solid red;
+}
+
+.settings {
+    dl, dt, dd {
+        display: inline;
+    }
+    dt {
+        font-weight: bold;
+    }
+    dd {
+        margin: 0 0.3rem 0 0;
+
+    }
+}
+
 .foo {
     position: absolute;
     top: 12rem;
 }
-
 
 .small-input {
     position: absolute;
@@ -78,4 +100,8 @@
         width: @col-width;
         text-align: center;
     }
+}
+
+.hidden {
+    display: none;
 }

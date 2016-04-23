@@ -166,7 +166,7 @@
         break;
       case 'I': // Click top row to go to position
         console.warn('I', alphanumToDec(el.innerText))
-        player1.gotoPos(alphanumToDec(el.innerText))
+        this.gotoPos(alphanumToDec(el.innerText))
         break;
       case 'P':
         console.warn('P Instrument', el)
@@ -177,8 +177,6 @@
   })
 
   // 1}}} Player
-
-
 
 bp.el = ab.qs('#player1')
 if (!bp.el) throw new Error('BAd')
