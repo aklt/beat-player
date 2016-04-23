@@ -17,6 +17,7 @@
   "homepage": "http://bladre.dk/scripts",
   "dependencies": {
     "coffee-script": "~1.1.3",
+    "timber": "0.0.1",
     "vows": "~0.5.13"
   },
   "devDependencies": {

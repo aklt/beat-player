@@ -2,11 +2,14 @@
 (function (win) {
   var bp = win.beatPlayer = {}
 
+  // {{{1 Keyboard
   function Keyboard(o) {
   }
 
   Keyboard.prototype = {
   }
+
+  ab.mix.dom(Keyboard)
 
   ab.mix.handlers(Keyboard, {
     keydown: function () {
@@ -21,6 +24,8 @@
       }
     }
   })
+
+  // 1}}} Keyboard
 
   // {{{1 Player
   bp.sounds = {
@@ -61,7 +66,7 @@
     if (!this.el) throw new Error('Bad el' + o.id)
     this.templates = ab.readTemplates(ab.qs('#player'))
     Object.keys(this.templates).forEach((template) => {
-      this.templates[template] = ab.template(this.templates[template])
+      this.templates[template] = this.templates[template]
     })
     this.scoreColumns = new ScoreColumns()
     this.tracks = o.tracks || []
@@ -138,8 +143,10 @@
         border: '1px solid red'
       },
       template: function (o) {
-        console.warn(player1)
-        var outer = ab.template(player1.templates.outerPlayer)
+        console.warn(player1.templates)
+        var outer = ab.templates.outer(o)
+        // console.warn(outer('Hello'))
+        return outer
     }})
 
   console.warn('Created player', player1)
@@ -147,7 +154,7 @@
 
   ab.mix.handlers(Player, {
     click: function (ev, el) {
-      console.warn('You clicked', ev, el)
+      console.warn('You clicked', ev, el, el.parentNode)
       switch (el.nodeName) {
       case 'B':
         ab.dom1 = ab.dom('<input name="input1" type="text" class="small-input" value="' + el.innerText + '"></input>', {
@@ -178,6 +185,43 @@
 
   // 1}}} Player
 
+
+// {{{1 Slider Input
+function SliderInput (o) {
+  o = o || {}
+}
+
+SliderInput.prototype = {
+  setRange: function (start, stop, value) {
+    value = value || (start + stop) / 2
+    if (!this.sliderEl) this.sliderEl = ab.qs('input[type=range]', this.el)
+    if (!this.textEl) this.textEl = ab.qs('input[type=text]', this.el)
+    ab.attr(this.sliderEl, {min: start,
+                            max: stop,
+                            value: value})
+    ab.attr(this.textEl, { value: value})
+  },
+  setPosition: function (top, left) {
+    ab.css(this.el, {
+      position: 'absolute',
+      top: top + 'px',
+      left: left + 'px'
+    })
+  }
+}
+
+ab.mix.dom(SliderInput)
+
+ab.mix.handlers(SliderInput, {
+  input: function (ev, el) {
+    console.warn('input', el.value)
+  },
+  change: function (ev, el) {
+    console.warn('change', el.value)
+  }
+})
+// 1}}} Slider Input
+
 bp.el = ab.qs('#player1')
 if (!bp.el) throw new Error('BAd')
 player1.render('Hello')
@@ -189,12 +233,38 @@ function stateHandler (nextKey) {
   }
 }
 
+// {{{1 Slider
+
+function Slider () {
+
+}
+
+ab.mix.dom(Slider)
+
+Slider.prototype = {
+
+}
+
+ab.mix.handlers(Slider, {
+  scroll: function () {
+    console.warn('scroll')
+  }
+})
+
+// 1}}} Slider
+
 ab.ready(function () {
   console.warn('ready', bp.sounds.bd);
   console.warn('ready', bp.sounds.bd.play());
   var start = Date.now()
-  var kb1 = new Keyboard()
+  var kb1 = Keyboard.create()
   kb1.eventsAttach()
+
+  var si1 = SliderInput.create({el: ab.qs('#slider1')})
+  si1.setRange(0, 100)
+  si1.setPosition(100, 100)
+  si1.eventsAttach()
+
   player1.attach(bp.el)
   player1.start()
   ab.delay(1001, () => {

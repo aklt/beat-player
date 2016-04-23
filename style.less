@@ -1,5 +1,6 @@
 
 @col-width: 1rem;
+@bg-input:  #AAE;
 
  * {
      box-sizing: border-box;
@@ -72,6 +73,26 @@
 
 .instrument-editor {
     // border: 1px solid red;
+}
+
+.slider-input {
+    border: 1px solid green;
+    width: 2rem;
+    position: absolute;
+    input {
+        width: 2rem;
+        margin: 0;
+    }
+    input[type=range] {
+        width: 2rem;
+        -webkit-appearance: slider-vertical;
+        writing-mode: bt-lr;
+        padding: 0 1px 0 0;
+    }
+    input[type=text] {
+        width: 1.9rem;
+        text-align: center;
+    }
 }
 
 .settings {

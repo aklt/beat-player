@@ -24,6 +24,7 @@
       </div>
       <div class="score">
         <span>
+          <i>&nbsp;</i>
           <i>1</i>
           <i>2</i>
           <i>3</i>
@@ -56,6 +57,7 @@
         </span>
         <div class="score-columns">
         <!--<p class="titles"><b>Foo</b><b>Bar</b><b>·</b><b>·</b><b>·</b><b>·</b></p>-->
+          <p><b>&nbsp;</b></p>
           <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
           <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
           <p               ><b>c</b><b>a</b><b>a</b><b>b</b><b>·</b><b>·</b></p>
@@ -88,7 +90,14 @@
         </div>
       </div>
       <div class="instrument-editor">
-        Hello
+        <h3>Instrument</h1>
+        <dl>
+          <dt>name</dt><dd>foo</dd>
+        </dl>
+      </div>
+      <div id="slider1" class="slider-input">
+        <input type="text" name="val" value="110">
+        <input orient="vertical" type="range" min="0.25" max="3" step="0.05" value="1">
       </div>
     </div>
 
@@ -100,11 +109,22 @@
       <input type="text" name="small-input" value="">
     </div>
 
+    <div class="assign-samples">
+      <pre>
+      1 2 3 4 5 6 7 8 9 0
+      Q W E R T Y U I O P
+       A S D F G H J K L
+       Z X C V B N M , .
+      </pre>
+      
+    </div>
+
     <div class="ontop">
     </div>
 
     <script id="player" type="text/plain">
-outerPlayer: <div class=player>
+outerPlayer: 
+               <div class=player>
                <div class=instruments>${instruments}</div>
                <div class=score>
                  <span>
@@ -125,6 +145,7 @@ scoreIRow: <i>·</i>
 scoreURow: <u>·</u>
     </script>
     <script src="ab.js"></script> 
+    <script src="templates.js"></script> 
     <script src="beat-player.js"></script> 
   </body>
 </html>
