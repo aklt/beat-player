@@ -1,0 +1,15 @@
+#
+#
+#
+Instrument:
+  description: This is a nice instrument
+  vol: 90
+  samples:
+    a:
+      data: samples/bd.wav
+      vol: 90
+    b:
+      data: http://asdasd.ddd/ddd
+      vol: 90
+    c:
+      data: samples/hat.wav

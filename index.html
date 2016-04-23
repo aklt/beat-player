@@ -86,8 +86,34 @@
           player1
     </div>
 
+    <div class="small-input">
+      <input type="text" name="small-input" value="">
+    </div>
+
     <div class="ontop">
     </div>
+
+    <script id="player" type="text/plain">
+outerPlayer: <div class=player>
+               <div class=instruments>${instruments}</div>
+               <div class=score>
+                 <span>
+                 ${score}
+                 </span>
+                 <div class=score-columns>
+                  ${columns}
+                 </div>
+               </div>
+             </div>
+
+instrument: <p>${name}</p>
+scoreNumber: <i>${number}</i>
+scoreSpace: <i>&nbsp;</i>
+scoreColumn: <p>${rows.join(' ')}</p>
+scoreDotRow: <b>·</b>
+scoreIRow: <i>·</i>
+scoreURow: <u>·</u>
+    </script>
     <script src="ab.js"></script> 
     <script src="beat-player.js"></script> 
   </body>
