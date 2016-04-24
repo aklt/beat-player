@@ -2,30 +2,158 @@
 (function (win) {
   var bp = win.beatPlayer = {}
 
-  // {{{1 Keyboard
-  function Keyboard(o) {
+  ab.classes = {}
+
+  var keyboardKeys = [
+        '1234567890',
+        'QWERTYUIOP',
+        'ASDFGHJKL',
+        'ZXCVBNM,.']
+
+  // {{{1 KeyboardView
+  function KeyboardView (o) {
+    o = o || {}
+    this.ranges = o.ranges || {
+      // Assumption: The array is sorted as the keyboard 
+      // and intervals do not overlap
+      1: ['U', 'F'],
+      2: ['Q', 'R']
+    }
+    this.selectedSample = '3'
   }
 
-  Keyboard.prototype = {
-  }
-
-  ab.mix.dom(Keyboard)
-
-  ab.mix.handlers(Keyboard, {
-    keydown: function () {
-      console.warn('down', arguments)
+  KeyboardView.prototype = {
+    rangesToIndex: function () {
+      var result = {}
+      var self = this
+      Object.keys(this.ranges).forEach(function (sample) {
+        var range = self.ranges[sample]
+        result[range[0]] = {}
+        result[range[0]][range[1]] = sample
+      })
+      return result
     },
-    keyup: function () {
-      console.warn('up', arguments)
-      if (ab.dom1 && ab.dom1parent) {
-        ab.dom1parent.removeChild(ab.dom1)
-        console.warn('DOM1', ab.dom1parent, ab.dom1)
-        ab.append(ab.dom1parent, ab.dom1)
+    template: function (o) {
+      var self = this
+      var rangeStart = this.rangesToIndex()
+      var rangeEnd = {}
+      return ab.templates.keyboard(keyboardKeys.map((row, j) => {
+        var keys = ''
+        var chars = row.split('')
+        if (j === 0) return ab.templates.keyboardRow(chars)
+        for (var i = 0; i < chars.length; i += 1) {
+          var ch = chars[i];
+          if (rangeStart[ch]) {
+            rangeEnd = ab.extend(rangeEnd, rangeStart[ch])
+            keys += '<span style=\'background-color: ' + ab.color(j + i) + '\'>'
+            delete rangeStart[ch]
+          }
+          keys += '<i>' + ch + '</i>'
+          if (rangeEnd[ch]) {
+            keys += '</span>'
+            delete rangeEnd[ch]
+          } 
+        }
+        return (j > 1 ? ' ' : '') + keys
+      }))
+    },
+    afterRender: function (el) {
+      var samples = ab.qa('b', el || this.el)
+      if (this.lastSampleEl) ab.classRemove(this.lastSampleEl, 'active-sample')
+      // Select the active sample
+      for (var i = 0; i < samples.length; i += 1) {
+        var s1 = samples[i]
+        if (s1.innerText === this.selectedSample) {
+          ab.classAdd(s1, 'active-sample')
+          this.lastSampleEl = s1
+        }
+      }
+    },
+    selectSample: function (sample) {
+      this.selectedSample = sample + ''
+      this.afterRender()
+    }
+  }
+
+  ab.mix.dom(KeyboardView)
+
+  ab.mix.handlers(KeyboardView, {
+    click: function (event, el) {
+      // Sample
+      if (el.nodeName === 'B') {
+        if (this.lastSampleEl) {
+          ab.classRemove(this.lastSampleEl, 'active-sample')
+        }
+        ab.classAdd(el, 'active-sample')
+        this.lastSampleEl = el
+        this.selectedSample = el.innerText
+      // Keyboard
+      } else if (el.nodeName === 'I') {
+        if (this.lastKey) {
+          ab.classRemove(this.lastKey, 'active-key')
+        }
+        ab.classAdd(el, 'active-key')
+        this.lastKey = el
       }
     }
   })
+  ab.classes.KeyboardView = KeyboardView
 
-  // 1}}} Keyboard
+  // 1}}} KeyboardView
+
+
+  // {{{1 KeyboardHandler
+
+  var key0 = '0'.charCodeAt(0)
+  var key9 = '9'.charCodeAt(0)
+  var keyUp = 38
+  var keyDown = 40
+  var keyLeft = 37
+  var keyRight = 39
+  var keyKeys = {}
+  
+  keyboardKeys.join('').split('').forEach(function (k) {
+    keyKeys[k] = 1
+  })
+
+  function KeyboardHandler(o) {
+    console.warn('KeyboardHandler', o)
+    if (!o.keyboardView) throw new Error('Need o.keyboardView')
+    this.keyboardView = o.keyboardView
+  }
+
+  ab.classes.KeyboardHandler = KeyboardHandler
+
+  KeyboardHandler.prototype = {
+  }
+
+  ab.mix.handlers(KeyboardHandler, {
+    keydown: function (ev, el) {
+      var code = ev.which
+      console.warn('Key', code, ev.charCode, String.fromCharCode(code))
+      if (code <= key9 && code >= key0) {
+        this.keyboardView.selectSample(String.fromCharCode(code))
+      } else if (code === keyUp) {
+        console.warn('keyUp')
+      } else if (code === keyDown) {
+        console.warn('keyDown')
+      } else if (code === keyLeft) {
+        console.warn('keyLeft')
+      } else if (code === keyRight) {
+        console.warn('keyRight')
+      } else {
+        var k = String.fromCharCode(code)
+        if (keyKeys[k]) {
+          console.warn('play key', k)
+        }
+      }
+    },
+    keyup: function () {
+      console.warn('up', arguments)
+    }
+  })
+
+  // 1}}} KeyboardHandler
 
   // {{{1 Player
   bp.sounds = {
@@ -121,7 +249,7 @@
 
   ab.mix.dom(Player)
 
-  const alphaNum = "01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  const alphaNum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   function decToalphanum (num) {
     if (num >= alphaNum.length) {
       console.warn('reset num from ', num)
@@ -253,12 +381,39 @@ ab.mix.handlers(Slider, {
 
 // 1}}} Slider
 
+// {{{1 Samples
+function Samples () {
+}
+
+ab.mix.dom(Samples)
+
+Samples.prototype = {
+  draw: function (el) {
+    ab.templates.keyboard({
+    })
+  }
+}
+
+// 1}}} Samples
+
 ab.ready(function () {
   console.warn('ready', bp.sounds.bd);
   console.warn('ready', bp.sounds.bd.play());
   var start = Date.now()
-  var kb1 = Keyboard.create()
+
+
+  // KeyboardView
+  var kv1 = KeyboardView.create()
+  kv1.render()
+  kv1.attach('#keyboard')
+
+  // KeyboardHandler handles events on body
+  var kb1 = new KeyboardHandler({
+    keyboardView: kv1
+  })
   kb1.eventsAttach()
+
+  ab.kv1 = kv1
 
   var si1 = SliderInput.create({el: ab.qs('#slider1')})
   si1.setRange(0, 100)
