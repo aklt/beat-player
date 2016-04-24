@@ -333,13 +333,14 @@
   // {{{1 Slider Input
   function SliderInput (o) {
     o = o || {}
+    if (!o.el) throw new Error('Need o.el')
+    this.sliderEl = ab.qs('input[type=range]', this.el)
+    this.textEl = ab.qs('input[type=text]', this.el)
   }
 
   SliderInput.prototype = {
     setRange: function (start, stop, value) {
       value = value || (start + stop) / 2
-      if (!this.sliderEl) this.sliderEl = ab.qs('input[type=range]', this.el)
-      if (!this.textEl) this.textEl = ab.qs('input[type=text]', this.el)
       ab.attr(this.sliderEl, {min: start,
                               max: stop,
                               value: value})
@@ -358,10 +359,14 @@
 
   ab.mix.handlers(SliderInput, {
     input: function (ev, el) {
-      console.warn('input', el.value)
+      ab.attr(this.textEl, {
+        value: Math.round(el.value)
+      })
     },
     change: function (ev, el) {
-      console.warn('change', el.value)
+      ab.attr(ab.qs('input[type=text]', this.el), {
+        value: Math.round(el.value)
+      })
     }
   })
   // 1}}} Slider Input
@@ -421,9 +426,9 @@
     ab.ih1 = ih1
 
     var si1 = SliderInput.create({el: ab.qs('#slider1')})
+    si1.eventsAttach()
     si1.setRange(0, 100)
     si1.setPosition(100, 100)
-    si1.eventsAttach()
 
     player1.attach(bp.el)
     player1.start()
