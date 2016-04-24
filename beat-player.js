@@ -100,31 +100,36 @@
 
   // 1}}} KeyboardView
 
-  // {{{1 KeyboardHandler
+  // {{{1 InputHandler
   var key0 = '0'.charCodeAt(0)
   var key9 = '9'.charCodeAt(0)
   var keyUp = 38
   var keyDown = 40
   var keyLeft = 37
   var keyRight = 39
+  var keyEnter = 13
+  var keySpace = 32
+  var keyEsc = 27
+  var keyTab = 9
   var keyKeys = {}
 
   keyboardKeys.join('').split('').forEach(function (k) {
     keyKeys[k] = 1
   })
 
-  function KeyboardHandler (o) {
-    console.warn('KeyboardHandler', o)
+  function InputHandler (o) {
+    console.warn('InputHandler', o)
     if (!o.keyboardView) throw new Error('Need o.keyboardView')
     this.keyboardView = o.keyboardView
+    this.el = document
   }
 
-  ab.classes.KeyboardHandler = KeyboardHandler
+  ab.classes.InputHandler = InputHandler
 
-  KeyboardHandler.prototype = {
+  InputHandler.prototype = {
   }
 
-  ab.mix.handlers(KeyboardHandler, {
+  ab.mix.handlers(InputHandler, {
     keydown: function (ev, el) {
       var code = ev.which
       console.warn('Key', code, ev.charCode, String.fromCharCode(code))
@@ -132,12 +137,28 @@
         this.keyboardView.selectSample(String.fromCharCode(code))
       } else if (code === keyUp) {
         console.warn('keyUp')
+        ev.preventDefault()
       } else if (code === keyDown) {
         console.warn('keyDown')
+        ev.preventDefault()
       } else if (code === keyLeft) {
         console.warn('keyLeft')
+        ev.preventDefault()
       } else if (code === keyRight) {
         console.warn('keyRight')
+        ev.preventDefault()
+      } else if (code === keySpace) {
+        console.warn('keySpace')
+        ev.preventDefault()
+      } else if (code === keyEsc) {
+        console.warn('keyEsc')
+        ev.preventDefault()
+      } else if (code === keyEnter) {
+        console.warn('keyEnter')
+        ev.preventDefault()
+      } else if (code === keyTab) {
+        console.warn('keyTab')
+        ev.preventDefault()
       } else {
         var k = String.fromCharCode(code)
         if (keyKeys[k]) {
@@ -147,10 +168,14 @@
     },
     keyup: function () {
       console.warn('up', arguments)
+    },
+    wheel: function () {
+      console.warn('scroll', arguments)
     }
+
   })
 
-  // 1}}} KeyboardHandler
+  // 1}}} InputHandler
 
   // {{{1 Player
   bp.sounds = {
@@ -386,13 +411,14 @@
     kv1.render()
     kv1.attach('#keyboard')
 
-    // KeyboardHandler handles events on body
-    var kb1 = new KeyboardHandler({
+    // InputHandler handles events on body
+    var ih1 = new InputHandler({
       keyboardView: kv1
     })
-    kb1.eventsAttach()
+    ih1.eventsAttach()
 
     ab.kv1 = kv1
+    ab.ih1 = ih1
 
     var si1 = SliderInput.create({el: ab.qs('#slider1')})
     si1.setRange(0, 100)
