@@ -359,14 +359,10 @@
 
   ab.mix.handlers(SliderInput, {
     input: function (ev, el) {
-      ab.attr(this.textEl, {
-        value: Math.round(el.value)
-      })
+      this.textEl.value = Math.round(el.value)
     },
     change: function (ev, el) {
-      ab.attr(ab.qs('input[type=text]', this.el), {
-        value: Math.round(el.value)
-      })
+      this.textEl.value = Math.round(el.value)
     }
   })
   // 1}}} Slider Input
@@ -430,6 +426,7 @@
     si1.setRange(0, 100)
     si1.setPosition(100, 100)
 
+    bp.el = ab.qs('#player1')
     player1.attach(bp.el)
     player1.start()
     ab.delay(1001, () => {
