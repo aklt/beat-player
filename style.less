@@ -52,6 +52,8 @@
         }
     }
     .score-columns {
+        position: absolute;
+        top: 2.5rem;
         display: block;
         float: left;
         b {
@@ -73,6 +75,10 @@
     /*border-left: 1px solid blue;*/
 }
 
+.boxed {
+    border: 1px solid blue;
+}
+
 .active-key {
     background-color: magenta;
 }
@@ -89,8 +95,7 @@
     border: 1px solid green;
     width: 2rem;
     position: absolute;
-    top: 12rem;
-    left: 12rem;
+    z-index: 100;
     input {
         width: 2rem;
         margin: 0;
