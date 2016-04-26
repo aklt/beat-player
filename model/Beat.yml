@@ -1,18 +1,22 @@
-# Beat 1
+# ## Beat 1
+#
+# This is an exampe of a beat
+#
 beat1:
+  # Beats per minute
   bpm: 108
   # Lines Per Beat: Smallest subdivision of a beat
   lpb: 3
-  # Bar: The length of a bar in lpb, so bar * lpb == number of subdivisions
-  bar: 2
-  sounds:
+  # Bars:How many bars to show
+  bars: 2
+  sound:
     bd:
       sample: bd.wav
     hat:
       sample: hat.wav
     sd:
       sample: sd.wav
-  keys:
+  key:
     b:
       sound: bd
     h:

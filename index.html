@@ -7,102 +7,9 @@
   </head>
   <body>
     <div class="player" id="player0">
-      <div class="settings">
-        <dl>
-          <dt><abbr title="Beats Per Minute"> BPM </dt><dd> 110 </dd>
-          <dt><abbr title="Lines Per Beat"> LPB </dt><dd> 4 </dd>
-          <dt><abbr title="Bars"> BAR </dt><dd> 4 </dd>
-        </dl>
-      </div>
-      <div class="instruments">
-        <p>Bass Drum</p>
-        <p>Snare</p>
-        <p>Hihat</p>
-        <p>Bass</p>
-        <p>Piano</p>
-        <p>Shaker</p>
-      </div>
-      <div class="score">
-        <span>
-          <i>&nbsp;</i>
-          <i>1</i>
-          <i>2</i>
-          <i>3</i>
-          <i>4</i>
-          <i>&nbsp;</i>
-          <i>5</i>
-          <i>6</i>
-          <i>7</i>
-          <i>8</i>
-          <i>&nbsp;</i>
-          <i>9</i>
-          <i>A</i>
-          <i>B</i>
-          <i>C</i>
-          <i>&nbsp;</i>
-          <i>D</i>
-          <i>E</i>
-          <i>F</i>
-          <i>G</i>
-          <i>&nbsp;</i>
-          <i>H</i>
-          <i>I</i>
-          <i>J</i>
-          <i>K</i>
-          <i>&nbsp;</i>
-          <i>L</i>
-          <i>M</i>
-          <i>N</i>
-          <i>O</i>
-        </span>
-        <div class="score-columns">
-        <!--<p class="titles"><b>Foo</b><b>Bar</b><b>·</b><b>·</b><b>·</b><b>·</b></p>-->
-          <p><b>&nbsp;</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>c</b><b>a</b><b>a</b><b>b</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p><b>&nbsp;</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p><b>&nbsp;</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p><b>&nbsp;</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p><b>&nbsp;</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p><b>&nbsp;</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-          <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
-        </div>
-      </div>
-      <div class="instrument-editor">
-        <h3>Instrument</h1>
-        <dl>
-          <dt>name</dt><dd>foo</dd>
-        </dl>
-      </div>
-      <div id="slider1" class="slider-input">
-        <input type="text" name="val" value="110">
-        <input orient="vertical" type="range" min="0" max="100" step="1" value="1">
-      </div>
     </div>
 
-    <div class="foo" id="player1">
-          player1
+    <div class="player" id="player1">
     </div>
 
     <div class="small-input hidden">
@@ -112,31 +19,112 @@
     <div class="keyboard" id="keyboard">
     </div>
 
+    <div id="slider1" class="slider-input">
+      <input type="text" name="val" value="110">
+      <input orient="vertical" type="range" min="0" max="100" step="1" value="1">
+    </div>
+
     <div class="ontop">
     </div>
 
-    <script id="player" type="text/plain">
-outerPlayer: 
-               <div class=player>
-               <div class=instruments>${instruments}</div>
-               <div class=score>
-                 <span>
-                 ${score}
-                 </span>
-                 <div class=score-columns>
-                  ${columns}
-                 </div>
-               </div>
-             </div>
+    <div class="body hidden">
+      <div class="player" id="playerXX">
+        <div class="settings">
+          <dl>
+            <dt><abbr title="Beats Per Minute"> BPM </dt><dd> 110 </dd>
+              <dt><abbr title="Lines Per Beat"> LPB </dt><dd> 4 </dd>
+                <dt><abbr title="Bars"> BAR </dt><dd> 4 </dd>
+          </dl>
+        </div>
+        <div class="instruments">
+          <p>Bass Drum</p>
+          <p>Snare</p>
+          <p>Hihat</p>
+          <p>Bass</p>
+          <p>Piano</p>
+          <p>Shaker</p>
+        </div>
+        <div class="score">
+          <span>
+            <i>&nbsp;</i>
+            <i>1</i>
+            <i>2</i>
+            <i>3</i>
+            <i>4</i>
+            <i>&nbsp;</i>
+            <i>5</i>
+            <i>6</i>
+            <i>7</i>
+            <i>8</i>
+            <i>&nbsp;</i>
+            <i>9</i>
+            <i>A</i>
+            <i>B</i>
+            <i>C</i>
+            <i>&nbsp;</i>
+            <i>D</i>
+            <i>E</i>
+            <i>F</i>
+            <i>G</i>
+            <i>&nbsp;</i>
+            <i>H</i>
+            <i>I</i>
+            <i>J</i>
+            <i>K</i>
+            <i>&nbsp;</i>
+            <i>L</i>
+            <i>M</i>
+            <i>N</i>
+            <i>O</i>
+          </span>
+          <div class="score-columns">
+            <!--<p class="titles"><b>Foo</b><b>Bar</b><b>·</b><b>·</b><b>·</b><b>·</b></p>-->
+            <p><b>&nbsp;</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>c</b><b>a</b><b>a</b><b>b</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p><b>&nbsp;</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p><b>&nbsp;</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p><b>&nbsp;</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p><b>&nbsp;</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p><b>&nbsp;</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+            <p               ><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b><b>·</b></p>
+          </div>
+        </div>
+        <div class="instrument-editor">
+          <h3>Instrument</h1>
+          <dl>
+            <dt>name</dt><dd>foo</dd>
+          </dl>
+        </div>
+        <div id="slider1" class="slider-input">
+          <input type="text" name="val" value="110">
+          <input orient="vertical" type="range" min="0" max="100" step="1" value="1">
+        </div>
+      </div>
 
-instrument: <p>${name}</p>
-scoreNumber: <i>${number}</i>
-scoreSpace: <i>&nbsp;</i>
-scoreColumn: <p>${rows.join(' ')}</p>
-scoreDotRow: <b>·</b>
-scoreIRow: <i>·</i>
-scoreURow: <u>·</u>
-    </script>
+    </div>
+
     <script src="ab.js"></script> 
     <script src="templates.js"></script> 
     <script src="beat-player.js"></script> 

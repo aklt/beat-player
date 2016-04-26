@@ -187,7 +187,7 @@
 
   function ScoreColumns (el) {
     // console.warn(ab.type(el));
-    this.els = ab.qa('p', el).filter(function (el1) {
+    this.els = ab.qa('* p', el).filter(function (el1) {
       return el1.childNodes.length > 1
     })
     this.selectedIndex = -1
@@ -212,13 +212,10 @@
 
   function Player (o) {
     o = o || {}
-    this.el = ab.qs('#' + o.id)
-    if (!this.el) throw new Error('Bad el' + o.id)
-    this.templates = ab.readTemplates(ab.qs('#player'))
-    Object.keys(this.templates).forEach((template) => {
-      this.templates[template] = this.templates[template]
-    })
-    this.scoreColumns = new ScoreColumns()
+    this.el = o.el || ab.dom('<div class="player"></div>')
+    if (typeof this.el === 'string') this.el = ab.qs(this.el)
+    if (!this.el) throw new Error('Bad el ' + this.el)
+    // this.scoreColumns = new ScoreColumns(this.el)
     this.tracks = o.tracks || []
 
     this.bpm = o.bpm || 100
@@ -228,6 +225,22 @@
   }
 
   Player.prototype = {
+    template: function (o) {
+      console.warn('Player template', o)
+      var t = ab.templates
+      o.settings = t.settings(o.settings)
+      o.score = t.scoreSpan(o.score)
+      o.instruments = t.instruments(o.instruments)
+      o.columns = o.columns.map(t.column).join('\n')
+      var player = t.player(o)
+      console.warn('Player Template:', player, o)
+      return player
+
+    },
+    afterRender: function (el) {
+      this.el = el
+
+    },
     renderTrack: function (track) {
       // var columns = []
       var i = 0
@@ -243,8 +256,8 @@
       this.restart()
     },
     gotoPos: function (pos) {
-      this.scoreColumns.selectedIndex = -1
-      this.scoreColumns.step(pos)
+      // this.scoreColumns.selectedIndex = -1
+      // this.scoreColumns.step(pos)
     },
     start: function (from) {
       var self = this
@@ -263,7 +276,7 @@
     step: function (amount) {
       amount = amount || 1
       this.currentPos += amount
-      this.scoreColumns.step(amount)
+      // this.scoreColumns.step(amount)
     }
   }
 
@@ -282,20 +295,6 @@
   function alphanumToDec (anum) {
     return alphaNum.indexOf(anum + '')
   }
-
-  var player1 = ab.player1 = Player.create({
-    id: 'player1',
-    css: {
-      border: '1px solid red'
-    },
-    template: function (o) {
-      console.warn(player1.templates)
-      var outer = ab.templates.outer(o)
-      // console.warn(outer('Hello'))
-      return outer
-    }})
-
-  console.warn('Created player', player1)
 
   ab.mix.handlers(Player, {
     click: function (ev, el) {
@@ -327,6 +326,10 @@
       }
     }
   })
+
+
+  // {{{2 
+  // 2}}}
 
   // 1}}} Player
 
@@ -387,7 +390,7 @@
 
   // 1}}} Slider
 
-  // {{{1 Samples
+  // {{{1 
   function Samples () {
   }
 
@@ -426,9 +429,41 @@
     si1.setRange(0, 100)
     si1.setPosition(100, 100)
 
-    bp.el = ab.qs('#player1')
-    player1.attach(bp.el)
-    player1.start()
+
+  var player1 = ab.player1 = Player.create({
+    bpm: 100,
+    lpb: 6,
+    bar: 4,
+    css: {
+      border: '1px solid red'
+    }})
+
+  console.warn('Created player', player1)
+
+    bp.el = ab.qs('#player0')
+    player1.render({
+      settings: {
+        bpm: 100,
+        lpb: 4,
+        bar: 4,
+      },
+      columns: [
+        [0, 0, 0],
+        [1, 1, 1],
+        [1, 2, 1],
+        [1, 2, 3],
+      ],
+      score: [
+        1, 2, 3, 4
+      ],
+      instruments: [
+        {name: 'aa'},
+        {name: 'bb'}
+      ]
+    })
+    console.warn('Rendered Player: ', player1)
+    player1.attach('#player1')
+    // player1.start()
     ab.delay(1001, () => {
       console.warn('syop')
       player1.stop()
