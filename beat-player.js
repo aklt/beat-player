@@ -457,7 +457,7 @@
       ab.attr(this.sliderEl, {min: start,
                               max: stop,
                               value: value})
-      ab.attr(this.textEl, {value: value})
+      this.textEl.value = value
     },
     setPosition: function (top, left) {
       ab.css(this.el, {
@@ -609,9 +609,15 @@ ab.mix.dom(SmallInput)
     lpb: 6,
     bar: 4,
     tracks: [
-      ['a','b'],
-      ['c','d']
-    ],
+      'ab..',
+      'cd..',
+      'cd..',
+      'cd..',
+      'cd..',
+      'cd..',
+    ].map((s1) => {
+      return s1.split('')
+    }),
     css: {
       border: '1px solid red'
     }})
@@ -654,7 +660,8 @@ ab.mix.dom(SmallInput)
       ],
       instruments: [
         {name: 'aa'},
-        {name: 'bb'}
+        {name: 'bb'},
+        {name: 'cc'}
       ]
     })
     console.warn('Rendered Player: ', player1)
