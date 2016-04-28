@@ -221,7 +221,7 @@
 
   // 1}}} InputHandler
 
-  // {{{1 Player
+  // {{{1 Player  TODO Rename to PlayerView
   bp.sounds = {
     bd: new Audio('samples/bd.wav'),
     // bd: new Audio('http://download.wavetlan.com/SVV/Media/HTTP/WAV/Media-Convert/Media-Convert_test6_PCM_Stereo_VBR_16SS_8000Hz.wav'),
@@ -409,7 +409,7 @@
           break
         case 'I': // Click top row to go to position
           console.warn('I', alphanumToDec(el.innerText))
-          // this.gotoPos(alphanumToDec(el.innerText))
+          //TODO  this.gotoPos(alphanumToDec(el.innerText))
           break
         case 'ABBR':
           r1 = ab.rect(ab.qs('dd', el))
