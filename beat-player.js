@@ -262,7 +262,7 @@
     // this.scoreColumns = new ScoreColumns(this.el)
 
     this.bpm = o.bpm || 100
-    this.lpb = o.lpb || 4
+    this.tpb = o.tpb || 4
     this.bar = o.bar || 4
     this.bars = this.bar
 
@@ -270,9 +270,9 @@
 
     for (var ibar = 0; ibar < this.bars; ibar += 1) {
       this.tracks[ibar] = []
-      for (var ilpb = 0; ilpb < this.lpb; ilpb += 1) {
-        this.tracks[ibar][ilpb] = (o.tracks && o.tracks[ibar] && o.tracks[ibar][ilpb])
-        if (!this.tracks[ibar][ilpb]) this.tracks[ibar][ilpb] = '·'
+      for (var itpb = 0; itpb < this.tpb; itpb += 1) {
+        this.tracks[ibar][itpb] = (o.tracks && o.tracks[ibar] && o.tracks[ibar][itpb])
+        if (!this.tracks[ibar][itpb]) this.tracks[ibar][itpb] = '·'
       }
     }
     console.warn('Player', this)
@@ -298,15 +298,15 @@
     renderTrack: function (track) {
       // var columns = []
       var i = 0
-      var length = this.lpb * this.bar * this.bars
+      var length = this.tpb * this.bar * this.bars
       while (i < length) {
         i += 1
       }
     },
-    setBpmBarLpb: function (bpm, bar, lpb) {
+    setBpmBarLpb: function (bpm, bar, tpb) {
       if (bpm) this.bpm = bpm
       if (bar) this.bar = bar
-      if (lpb) this.lpb = lpb
+      if (tpb) this.tpb = tpb
       this.restart()
     },
     gotoPos: function (pos) {
@@ -319,7 +319,7 @@
         requestAnimationFrame(function () {
           self.step()
         })
-      }, (this.bpm / 60) * this.bar * this.lpb * 100)
+      }, (this.bpm / 60) * this.bar * this.tpb * 100)
     },
     stop: function () {
       if (this.interval) {
@@ -384,10 +384,8 @@
   ab.mix.handlers(Player, {
     click: function (ev, el) {
       console.warn('You clicked', ev, el, el.parentNode)
-      console.warn('This is index', el, el.parentNode)
       var rowIndex = [].slice.call(el.parentNode.childNodes).indexOf(el)
       var columnIndex
-      console.warn('Player index', rowIndex, columnIndex)
       var r1
       switch (el.nodeName) {
         case 'P':
@@ -397,12 +395,15 @@
         case 'B':
           textInputWidth = '1rem'
           r1 = ab.rect(el)
-          if (ab.lastPopUp) ab.lastPopUp.hide()
+          var value = el.innerText
+          if (!value || /^\s*$/.test(value)) value = '.'
           ab.smallInput1.popup({
             top: r1.top,
             left: r1.left,
-            value: el.innerText,
-            width: textInputWidth
+            value: value,
+            set: function (value) {
+              el.innerText = value
+            }
           })
           ab.lastPopUp = ab.smallInput1
           break
@@ -415,13 +416,13 @@
         case 'DT':
         case 'DD':
           r1 = ab.rect(el)
-          if (ab.lastPopUp) ab.lastPopUp.hide()
+          // if (ab.lastPopUp) ab.lastPopUp.hide()
           ab.sliderInput1.popup({
             top: r1.top,
             left: r1.left,
             value: el.innerText,
             set: function (value) {
-
+              el.innerText = value +''
             }
           })
           ab.lastPopUp = ab.sliderInput1
@@ -459,34 +460,26 @@
                               value: value})
       this.textEl.value = value
     },
-    setPosition: function (top, left) {
-      ab.css(this.el, {
-        position: 'absolute',
-        top: top + 'px',
-        left: left + 'px'
-      })
-    },
-    afterRender: function (el) {
-      this.inputEl = ab.qs('input[type=text]', el)
-    },
     popup: function (o) {
-      o.value = o.value || this.inputEl.value
-      this.detach()
-      if (o.value !== this.lastValue) this.render(o)
-      this.attach(this.parent)
+      if (!this.attached) {
+        this.attach(document.body)
+        this.attached = true
+      }
+      // o.value = o.value || this.inputEl.value
+      // this.detach()
+      // if (o.value !== this.lastValue) this.render(o)
+      // this.attach(this.parent)
       ab.css(this.el, {
         position: 'absolute',
         top: o.top + 'px',
-        left: o.left + 'px',
-        'background-color': ab.color(ab.randInt(1, 100), 0x99, 0xEE)
+        left: o.left + 'px'
       })
-      ab.css(this.sliderEl, {
-        'background-color': ab.color(ab.randInt(1, 100), 0x99, 0xEE)
-      })
-      ab.classRemove(this.el, 'hidden')
-      this.lastValue = this.inputEl.value = o.value
-      this.inputEl.focus()
-      this.inputEl.select()
+      this.sliderEl.value = o.value
+      this.textEl.value = o.value
+      this.setValue = o.set
+      // this.lastValue = this.inputEl.value = o.value
+      this.textEl.focus()
+      this.textEl.select()
     }
   }
 
@@ -494,75 +487,71 @@
 
   ab.mix.handlers(SliderInput, {
     input: function (ev, el) {
-      this.textEl.value = Math.round(el.value)
+      var v1 = this.sliderEl.value = this.textEl.value = Math.round(el.value)
+      if (this.setValue) this.setValue(v1)
+      ev.stopPropagation()
     },
     change: function (ev, el) {
-      this.textEl.value = Math.round(el.value)
+      var v1 = this.sliderEl.value = this.textEl.value = Math.round(el.value)
+      if (this.setValue) this.setValue(v1)
+      ev.stopPropagation()
     },
     keydown: function (ev, el) {
       console.warn('Key i sdown', ev, el)
+      ev.stopPropagation()
     }
   })
   // 1}}} Slider Input
 
-// {{{1 SmallInput
-function SmallInput (o) {
-  
-}
-
-SmallInput.prototype = {
-  template: function (o) {
-    var res = ab.templates.smallInput(o)
-    console.warn('SmallInput template', res)
-    return res
-  },
-  afterAttach: function (el) {
-    this.inputEl = ab.qs('input[type=text]', this.el)
-    ab.classRemove(this.el, 'hidden')
-  },
-  popup: function (o) {
-    o.value = o.value || this.inputEl.value
-    this.detach()
-    if (o.value !== this.lastValue) this.render(o)
-    this.attach(this.parent)
-    ab.css(this.el, {
-      position: 'absolute',
-      top: o.top + 'px',
-      left: o.left + 'px',
-      'background-color': ab.color(ab.randInt(1, 100), 0x99, 0xEE),
-      width: o.width || '1rem'
-    })
-    ab.classRemove(this.el, 'hidden')
-    this.lastValue = this.inputEl.value = o.value
-    this.inputEl.focus()
-    this.inputEl.select()
-  }
-}
-
-ab.mix.dom(SmallInput)
-
-
-// 1}}} SmallInput
-
-  // {{{1 Slider
-
-  function Slider () {
-
+  // {{{1 SmallInput
+  function SmallInput (o) {
+    
   }
 
-  ab.mix.dom(Slider)
-
-  Slider.prototype = {
-
+  SmallInput.prototype = {
+    template: function (o) {
+      return ab.templates.smallInput(o)
+    },
+    afterRender: function () {
+      this.inputEl = ab.qs('input[type=text]', this.el)
+    },
+    afterAttach: function (el) {
+      ab.classRemove(this.el, 'hidden')
+    },
+    popup: function (o) {
+      o.value = o.value || this.inputEl.value
+      if (!this.attached) {
+        this.attach(document.body)
+        this.attached = true
+      }
+      this.show()
+      ab.css(this.el, {
+        position: 'absolute',
+        top: o.top + 'px',
+        left: o.left + 'px',
+        'background-color': ab.color(ab.randInt(1, 100), 0x99, 0xEE),
+        width: o.width || '1rem'
+      })
+      this.setValue = o.set
+      this.lastValue = this.inputEl.value = o.value
+      this.inputEl.focus()
+      this.inputEl.select()
+    }
   }
 
-  ab.mix.handlers(Slider, {
-    scroll: function () {
-      console.warn('scroll')
+  ab.mix.dom(SmallInput)
+
+  ab.mix.handlers(SmallInput, {
+    keyup: function (ev, el) {
+      var key = String.fromCharCode(ev.keyCode).toLowerCase()
+      if (this.setValue) this.setValue(key)
+      this.hide()
+      console.warn('key', key)
+      return ev.stopPropagation()
     }
   })
 
-  // 1}}} Slider
+  // 1}}} SmallInput
 
   // {{{1 
   function Samples () {
@@ -594,19 +583,16 @@ ab.mix.dom(SmallInput)
     var si1 = SliderInput.create({el: '#slider1'})
     si1.eventsAttach()
     si1.setRange(0, 100)
-    si1.setPosition(100, 100)
-    si1.attach('body')
     ab.sliderInput1 = si1
 
     var smallInput1 = SmallInput.create({top: '12rem', left: '12rem'})
     smallInput1.render({value: 101})
-    smallInput1.attach('body');
     ab.smallInput1 = smallInput1
 
 
   var player1 = ab.player1 = Player.create({
     bpm: 100,
-    lpb: 6,
+    tpb: 6,
     bar: 4,
     tracks: [
       'ab..',
@@ -636,7 +622,7 @@ ab.mix.dom(SmallInput)
     player1.render({
       settings: {
         bpm: 100,
-        lpb: 4,
+        tpb: 4,
         bar: 4,
       },
       columns: [
@@ -675,10 +661,10 @@ ab.mix.dom(SmallInput)
       console.warn('set')
       // player1.gotoPos(4)
     })
-    ab.delay(2501, () => {
-      console.warn('Hello')
-      player1.start()
-    })
+    // ab.delay(2501, () => {
+      // console.warn('Hello')
+      // // player1.start()
+    // })
 
     var player = new Player({id: 'player0'})
     player.eventsAttach()
