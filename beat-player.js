@@ -40,7 +40,7 @@
       var rangeStart = this.rangesToIndex()
       var rangeEnd = {}
       o = o || {}
-      o.classes = o.classes || this.classes
+      o.classes = o.classes || this.classes || 'color1'
       return ab.templates.keyboard(keyboardKeys.map((row, j) => {
         var keys = ''
         var chars = row.split('')
