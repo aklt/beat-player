@@ -1,5 +1,8 @@
 
-// The underlying model of the beat
+// # BeatModel
+//
+// Holds all data of the current beat and is referenceds from all Views and
+// the BeatAudio player.
 function BeatModel (o) {
   this.model = o || {}
 }
@@ -52,6 +55,15 @@ BeatModel.prototype = {
   // TODO Return a text string representing the pattern
   getPattern: function () {
 
+  },
+  // ## Modifying the model with getters and setters
+  instrumentUrl: function (i, newUrl) {
+    if (!newUrl) return this.model.instruments[i]
+    this.model.instruments[i].url = newUrl
+  },
+  instrumentName: function (i, newName) {
+    if (!newName) return this.model.instruments[i].name
+    this.model.instruments[i].name = newName
   }
 }
 
@@ -66,6 +78,7 @@ mixinGetSet(BeatModel, 'bpm')
 mixinGetSet(BeatModel, 'tpb')
 mixinGetSet(BeatModel, 'bar')
 
+// TODO Also represent instruments and bpm in a pattern
 var beat1 = `
 Bas Drum: b... b... b...
 Snare:    ..s. ..s. .s.s

@@ -1,5 +1,11 @@
 /*global ab, AudioContext, webkitAudioContext*/
-// Schedule audio for playback
+
+// # BeatAudio
+//
+// Load and play patterns and instruments
+//
+// See: https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
+//
 function BeatAudio (o) {
   this.instruments = o
   this.context = new (AudioContext || webkitAudioContext)()
@@ -10,6 +16,7 @@ function BeatAudio (o) {
 }
 
 BeatAudio.prototype = {
+  // Load instruments
   load: function (cb) {
     var ikeys = Object.keys(this.instruments)
     var self = this
@@ -31,34 +38,41 @@ BeatAudio.prototype = {
       loadOne(i)
     }
   },
-  playSample: function (i, when) {
+  // Play a sample in `when` seconds
+  playSample: function (i, when, detune) {
     when = when || 0
+    detune = detune || 0
     var source = this.context.createBufferSource()
     source.buffer = this.instruments[i + ''].buffer
     source.connect(this.volume)
+    // TODO Make ranges of notes
+    source.detune.value = detune
+    // source.playbackRate.value = 2
     source.start(this.context.currentTime + when)
     source.onended = function () {
       this.ended = true
     }
     this.playing.push(source)
   },
+  // Remove sounds that have been played drom this.playing
   removeEnded: function () {
     this.playing = this.playing.filter(function (s1) {
       return !s1.ended
     })
   },
-  stopAll: function () {
-    for (var i = 0; i < this.playing.length; i += 1) {
-      this.playing[i].stop()
-    }
-    this.playing = []
-  },
+  // Start playback at pattern position
   start: function (position) {
     this.timeout = setTimeout(function () {
 
     }, 100)
   },
+  // Stop all playing samples
   stop: function () {
+    clearTimeout(this.timeout)
+    for (var i = 0; i < this.playing.length; i += 1) {
+      this.playing[i].stop()
+    }
+    this.playing = []
   }
 
   // TODO Mixing https://developer.mozilla.org/en-US/docs/Web/API/OfflineAudioContext
@@ -68,9 +82,7 @@ ab.BeatAudio = BeatAudio
 ab.beat1 = new BeatAudio({
   1: {
     url: 'samples/bd.wav',
-    name: 'Bass Drum',
-    loop: true,
-    detune: 0
+    name: 'Bass Drum'
   },
   2: {
     url: 'samples/sd.wav',
@@ -87,3 +99,7 @@ ab.beat1.test = function () {
     console.warn('loaded')
   })
 }
+
+setTimeout(function () {
+  ab.beat1.test()
+}, 200)
