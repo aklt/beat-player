@@ -14,8 +14,32 @@ function BeatAudio (model) {
   this.volume.gain.value = 1
   this.volume.connect(this.context.destination)
   this.playing = []
-  this.lookaheadTime = 100
   this.position = 0
+  this.positionTime = 0
+  this.lookaheadTime = 0.1
+
+  this.positionNoteBuckets = []
+}
+
+function timeBuckets(notes, intervalTime) {
+    var time = intervalTime
+    var buckets = [[]]
+    var ibucket = 0
+    var i = 0
+    var note = notes[i]
+    while (note && i < notes.length) {
+      if (note.time < time) {
+        buckets[ibucket].push(note)
+      } else {
+        ibucket += 1
+        buckets[ibucket] = []
+        time += intervalTime
+        i -= 1
+      }
+      i += 1
+      note = notes[i]
+    }
+    return buckets
 }
 
 BeatAudio.prototype = {
@@ -37,45 +61,53 @@ BeatAudio.prototype = {
         })
       })
     }
-    for (var i = 0; i < ikeys.length; i += 1) {
-      loadOne(i)
-    }
+    for (var i = 0; i < ikeys.length; i += 1) loadOne(i)
     // TODO: mixin and effects
   },
   // Schedule offset times of samples according to pattern
-  calculateTimeOffsets: function () {
+  calculateNoteBuckets: function () {
     var patterns = this.model.patterns()
     this.secondsPerTick = (this.model.bpm() / 60) /
-                         (this.model.tpb() * this.model.bars())
-    this.scheduled = []
+                         (this.model.tpb() * this.model.beats())
+    this.orderedNotes = []
     for (var instrumentNumber in patterns) {
       var notes = patterns[instrumentNumber]
       for (var offset in notes) {
         var key = notes[offset]
-        this.scheduled.push({
+        this.orderedNotes.push({
           time: this.secondsPerTick * parseInt(offset, 10),
           instrument: instrumentNumber,
           key: key
         })
       }
     }
-    this.scheduled.sort(function (a, b) {
+    this.orderedNotes.sort(function (a, b) {
       return a.time - b.time
     })
+
+    this.noteBuckets = timeBuckets(this.orderedNotes, this.lookaheadTime)
+    this.noteBucketsIndex = 0
   },
   // Start playback at pattern position
-  play: function () {
-    var time = this.context.currentTime
-    var positionStartTime = this.position * this.secondsPerTick
-    var positionEndTime = positionStartTime + this.lookaheadTime
-    var playThese = []
-    for (var i = 0; i < this.scheduled.length; i += 1) {
-      var note = this.scheduled[i]
-      if (note.time )
-    }
+  tick: function (currentTime) {
     var self = this
-    this.timeout = setTimeout(function () {
-    }, this.lookaheadTime)
+    var time = this.context.currentTime
+    this.timeout = setInterval(function () {
+      var elapsedTime = self.context.currentTime - time
+      var notes = self.noteBuckets[self.noteBucketsIndex]
+      for (var i = 0; i < notes.length; i += 1) {
+        var n1 = notes[i]
+        var atTime = n1.time 
+        self.playSample(n1.instrument, atTime)
+        console.warn('play', n1, atTime)
+      }
+      self.noteBucketsIndex += 1
+      if (self.noteBucketsIndex === self.noteBuckets.length) self.noteBucketsIndex = 0
+      time = self.context.currentTime
+    }, this.lookaheadTime * 1000)
+  },
+  play: function () {
+    this.tick()
   },
   // Stop all playing samples
   stop: function () {
@@ -116,9 +148,7 @@ ab.BeatAudio = BeatAudio
 // test
 
 var beat1 = `
-Bass Drum: b... b... b...
-Snare:     ..s. ..s. .s.s
-HiHat:     x.x. x.x. .x.x
+HiHat:     x.x. x.x. x.x.
 --
 Bass Drum:
   url: samples/bd.wav
@@ -137,6 +167,9 @@ ab.beat1.test = function () {
   console.warn('Boob', ab.beat1)
   ab.beat1.loadSamples(function () {
     console.warn('loaded')
+    ab.beat1.calculateNoteBuckets()
+    ab.beat1.model.bpm(80)
+    ab.beat1.play()
   })
 }
 

@@ -32,12 +32,12 @@ BeatModel.prototype = {
       var k
       var ch
       var tpb = -1
-      var bars = 0
+      var beats = 0
       var lastLpb = -1
       for (k = 0; k < rawChars.length; k += 1) {
         ch = rawChars[k]
         if (ch === ' ') {
-          bars += 1
+          beats += 1
           if (tpb === -1) {
             tpb = k
             lastLpb = k
@@ -57,12 +57,12 @@ BeatModel.prototype = {
         }
       }
       patternIndex += 1
-      bars += 1
+      beats += 1
       patternLpb = tpb
-      patternBars = bars
+      patternBars = beats
     }
     this.model.tpb = patternLpb
-    this.model.bars = patternBars
+    this.model.beats = patternBars
 
     // Read samples/instruments
     i += 1
@@ -120,6 +120,10 @@ BeatModel.prototype = {
     if (!newPatterns) return this.model.patterns
     throw new Error('TODO: set patterns')
   },
+  patternLength: function (newLength) {
+    if (!newLength) return this.tpb() * this.beats()
+    throw new Error('TODO: set patternLength')
+  },
   // ## Modifying the model with getters and setters
   instrumentUrl: function (i, newUrl) {
     if (!newUrl) return this.model.instruments[i]
@@ -131,16 +135,17 @@ BeatModel.prototype = {
   }
 }
 
-function mixinGetSet (AClass, prop) {
+function mixinGetSet (AClass, prop, defaultValue) {
   AClass.prototype[prop] = function (value) {
     if (typeof value !== 'undefined') this.model[prop] = value
-    else return this.model[prop]
+    if (typeof this.model[prop] === 'undefined') this.model[prop] = defaultValue
+    return this.model[prop]
   }
 }
 
-mixinGetSet(BeatModel, 'bpm')
-mixinGetSet(BeatModel, 'tpb')
-mixinGetSet(BeatModel, 'bar')
+mixinGetSet(BeatModel, 'bpm', 100)
+mixinGetSet(BeatModel, 'tpb',   4)
+mixinGetSet(BeatModel, 'beats', 4)
 
 // TODO: encapsulate pattern block in '--'
 var beat1 = `
