@@ -10,7 +10,7 @@ function BeatModel (text) {
 BeatModel.prototype = {
   // Read a text pattern without instruments
   readBeatText: function (text) {
-    var pattern = this.model.pattern = {}
+    var patterns = this.model.patterns = {}
     var patternIndex = 0
     var patternInstruments = {}
     var lines = text.split(/\n/)
@@ -48,11 +48,11 @@ BeatModel.prototype = {
           chars.push(ch)
         }
       }
-      pattern[patternIndex] = {}
+      patterns[patternIndex] = {}
       for (k = 0; k < chars.length; k += 1) {
         ch = chars[k]
         if (ch !== '.') {
-          pattern[patternIndex][k] = ch
+          patterns[patternIndex][k] = ch
           patternInstruments[instrument][ch] = patternIndex
         }
       }
@@ -115,6 +115,10 @@ BeatModel.prototype = {
   instruments: function (newInstruments) {
     if (!newInstruments) return this.model.instruments
     throw new Error('TODO: set instruments')
+  },
+  patterns: function (newPatterns) {
+    if (!newPatterns) return this.model.patterns
+    throw new Error('TODO: set patterns')
   },
   // ## Modifying the model with getters and setters
   instrumentUrl: function (i, newUrl) {

@@ -14,6 +14,8 @@ function BeatAudio (model) {
   this.volume.gain.value = 1
   this.volume.connect(this.context.destination)
   this.playing = []
+  this.lookaheadTime = 100
+  this.position = 0
 }
 
 BeatAudio.prototype = {
@@ -38,10 +40,50 @@ BeatAudio.prototype = {
     for (var i = 0; i < ikeys.length; i += 1) {
       loadOne(i)
     }
+    // TODO: mixin and effects
   },
   // Schedule offset times of samples according to pattern
-  schedule: function () {
-
+  calculateTimeOffsets: function () {
+    var patterns = this.model.patterns()
+    this.secondsPerTick = (this.model.bpm() / 60) /
+                         (this.model.tpb() * this.model.bars())
+    this.scheduled = []
+    for (var instrumentNumber in patterns) {
+      var notes = patterns[instrumentNumber]
+      for (var offset in notes) {
+        var key = notes[offset]
+        this.scheduled.push({
+          time: this.secondsPerTick * parseInt(offset, 10),
+          instrument: instrumentNumber,
+          key: key
+        })
+      }
+    }
+    this.scheduled.sort(function (a, b) {
+      return a.time - b.time
+    })
+  },
+  // Start playback at pattern position
+  play: function () {
+    var time = this.context.currentTime
+    var positionStartTime = this.position * this.secondsPerTick
+    var positionEndTime = positionStartTime + this.lookaheadTime
+    var playThese = []
+    for (var i = 0; i < this.scheduled.length; i += 1) {
+      var note = this.scheduled[i]
+      if (note.time )
+    }
+    var self = this
+    this.timeout = setTimeout(function () {
+    }, this.lookaheadTime)
+  },
+  // Stop all playing samples
+  stop: function () {
+    clearTimeout(this.timeout)
+    for (var i = 0; i < this.playing.length; i += 1) {
+      this.playing[i].stop()
+    }
+    this.playing = []
   },
   // Play a sample in `when` seconds
   playSample: function (i, when, detune) {
@@ -64,20 +106,6 @@ BeatAudio.prototype = {
     this.playing = this.playing.filter(function (s1) {
       return !s1.ended
     })
-  },
-  // Start playback at pattern position
-  start: function (position) {
-    this.timeout = setTimeout(function () {
-
-    }, 100)
-  },
-  // Stop all playing samples
-  stop: function () {
-    clearTimeout(this.timeout)
-    for (var i = 0; i < this.playing.length; i += 1) {
-      this.playing[i].stop()
-    }
-    this.playing = []
   }
 
   // TODO Mixing https://developer.mozilla.org/en-US/docs/Web/API/OfflineAudioContext
