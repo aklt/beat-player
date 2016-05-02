@@ -6,8 +6,9 @@
 //
 // See: https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API
 //
-function BeatAudio (o) {
-  this.instruments = o
+function BeatAudio (model) {
+  this.model = model
+  this.instruments = model.instruments()
   this.context = new (AudioContext || webkitAudioContext)()
   this.volume = this.context.createGain()
   this.volume.gain.value = 1
@@ -17,7 +18,7 @@ function BeatAudio (o) {
 
 BeatAudio.prototype = {
   // Load instruments
-  load: function (cb) {
+  loadSamples: function (cb) {
     var ikeys = Object.keys(this.instruments)
     var self = this
     var count = 0
@@ -34,9 +35,13 @@ BeatAudio.prototype = {
         })
       })
     }
-    for (var i = 1; i <= ikeys.length; i += 1) {
+    for (var i = 0; i < ikeys.length; i += 1) {
       loadOne(i)
     }
+  },
+  // Schedule offset times of samples according to pattern
+  schedule: function () {
+
   },
   // Play a sample in `when` seconds
   playSample: function (i, when, detune) {
@@ -79,23 +84,30 @@ BeatAudio.prototype = {
 }
 
 ab.BeatAudio = BeatAudio
-ab.beat1 = new BeatAudio({
-  1: {
-    url: 'samples/bd.wav',
-    name: 'Bass Drum'
-  },
-  2: {
-    url: 'samples/sd.wav',
-    name: 'Snare Drum'
-  },
-  3: {
-    url: 'samples/hat.wav',
-    name: 'Hihat'
-  }
-})
+
+// test
+
+var beat1 = `
+Bass Drum: b... b... b...
+Snare:     ..s. ..s. .s.s
+HiHat:     x.x. x.x. .x.x
+--
+Bass Drum:
+  url: samples/bd.wav
+
+Snare:
+  url: samples/sd.wav
+
+HiHat:
+  url: samples/hat.wav
+`
+var beat1Model = new BeatModel(beat1)
+
+ab.beat1 = new BeatAudio(beat1Model)
 
 ab.beat1.test = function () {
-  ab.beat1.load(function () {
+  console.warn('Boob', ab.beat1)
+  ab.beat1.loadSamples(function () {
     console.warn('loaded')
   })
 }

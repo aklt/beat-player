@@ -1,35 +1,41 @@
-
 // # BeatModel
 //
 // Holds all data of the current beat and is referenceds from all Views and
 // the BeatAudio player.
-function BeatModel (o) {
-  this.model = o || {}
+function BeatModel (text) {
+  this.model = {}
+  if (typeof text === 'string') this.readBeatText(text)
 }
 
 BeatModel.prototype = {
   // Read a text pattern without instruments
-  readPattern: function (text) {
-    var pat = this.model.pattern = {}
-    var inst = this.model.instruments = {}
+  readBeatText: function (text) {
+    var pattern = this.model.pattern = {}
+    var patternIndex = 0
+    var patternInstruments = {}
     var lines = text.split(/\n/)
     var patternLpb
     var patternBars
+    var instrument
+    var line
     for (var i = 0; i < lines.length; i += 1) {
-      var line = lines[i]
+      line = lines[i]
       if (/^\s*$/.test(line)) continue
+      if (/^--/.test(line)) break
       var idx = line.indexOf(':')
       if (idx < 0) throw new Error('Bad pattern format on line ' + i)
-      var instrument = line.slice(0, idx).trim()
-      inst[instrument] = {}
+      instrument = line.slice(0, idx).trim()
+      patternInstruments[instrument] = {}
       line = line.slice(idx + 1).trim()
-      var chars = line.split('')
-      pat[i] = {}
+      var rawChars = line.split('')
+      var chars = []
+      var k
+      var ch
       var tpb = -1
       var bars = 0
       var lastLpb = -1
-      for (var k = 0; k < chars.length; k += 1) {
-        var ch = chars[k]
+      for (k = 0; k < rawChars.length; k += 1) {
+        ch = rawChars[k]
         if (ch === ' ') {
           bars += 1
           if (tpb === -1) {
@@ -38,23 +44,77 @@ BeatModel.prototype = {
           } else {
             if (k - lastLpb - 1 !== tpb) throw new Error('Bad tpb ' + lastLpb + ' ' + k)
           }
-          continue
-        }
-        if (ch !== '.') {
-          pat[i][k] = ch
-          inst[instrument][ch] = i
+        } else {
+          chars.push(ch)
         }
       }
+      pattern[patternIndex] = {}
+      for (k = 0; k < chars.length; k += 1) {
+        ch = chars[k]
+        if (ch !== '.') {
+          pattern[patternIndex][k] = ch
+          patternInstruments[instrument][ch] = patternIndex
+        }
+      }
+      patternIndex += 1
       bars += 1
       patternLpb = tpb
       patternBars = bars
     }
     this.model.tpb = patternLpb
     this.model.bars = patternBars
+
+    // Read samples/instruments
+    i += 1
+    var instruments = {}
+    instrument = null
+    var m
+    for (; i < lines.length; i += 1) {
+      line = lines[i]
+      if (/^\s*$/.test(line)) continue
+
+      // instrument name
+      m = /^(\w+[\w\s]+):/.exec(line)
+      if (m) {
+        instrument = m[1].trim()
+        instruments[instrument] = {}
+        if (!patternInstruments[instrument]) {
+          console.warn('Unused instrument', instrument)
+        }
+        continue
+      }
+
+      // instrument properties
+      m = /^\s+([\w]+):(.*)/.exec(line)
+      if (m) {
+        if (!instrument) {
+          throw new Error('Expected an instrument name at line ' + i + 1)
+        }
+        instruments[instrument][m[1]] = m[2].trim()
+      }
+    }
+
+    var ins = this.model.instruments = {}
+    Object.keys(patternInstruments).forEach(function (name, i) {
+      var obj = {
+        name: name
+      }
+      if (!instruments[name]) {
+        throw new Error('Undefined instrument used: ' + name)
+      }
+      for (var k in instruments[name]) {
+        obj[k] = instruments[name][k]
+      }
+      ins[i] = obj
+    })
   },
   // TODO Return a text string representing the pattern
   getPattern: function () {
 
+  },
+  instruments: function (newInstruments) {
+    if (!newInstruments) return this.model.instruments
+    throw new Error('TODO: set instruments')
   },
   // ## Modifying the model with getters and setters
   instrumentUrl: function (i, newUrl) {
@@ -78,16 +138,25 @@ mixinGetSet(BeatModel, 'bpm')
 mixinGetSet(BeatModel, 'tpb')
 mixinGetSet(BeatModel, 'bar')
 
-// TODO Also represent instruments and bpm in a pattern
+// TODO: encapsulate pattern block in '--'
 var beat1 = `
-Bas Drum: b... b... b...
-Snare:    ..s. ..s. .s.s
-Hihat:    x.x. x.x. .x.x
+Bass Drum: b... b... b...
+Snare:     ..s. ..s. .s.s
+HiHat:     x.x. x.x. .x.x
+--
+Bass Drum:
+  url: samples/bd.wav
+
+Snare:
+  url: samples/sd.wav
+
+HiHat:
+  url: samples/hat.wav
 `
 
 var b1 = new BeatModel()
 
-b1.readPattern(beat1)
+b1.readBeatText(beat1)
 
 console.warn(JSON.stringify(b1, 0, 2))
 
