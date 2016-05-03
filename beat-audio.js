@@ -1,4 +1,4 @@
-/*global ab, AudioContext, webkitAudioContext*/
+/*global ab, AudioContext, webkitAudioContext, BeatModel*/
 
 // # BeatAudio
 //
@@ -16,33 +16,40 @@ function BeatAudio (model) {
   this.playing = []
   this.position = 0
   this.positionTime = 0
-  this.lookaheadTime = 0.1
-
-  this.positionNoteBuckets = []
+  this.lookaheadTime = 0.3
 }
 
-function timeBuckets(notes, intervalTime) {
-    var time = intervalTime
-    var buckets = [[]]
-    var ibucket = 0
-    var i = 0
-    var note = notes[i]
-    while (note && i < notes.length) {
-      if (note.time < time) {
-        buckets[ibucket].push(note)
-      } else {
-        ibucket += 1
-        buckets[ibucket] = []
-        time += intervalTime
-        i -= 1
-      }
-      i += 1
-      note = notes[i]
+// divide notes on property `note.time` into buckets of `intervalTime` size
+function timeBuckets (notes, intervalTime) {
+  var time = intervalTime
+  var buckets = [[]]
+  var ibucket = 0
+  var i = 0
+  var note = notes[i]
+  while (note && i < notes.length) {
+    if (note.time < time) {
+      buckets[ibucket].push(note)
+    } else {
+      ibucket += 1
+      buckets[ibucket] = []
+      time += intervalTime
+      i -= 1
     }
-    return buckets
+    i += 1
+    note = notes[i]
+  }
+  return buckets
 }
 
 BeatAudio.prototype = {
+  // load and reset variables
+  load: function (cb) {
+    var self = this
+    this.loadSamples(function () {
+      self.calculateNoteBuckets()
+      if (typeof cb === 'function') cb(null, self)
+    })
+  },
   // Load instruments
   loadSamples: function (cb) {
     var ikeys = Object.keys(this.instruments)
@@ -57,7 +64,7 @@ BeatAudio.prototype = {
         self.context.decodeAudioData(result, function (buffer) {
           self.instruments[i].buffer = buffer
           count += 1
-          if (count === ikeys.length) return cb(self.instruments)
+          if (count === ikeys.length) return cb(null, self.instruments)
         })
       })
     }
@@ -87,23 +94,17 @@ BeatAudio.prototype = {
 
     this.noteBuckets = timeBuckets(this.orderedNotes, this.lookaheadTime)
     this.noteBucketsIndex = 0
+    console.warn('buckets', this.noteBuckets)
   },
   // Start playback at pattern position
   tick: function (currentTime) {
     var self = this
     var time = this.context.currentTime
     this.timeout = setInterval(function () {
-      var elapsedTime = self.context.currentTime - time
-      var notes = self.noteBuckets[self.noteBucketsIndex]
-      for (var i = 0; i < notes.length; i += 1) {
-        var n1 = notes[i]
-        var atTime = n1.time 
-        self.playSample(n1.instrument, atTime)
-        console.warn('play', n1, atTime)
-      }
-      self.noteBucketsIndex += 1
-      if (self.noteBucketsIndex === self.noteBuckets.length) self.noteBucketsIndex = 0
-      time = self.context.currentTime
+      var delta = self.context.currentTime - time
+      console.warn(time, delta)
+      time += self.secondsPerTick
+      console.warn('time', time, delta, self.secondsPerTick, self.context.currentTime)
     }, this.lookaheadTime * 1000)
   },
   play: function () {
@@ -112,17 +113,15 @@ BeatAudio.prototype = {
   // Stop all playing samples
   stop: function () {
     clearTimeout(this.timeout)
-    for (var i = 0; i < this.playing.length; i += 1) {
-      this.playing[i].stop()
-    }
-    this.playing = []
   },
   // Play a sample in `when` seconds
   playSample: function (i, when, detune) {
     when = when || 0
     detune = detune || 0
     var source = this.context.createBufferSource()
-    source.buffer = this.instruments[i + ''].buffer
+    var instrument = this.instruments[i + '']
+    if (!instrument) throw new Error('Please init')
+    source.buffer = instrument.buffer
     source.connect(this.volume)
     // TODO Make ranges of notes
     source.detune.value = detune
@@ -149,6 +148,8 @@ ab.BeatAudio = BeatAudio
 
 var beat1 = `
 HiHat:     x.x. x.x. x.x.
+Bass Drum: b... .... b...
+Snare:     .... s... ..s.
 --
 Bass Drum:
   url: samples/bd.wav
@@ -165,11 +166,14 @@ ab.beat1 = new BeatAudio(beat1Model)
 
 ab.beat1.test = function () {
   console.warn('Boob', ab.beat1)
-  ab.beat1.loadSamples(function () {
+  ab.beat1.load(function (err) {
+    if (err) throw err
     console.warn('loaded')
-    ab.beat1.calculateNoteBuckets()
     ab.beat1.model.bpm(80)
     ab.beat1.play()
+    setTimeout(function (o) {
+      ab.beat1.stop()
+    }, 3000)
   })
 }
 
