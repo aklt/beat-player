@@ -1,7 +1,7 @@
 
 TEMPLATES=$(wildcard templates/*.html)
 
-all: style.css templates.js
+all: style.css templates.js bp.js
 
 style.css: style.less
 	lessc $< > $@
@@ -10,7 +10,13 @@ templates.js: $(TEMPLATES)
 	timber builtin                > $@
 	timber templates ab.templates >> $@
 
-.PHONY: clean
+bp.js: beat-model.js beat-audio.js beat-player.js templates.js
+	./node_modules/ab.js/bin/ab.js cat $^ > $@
+
+.PHONY: clean freshen
+
+freshen:
+	freshen
 
 clean:
 	rm -fv templates.js style.css

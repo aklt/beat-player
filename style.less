@@ -8,9 +8,9 @@
 
 .player {
     font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif;
-    position: absolute;
+    position: relative;
     top: 0.2rem;
-    left: 12rem;
+    // left: 12rem;
     width: 95%;
     cursor: pointer;
     // border: 1px solid blue;
@@ -83,12 +83,18 @@
     background-color: magenta;
 }
 
-.active-sample {
+.active-instrument {
     background-color: lightgreen;
 }
 
 .instrument-editor {
-    // border: 1px solid red;
+   position: relative;
+   margin: 0;
+   padding: 0;
+   top: -1rem;
+   left: 14rem;
+   border: 1px solid red;
+   background-color: white;
 }
 
 .slider-input {
@@ -115,9 +121,14 @@
 .keyboard {
     cursor: pointer;
     font-size: 130%;
-    position: absolute;
-    top: 8.2rem;
-    left: 23rem;
+    border: 1px solid red;
+    position: relative;
+    margin: 0;
+    top: 0rem;
+    left: 0rem;
+    pre {
+        border: 1px solid green;
+    }
     b {
         font-weight: normal;
     }

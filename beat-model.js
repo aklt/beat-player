@@ -2,12 +2,36 @@
 //
 // Holds all data of the current beat and is referenceds from all Views and
 // the BeatAudio player.
+//
+// TODO Add subscriptions to events
 function BeatModel (text) {
   this.model = {}
+  this.subscriptions = {}
   if (typeof text === 'string') this.readBeatText(text)
 }
 
+var subscriptionEvents = {
+  NewText: 1,
+  ChangeBpm: 1,
+  ChangeTpb: 1,
+  ChangeBeats: 1,
+  ChangeNote:  1,
+  SelectInstrument: 1
+}
+
 BeatModel.prototype = {
+  // Subscribe to changes of properties
+  //
+  // ## Events
+  //
+  // * NewText: A new text was read in
+  // * ChangeBpm: Bpm change
+  // * ChangeTpb:
+  // * ChangeBeats:
+  // * ChangeNote:
+  subscribe: function (ev, cb) {
+    this.subscriptions[ev] = cb
+  },
   // Read a text pattern without instruments
   readBeatText: function (text) {
     var patterns = this.model.patterns = {}
@@ -107,13 +131,15 @@ BeatModel.prototype = {
       }
       ins[i] = obj
     })
+    var cb = this.subscriptions.NewText
+    if (typeof cb === 'function') cb(this)
   },
   // TODO Return a text string representing the pattern
   getPattern: function () {
 
   },
-  instruments: function (newInstruments) {
-    if (!newInstruments) return this.model.instruments
+  instruments: function (changeUrls) {
+    if (!changeUrls) return this.model.instruments
     throw new Error('TODO: set instruments')
   },
   patterns: function (newPatterns) {
@@ -128,17 +154,32 @@ BeatModel.prototype = {
   instrumentUrl: function (i, newUrl) {
     if (!newUrl) return this.model.instruments[i]
     this.model.instruments[i].url = newUrl
+    var cb = this.subscriptions.ChangeUrl
+    if (typeof cb === 'function') cb(this)
   },
   instrumentName: function (i, newName) {
     if (!newName) return this.model.instruments[i].name
     this.model.instruments[i].name = newName
+    var cb = this.subscriptions.ChangeName
+    if (typeof cb === 'function') cb(this)
   }
 }
 
 function mixinGetSet (AClass, prop, defaultValue) {
   AClass.prototype[prop] = function (value) {
-    if (typeof value !== 'undefined') this.model[prop] = value
-    if (typeof this.model[prop] === 'undefined') this.model[prop] = defaultValue
+    var change
+    if (typeof value !== 'undefined') {
+      this.model[prop] = value
+      change = true
+    }
+    if (typeof this.model[prop] === 'undefined') {
+      this.model[prop] = defaultValue
+      change = true
+    }
+    if (change) {
+      var cb = this.subscriptions['Change' + ucfirst(prop)]
+      if (typeof cb === 'function') cb()
+    }
     return this.model[prop]
   }
 }
@@ -147,6 +188,13 @@ mixinGetSet(BeatModel, 'bpm', 100)
 mixinGetSet(BeatModel, 'tpb',   4)
 mixinGetSet(BeatModel, 'beats', 4)
 
+function ucfirst (s) {
+  return s[0].toUpperCase() + s.slice(1)
+}
+
+
+// test
+//
 // TODO: encapsulate pattern block in '--'
 var beat1 = `
 Bass Drum: b... b... b...
