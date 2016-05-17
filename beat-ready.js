@@ -10,7 +10,7 @@ ab.ready(function () {
   ab.kv1 = kv1
 
   var si1 = SliderInput.create({el: '#slider1'})
-  si1.eventsAttach()
+  // si1.eventsAttach()
   si1.setRange(0, 100)
   ab.sliderInput1 = si1
 
@@ -46,7 +46,7 @@ var player1 = ab.player1 = Player.create({
     keyboardView: kv1,
     player: player1
   })
-  ih1.eventsAttach()
+  // ih1.eventsAttach()
   ab.ih1 = ih1
 
 console.warn('Created player', player1)
@@ -100,6 +100,6 @@ console.warn('Created player', player1)
   // })
 
   var player = new Player({id: 'player0'})
-  player.eventsAttach()
+  // player.eventsAttach()
 })
 

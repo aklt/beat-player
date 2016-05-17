@@ -89,9 +89,11 @@ KeyboardView.prototype = {
   }
 }
 
+ab.KeyboardView = KeyboardView
+
 ab.mix.dom(KeyboardView)
 ab.mix.focus(KeyboardView)
-ab.mix.handlers(KeyboardView, {
+ab.mix.handlers(KeyboardView, 'el', {
   click: function (event, el) {
     // Instrument
     if (el.nodeName === 'B') {
@@ -163,7 +165,7 @@ ab.classes.InputHandler = InputHandler
 InputHandler.prototype = {
 }
 
-ab.mix.handlers(InputHandler, {
+ab.mix.handlers(InputHandler, 'el', {
   keydown: function (ev, el) {
     var code = ev.which
     console.warn('Key', code, ev.charCode, String.fromCharCode(code))
@@ -375,7 +377,7 @@ function alphanumToDec (anum) {
   return alphaNum.indexOf(anum + '')
 }
 
-ab.mix.handlers(Player, {
+ab.mix.handlers(Player, 'el', {
   click: function (ev, el) {
     console.warn('You clicked', ev, el, el.parentNode)
     var rowIndex = [].slice.call(el.parentNode.childNodes).indexOf(el)
@@ -440,7 +442,7 @@ InstrumentsView.prototype = {
   }
 }
 ab.mix.dom(InstrumentsView)
-ab.mix.handlers(InstrumentsView, {
+ab.mix.handlers(InstrumentsView, 'el', {
   click: function () {
     console.warn('Hello Instruments')
   }
@@ -495,7 +497,7 @@ SliderInput.prototype = {
 
 ab.mix.dom(SliderInput)
 
-ab.mix.handlers(SliderInput, {
+ab.mix.handlers(SliderInput, 'el', {
   input: function (ev, el) {
     var v1 = this.sliderEl.value = this.textEl.value = Math.round(el.value)
     if (this.setValue) this.setValue(v1)
@@ -551,7 +553,7 @@ SmallInput.prototype = {
 
 ab.mix.dom(SmallInput)
 
-ab.mix.handlers(SmallInput, {
+ab.mix.handlers(SmallInput, 'el', {
   keyup: function (ev, el) {
     var key = String.fromCharCode(ev.keyCode).toLowerCase()
     if (this.setValue) this.setValue(key)

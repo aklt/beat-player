@@ -1,7 +1,7 @@
 
 TEMPLATES=$(wildcard templates/*.html)
 
-all: style.css templates.js bp.js bp-min.js
+all: style.css templates.js bp.js
 
 style.css: style.less
 	lessc $< > $@
@@ -22,4 +22,4 @@ dev:
 	freshen
 
 clean:
-	rm -fv templates.js style.css
+	rm -fv templates.js style.css bp.js
