@@ -3,11 +3,16 @@ ab.ready(function () {
   console.warn('ready', start)
 
   // KeyboardView
-  var kv1 = KeyboardView.create()
+  var kv1 = KeyboardView.create({
+	parent: 'test1'
+  })
   kv1.render()
   kv1.attach('#keyboard')
 
   ab.kv1 = kv1
+
+
+  return true;
 
   var si1 = SliderInput.create({el: '#slider1'})
   // si1.eventsAttach()

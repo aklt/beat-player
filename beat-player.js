@@ -9,14 +9,15 @@ var keyboardKeys = [
   'ASDFGHJKL',
   'ZXCVBNM,.']
 
+// TODO Remove this
 ab.mix.focus = function (AClass) {
   AClass.prototype.focus = function () {
-    ab.css(this.el, {
+    ab.css(this.parentEl, {
       border: '1px solid blue'
     })
   }
   AClass.prototype.unfocus = function () {
-    ab.css(this.el, {
+    ab.css(this.parentEl, {
       border: 'none'
     })
   }
@@ -31,11 +32,11 @@ function KeyboardView (o) {
     1: ['U', 'F'],
     2: ['Q', 'R']
   }
-  this.selectedSample = '3'
+  this.selectedSample = (o.selectedSample || 3) + ''
 }
 
 KeyboardView.prototype = {
-  template: function (o) {
+  tpl: function (o) {
     var rangeStart = this.rangesToIndex()
     var rangeEnd = {}
     o = o || {}
@@ -91,10 +92,10 @@ KeyboardView.prototype = {
 
 ab.KeyboardView = KeyboardView
 
-ab.mix.dom(KeyboardView)
-ab.mix.focus(KeyboardView)
-ab.mix.handlers(KeyboardView, 'el', {
+mixinDom(KeyboardView)
+mixinHandlers(KeyboardView, {
   click: function (event, el) {
+	console.warn('click', event, el)
     // Instrument
     if (el.nodeName === 'B') {
       if (this.lastInstrumentEl) {
@@ -113,11 +114,12 @@ ab.mix.handlers(KeyboardView, 'el', {
       ab.classAdd(el, 'active-key')
       this.lastKey = el
     }
-    this.focus()
-  },
+	console.warn(this.parentEl)
+    // this.focus()
+  }
 })
-ab.classes.KeyboardView = KeyboardView
 
+ab.mix.focus(KeyboardView)
 
 KeyboardView.prototype.keyLeft = function (ev, el) {
   console.warn(ev, el)

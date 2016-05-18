@@ -177,6 +177,6 @@ ab.beat1.test = function () {
   })
 }
 
-setTimeout(function () {
-  ab.beat1.test()
-}, 200)
+// setTimeout(function () {
+  // ab.beat1.test()
+// }, 200)

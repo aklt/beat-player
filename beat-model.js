@@ -15,7 +15,7 @@ var subscriptionEvents = {
   ChangeBpm: 1,
   ChangeTpb: 1,
   ChangeBeats: 1,
-  ChangeNote:  1,
+  ChangeNote: 1,
   SelectInstrument: 1
 }
 
@@ -214,6 +214,3 @@ HiHat:
 var b1 = new BeatModel()
 
 b1.readBeatText(beat1)
-
-console.warn(JSON.stringify(b1, 0, 2))
-
