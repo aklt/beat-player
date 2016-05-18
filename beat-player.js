@@ -49,6 +49,7 @@ KeyboardView.prototype = {
       for (var i = 0; i < chars.length; i += 1) {
         var ch = chars[i]
         if (rangeStart[ch]) {
+          console.warn('XXX', rangeStart, rangeStart[ch], rangeEnd)
           rangeEnd = ab.extend(rangeEnd, rangeStart[ch])
           keys += '<span class="' + o.classes + '">'
           delete rangeStart[ch]
@@ -65,10 +66,10 @@ KeyboardView.prototype = {
   rangesToIndex: function () {
     var result = {}
     var self = this
-    Object.keys(this.ranges).forEach(function (sample) {
-      var range = self.ranges[sample]
+    Object.keys(this.ranges).forEach(function (instrumentIndex) {
+      var range = self.ranges[instrumentIndex]
       result[range[0]] = {}
-      result[range[0]][range[1]] = sample
+      result[range[0]][range[1]] = instrumentIndex
     })
     return result
   },
@@ -110,15 +111,38 @@ mixinHandlers(KeyboardView, {
     } else if (el.nodeName === 'I') {
       var parentName = el.parentNode.nodeName
       if (parentName === 'PRE') {
-        if (this.lastKey) {
-          ab.classRemove(this.lastKey, 'active-key')
+        // Define range for instrument and surround with a span
+        if (this.lastKeyEl) {
+          ab.classRemove(this.lastKeyEl, 'active-key')
+          // Add span around key range
+          var begin = this.lastKeyEl
+          var end = el
+          if (keyKeys[begin.innerText] > keyKeys[end.innerText]) {
+            begin = el
+            end = this.lastKeyEl
+          }
+          var span = htmlEl('span', {'class': 'color' + this.selectedInstrument})
+          span = insertBefore(begin.parentNode, span, begin)
+          while (1) {
+            var next = begin.nextSibling
+            appendChild(span, begin)
+            if (begin === end) break
+            begin = next
+            if (!begin) break
+          }
+          this.lastKeyEl = null
+        // Mark the start of the range
+        } else {
+          ab.classAdd(el, 'active-key')
+          this.lastKeyEl = el
         }
-        ab.classAdd(el, 'active-key')
-        this.lastKey = el
       } else if (parentName === 'SPAN') {
-        console.warn('TODO: remove the span around this set of nodes')
-        // TODO: How to append nodes at a particular position within the DOM?
-        removeChild(el.parentNode.parentNode, el.parentNode)
+        var span = el.parentNode
+        var top = span.parentNode
+        while ((el = span.firstChild)) {
+          insertBefore(top, el, span)
+        }
+        removeChild(top, span)
       }
     }
     this.focus()
@@ -155,8 +179,8 @@ var keyEsc = 27
 var keyTab = 9
 var keyKeys = {}
 
-keyboardKeys.join('').split('').forEach(function (k) {
-  keyKeys[k] = 1
+keyboardKeys.join('').split('').forEach(function (k, i) {
+  keyKeys[k] = i
 })
 
 function InputHandler (o) {
