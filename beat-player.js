@@ -30,9 +30,10 @@ function KeyboardView (o) {
     // Assumption: The array is sorted as the keyboard
     // and intervals do not overlap
     1: ['U', 'F'],
-    2: ['Q', 'R']
+    2: ['Q', 'R'],
+    3: ['B', 'M']
   }
-  this.selectedSample = (o.selectedSample || 3) + ''
+  this.selectedInstrument = (o.selectedInstrument || 3) + ''
 }
 
 KeyboardView.prototype = {
@@ -77,8 +78,8 @@ KeyboardView.prototype = {
     if (this.lastInstrumentEl) ab.classRemove(this.lastInstrumentEl, 'active-instrument')
     for (var i = 0; i < samples.length; i += 1) {
       var s1 = samples[i]
-	  console.warn('afterRender', s1.innerText, this.selectedSample)
-      if (s1.innerText === this.selectedSample) {
+	  console.warn('afterRender', s1.innerText, this.selectedInstrument)
+      if (s1.innerText === this.selectedInstrument) {
         ab.classAdd(s1, 'active-instrument')
         this.lastInstrumentEl = s1
         break
@@ -86,7 +87,7 @@ KeyboardView.prototype = {
     }
   },
   selectSample: function (sample) {
-    this.selectedSample = sample + ''
+    this.selectedInstrument = sample + ''
     this.afterAttach()
   }
 }
@@ -103,16 +104,22 @@ mixinHandlers(KeyboardView, {
       }
       ab.classAdd(el, 'active-instrument')
       this.lastInstrumentEl = el
-      this.selectedSample = el.innerText
-      // TODO Subscribe to model
-      // this.model.
+      this.selectedInstrument = el.innerText
+      this.model.dispatch('SelectInstrument', this.selectedInstrument)
     // Keyboard layout
     } else if (el.nodeName === 'I') {
-      if (this.lastKey) {
-        ab.classRemove(this.lastKey, 'active-key')
+      var parentName = el.parentNode.nodeName
+      if (parentName === 'PRE') {
+        if (this.lastKey) {
+          ab.classRemove(this.lastKey, 'active-key')
+        }
+        ab.classAdd(el, 'active-key')
+        this.lastKey = el
+      } else if (parentName === 'SPAN') {
+        console.warn('TODO: remove the span around this set of nodes')
+        // TODO: How to append nodes at a particular position within the DOM?
+        removeChild(el.parentNode.parentNode, el.parentNode)
       }
-      ab.classAdd(el, 'active-key')
-      this.lastKey = el
     }
     this.focus()
   }
@@ -434,18 +441,14 @@ function InstrumentsView (o) {
 }
 
 InstrumentsView.prototype = {
-  template: function (o) {
+  tpl: function (o) {
     return ab.templates.instrument(o)
-  },
-  afterRender: function (el) {
-    this.el = el
-    console.warn('InstrumentsView render', this)
   }
 }
-ab.mix.dom(InstrumentsView)
-ab.mix.handlers(InstrumentsView, 'el', {
+mixinDom(InstrumentsView)
+mixinHandlers(InstrumentsView, {
   click: function () {
-    console.warn('Hello Instruments')
+    console.warn('Hello Instruments', this.model)
   }
 })
 // 1}}} InstrumentsView

@@ -1,7 +1,8 @@
 // # BeatModel
 //
-// Holds all data of the current beat and is referenceds from all Views and
-// the BeatAudio player.
+// Represents the model of the current beat.
+//
+// Holds all data of the current beat and is referenced from all Views.
 //
 // TODO Add subscriptions to events
 function BeatModel (text) {
@@ -30,7 +31,17 @@ BeatModel.prototype = {
   // * ChangeBeats:
   // * ChangeNote:
   subscribe: function (ev, cb) {
+    if (!subscriptionEvents[ev]) throw new Error('Illegal event name ' + ev)
     this.subscriptions[ev] = cb
+  },
+  dispatch: function (ev, data) {
+    if (!subscriptionEvents[ev]) throw new Error('Illegal subscription event name ' + ev)
+    var cb = this.subscriptions[ev]
+    if (cb) {
+      if (!cb.disabled) cb(data)
+    } else {
+      console.warn('No subscription for event', ev, data)
+    }
   },
   // Read a text pattern without instruments
   readBeatText: function (text) {
