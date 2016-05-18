@@ -71,12 +71,13 @@ KeyboardView.prototype = {
     })
     return result
   },
-  afterRender: function (el) {
-    var samples = ab.qa('b', el || this.el)
-    if (this.lastInstrumentEl) ab.classRemove(this.lastInstrumentEl, 'active-instrument')
+  afterAttach: function (el) {
     // Select the active sample
+    var samples = ab.qa('b', this.parentEl)
+    if (this.lastInstrumentEl) ab.classRemove(this.lastInstrumentEl, 'active-instrument')
     for (var i = 0; i < samples.length; i += 1) {
       var s1 = samples[i]
+	  console.warn('afterRender', s1.innerText, this.selectedSample)
       if (s1.innerText === this.selectedSample) {
         ab.classAdd(s1, 'active-instrument')
         this.lastInstrumentEl = s1
@@ -86,7 +87,7 @@ KeyboardView.prototype = {
   },
   selectSample: function (sample) {
     this.selectedSample = sample + ''
-    this.afterRender()
+    this.afterAttach()
   }
 }
 
@@ -95,7 +96,6 @@ ab.KeyboardView = KeyboardView
 mixinDom(KeyboardView)
 mixinHandlers(KeyboardView, {
   click: function (event, el) {
-	console.warn('click', event, el)
     // Instrument
     if (el.nodeName === 'B') {
       if (this.lastInstrumentEl) {
@@ -106,7 +106,7 @@ mixinHandlers(KeyboardView, {
       this.selectedSample = el.innerText
       // TODO Subscribe to model
       // this.model.
-    // Keyboard
+    // Keyboard layout
     } else if (el.nodeName === 'I') {
       if (this.lastKey) {
         ab.classRemove(this.lastKey, 'active-key')
@@ -114,8 +114,7 @@ mixinHandlers(KeyboardView, {
       ab.classAdd(el, 'active-key')
       this.lastKey = el
     }
-	console.warn(this.parentEl)
-    // this.focus()
+    this.focus()
   }
 })
 
