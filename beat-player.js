@@ -1,4 +1,5 @@
-/*global ab, __window, Audio, requestAnimationFrame*/
+/*global ab __window Audio requestAnimationFrame htmlEl insertBefore
+ appendChild, removeChild mixinDom mixinHandlers*/
 var bp = __window.beatPlayer = {}
 
 ab.classes = {}
@@ -26,20 +27,18 @@ ab.mix.focus = function (AClass) {
 // {{{1 KeyboardView
 function KeyboardView (o) {
   o = o || {}
-  this.ranges = o.ranges || {
+  this.ranges = o.ranges || [
     // Assumption: The array is sorted as the keyboard
     // and intervals do not overlap
-    1: ['U', 'F'],
-    2: ['Q', 'R'],
-    3: ['B', 'M']
-  }
+    [1, 'U', 'F'],
+    [2, 'Q', 'R'],
+    [3, 'B', 'M']
+  ]
   this.selectedInstrument = (o.selectedInstrument || 3) + ''
 }
 
 KeyboardView.prototype = {
   tpl: function (o) {
-    var rangeStart = this.rangesToIndex()
-    var rangeEnd = {}
     o = o || {}
     o.classes = o.classes || this.classes || 'color1'
     return ab.templates.keyboard(keyboardKeys.map((row, j) => {
@@ -48,30 +47,35 @@ KeyboardView.prototype = {
       if (j === 0) return ab.templates.keyboardRow(chars)
       for (var i = 0; i < chars.length; i += 1) {
         var ch = chars[i]
-        if (rangeStart[ch]) {
-          console.warn('XXX', rangeStart, rangeStart[ch], rangeEnd)
-          rangeEnd = ab.extend(rangeEnd, rangeStart[ch])
-          keys += '<span class="' + o.classes + '">'
-          delete rangeStart[ch]
-        }
         keys += '<i>' + ch + '</i>'
-        if (rangeEnd[ch]) {
-          keys += '</span>'
-          delete rangeEnd[ch]
-        }
       }
       return (j > 1 ? ' ' : '') + keys
     }))
   },
-  rangesToIndex: function () {
-    var result = {}
-    var self = this
-    Object.keys(this.ranges).forEach(function (instrumentIndex) {
-      var range = self.ranges[instrumentIndex]
-      result[range[0]] = {}
-      result[range[0]][range[1]] = instrumentIndex
-    })
-    return result
+  // Add span around key range
+  markRange: function (beginEl, endEl, instrumentNumber) {
+    var begin = beginEl
+    var end = endEl
+    if (keyKeys[begin.innerText] > keyKeys[end.innerText]) {
+      begin = endEl
+      end = beginEl
+    }
+    var span = htmlEl('span', {'class': 'color' + instrumentNumber})
+    span = insertBefore(begin.parentNode, span, begin)
+    while (1) {
+      var next = begin.nextSibling
+      appendChild(span, begin)
+      if (begin === end) break
+      begin = next
+      if (!begin) break
+    }
+  },
+  findKeyEl: function (character) {
+    var keys = ab.qa('i', this.parentEl)
+    for (var i = 0; i < keys.length; i += 1) {
+      var k1 = keys[i]
+      if (k1.innerText === character) return k1
+    }
   },
   afterAttach: function (el) {
     // Select the active sample
@@ -79,12 +83,19 @@ KeyboardView.prototype = {
     if (this.lastInstrumentEl) ab.classRemove(this.lastInstrumentEl, 'active-instrument')
     for (var i = 0; i < samples.length; i += 1) {
       var s1 = samples[i]
-	  console.warn('afterRender', s1.innerText, this.selectedInstrument)
+      console.warn('afterRender', s1.innerText, this.selectedInstrument)
       if (s1.innerText === this.selectedInstrument) {
         ab.classAdd(s1, 'active-instrument')
         this.lastInstrumentEl = s1
         break
       }
+    }
+    // Set selected ranges
+    for (i = 0; i < this.ranges.length; i += 1) {
+      var assignment = this.ranges[i]
+      var begin = this.findKeyEl(assignment[1])
+      var end = this.findKeyEl(assignment[2])
+      this.markRange(begin, end, assignment[0])
     }
   },
   selectSample: function (sample) {
@@ -92,8 +103,6 @@ KeyboardView.prototype = {
     this.afterAttach()
   }
 }
-
-ab.KeyboardView = KeyboardView
 
 mixinDom(KeyboardView)
 mixinHandlers(KeyboardView, {
@@ -114,22 +123,7 @@ mixinHandlers(KeyboardView, {
         // Define range for instrument and surround with a span
         if (this.lastKeyEl) {
           ab.classRemove(this.lastKeyEl, 'active-key')
-          // Add span around key range
-          var begin = this.lastKeyEl
-          var end = el
-          if (keyKeys[begin.innerText] > keyKeys[end.innerText]) {
-            begin = el
-            end = this.lastKeyEl
-          }
-          var span = htmlEl('span', {'class': 'color' + this.selectedInstrument})
-          span = insertBefore(begin.parentNode, span, begin)
-          while (1) {
-            var next = begin.nextSibling
-            appendChild(span, begin)
-            if (begin === end) break
-            begin = next
-            if (!begin) break
-          }
+          this.markRange(this.lastKeyEl, el, this.selectedInstrument)
           this.lastKeyEl = null
         // Mark the start of the range
         } else {
@@ -163,7 +157,6 @@ KeyboardView.prototype.keyUp = function (ev, el) {
 KeyboardView.prototype.keyDown = function (ev, el) {
   console.warn(ev, el)
 }
-
 // 1}}} KeyboardView
 
 // {{{1 InputHandler
@@ -320,11 +313,10 @@ Player.prototype = {
     o.settings = t.settings(o.settings)
     o.score = ab.templates.scoreSpan([1, 2, 3, 4, 5, 6, 7, 8, 9, 'A'])
     o.instruments = t.instruments(o.instruments)
-    o.columns = t.columnEmpty() + this.tracks.map(t.column).join('\n') //(o.columns[0])
+    o.columns = t.columnEmpty() + this.tracks.map(t.column).join('\n')
     var player = t.player(o)
     console.warn('Player Template:', player, o)
     return player
-
   },
   afterRender: function (el) {
     this.el = el
@@ -367,19 +359,19 @@ ab.mix.focus(Player)
 
 Player.prototype.unfocus = function () {
   console.warn('aa', this.el)
-    ab.css(this.el.childNodes[0], {
-      border: 'none'
-    })
-    if (ab.lastPopUp) ab.lastPopUp.hide()
+  ab.css(this.el.childNodes[0], {
+    border: 'none'
+  })
+  if (ab.lastPopUp) ab.lastPopUp.hide()
 }
 Player.prototype.focus = function () {
-    ab.css(this.el.childNodes[0], {
-      border: '1px solid blue'
-    })
-    if (ab.lastPopUp) {
-      ab.lastPopUp.show()
-      ab.lastPopUp.inputEl.select()
-    }
+  ab.css(this.el.childNodes[0], {
+    border: '1px solid blue'
+  })
+  if (ab.lastPopUp) {
+    ab.lastPopUp.show()
+    ab.lastPopUp.inputEl.select()
+  }
 }
 
 Player.prototype.keyLeft = function (ev, el) {
@@ -437,7 +429,7 @@ ab.mix.handlers(Player, 'el', {
         break
       case 'I': // Click top row to go to position
         console.warn('I', alphanumToDec(el.innerText))
-        //TODO  this.gotoPos(alphanumToDec(el.innerText))
+        // TODO  this.gotoPos(alphanumToDec(el.innerText))
         break
       case 'ABBR':
         r1 = ab.rect(ab.qs('dd', el))
