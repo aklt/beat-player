@@ -249,6 +249,28 @@ ab.mix.handlers(InputHandler, 'el', {
 
 // 1}}} InputHandler
 
+// {{{1 PlayerView
+function PlayerView () {
+}
+
+PlayerView.prototype = {
+  tpl: function (o) {
+    var t = ab.templates
+    o.settings = t.settings(o.settings)
+    o.score = ab.templates.scoreSpan([1, 2, 3, 4, 5, 6, 7, 8, 9, 'A'])
+    o.instruments = t.instruments(o.instruments)
+    o.columns = t.columnEmpty() + this.tracks.map(t.column).join('\n')
+    var player = t.player(o)
+    console.warn('Player Template:', player, o)
+    return player
+  }
+}
+
+mixinDom(PlayerView)
+
+
+// 1}}} PlayerView
+
 // {{{1 Player  TODO Rename to PlayerView
 bp.sounds = {
   bd: new Audio('samples/bd.wav'),
