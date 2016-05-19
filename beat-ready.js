@@ -1,5 +1,5 @@
 /*global ready bp BeatModel KeyboardView InstrumentsView PlayerView InputHandler
-  SmallInput SliderInput InstrumentsView*/
+  TextInput SliderInput InstrumentsView*/
 
 ready(function () {
   bp.started = Date.now()
@@ -71,17 +71,16 @@ ready(function () {
   ih1.eventsAttach()
   bp.live.ih1 = ih1
 
-  // SmallInput pops up to get input
-  var smallInput1 = SmallInput.create({top: '12rem', left: '12rem'})
-  smallInput1.render({value: 101})
-  bp.smallInput1 = smallInput1
+  // TextInput pops up to get input
+  var ti1 = TextInput.create({id: 'textInput1'})
+  bp.live.ti1 = ti1
 
   // SliderInput for slidable values
-  var si1 = SliderInput.create({el: '#slider1'})
-  // si1.eventsAttach()
-  si1.setRange(0, 100)
-  si1.render()
-  bp.sliderInput1 = si1
+  // var si1 = SliderInput.create({el: '#slider1'})
+  // // si1.eventsAttach()
+  // si1.setRange(0, 100)
+  // si1.render()
+  // bp.sliderInput1 = si1
 
   return true
 

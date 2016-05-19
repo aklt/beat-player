@@ -1,6 +1,6 @@
 /*global __window __document Audio requestAnimationFrame htmlEl insertBefore
 appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
-rect attr newColor randInt type*/
+rect attr newColor randInt */
 var bp = __window.bp = {}
 
 const alphaNum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -323,28 +323,25 @@ mixinHandlers(PlayerView, {
     // var rowIndex = [].slice.call(el.parentNode.childNodes).indexOf(el)
     // var columnIndex
     var r1
-    var textInputWidth
     switch (el.nodeName) {
       case 'P':
         console.warn('P Instrument', el)
         // var dom2 = ab.dom('<div class="instruments">${instruments}</div>')
-        textInputWidth = '4rem'
         // falls through
       case 'B':
-        textInputWidth = '1rem'
         r1 = rect(el)
         var value = el.innerText
         if (!value || /^\s*$/.test(value)) value = '.'
-        bp.smallInput1.popup({
+        bp.live.ti1.popup({
           top: r1.top,
           left: r1.left,
+          width: r1.width,
           value: value,
-          width: textInputWidth,
           set: function (value) {
             el.innerText = value
           }
         })
-        bp.lastPopUp = bp.smallInput1
+        bp.lastPopUp = bp.live.ti1
         break
       case 'I': // Click top row to go to position
         console.warn('I', alphanumToDec(el.innerText))
@@ -474,10 +471,33 @@ InstrumentsView.prototype = {
     this.update(this.model.instrument())
   }
 }
+
 mixinDom(InstrumentsView)
+
 mixinHandlers(InstrumentsView, {
   click: function (ev, el) {
-    console.warn('Hello Instruments', this.model)
+    var name = el.nodeName
+    var dtEl
+    var ddEl
+    if (name === 'DT') {
+      dtEl = el
+      ddEl = nextSibling(el)
+    } else if (name === 'DD') {
+      dtEl = prevSibling(el)
+      ddEl = el
+    }
+    if (dtEl && ddEl) {
+      var r1 = rect(ddEl)
+      bp.live.ti1.popup({
+        top: r1.top,
+        left: r1.left,
+        width: r1.width,
+        value: ddEl.innerText,
+        set: function (value) {
+          ddEl.innerText = value
+        }
+      })
+    }
   }
 })
 // 1}}} InstrumentsView
@@ -548,55 +568,53 @@ mixinHandlers(SliderInput, {
 })
 // 1}}} Slider Input
 
-// {{{1 SmallInput
-function SmallInput (o) {
+// {{{1 TextInput
+function TextInput (o) {
+  this.parentEl = $id(o.id)
+  if (!this.parentEl) throw new Error('Need parentEl')
+  this.inputEl = qs('input', this.parentEl)
+  this.eventsAttach()
 }
 
-SmallInput.prototype = {
-  tpl: function (o) {
-    return bp.templates.smallInput(o)
-  },
-  afterRender: function () {
-    this.inputEl = qs('input[type=text]', this.el)
-  },
-  afterAttach: function (el) {
-    classRemove(this.el, 'hidden')
-  },
+TextInput.prototype = {
   popup: function (o) {
-    o.value = o.value || this.inputEl.value
-    if (!this.attached) {
-      this.attach(document.body)
-      this.attached = true
-    }
-    this.show()
-    css(this.el, {
+    var value = o.value || this.inputEl.value
+    css(this.parentEl, {
       position: 'absolute',
       top: o.top + 'px',
       left: o.left + 'px',
-      'background-color': newColor(randInt(1, 100), 0x99, 0xEE),
-      width: o.width || '1rem'
+      width: o.width + 'px'
     })
     this.setValue = o.set
-    this.lastValue = this.inputEl.value = o.value
+    this.lastValue = this.inputEl.value = value
     this.inputEl.focus()
     this.inputEl.select()
+    this.show()
+  },
+  popdown: function () {
+    this.inputEl.blur()
+    this.hide()
   }
 }
 
-mixinDom(SmallInput)
+TextInput.create = function (o) {
+  return new TextInput(o)
+}
 
-mixinHandlers(SmallInput, {
+mixinHideShow(TextInput)
+
+mixinHandlers(TextInput, {
   keyup: function (ev, el) {
     var key = String.fromCharCode(ev.keyCode).toLowerCase()
+    if (/^[\s\b]*$/.test(key)) key = '.'
     if (this.setValue) this.setValue(key)
-    this.hide()
-    console.warn('key', key)
-    return ev.stopPropagation()
+    ev.stopPropagation()
+    this.popdown()
   }
 })
-// 1}}} SmallInput
+// 1}}} TextInput
 
-// {{{1
+// {{{1 Samples
 function Samples () {
 }
 
