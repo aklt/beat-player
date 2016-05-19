@@ -21,18 +21,9 @@ var subscriptionEvents = {
 }
 
 BeatModel.prototype = {
-  // Subscribe to changes of properties
-  //
-  // ## Events
-  //
-  // * NewText: A new text was read in
-  // * ChangeBpm: Bpm change
-  // * ChangeTpb:
-  // * ChangeBeats:
-  // * ChangeNote:
   subscribe: function (ev, cb) {
     if (!subscriptionEvents[ev]) throw new Error('Illegal event name ' + ev)
-    if (this.subscriptions[ev]) this.subscriptions[ev] = []
+    if (!this.subscriptions[ev]) this.subscriptions[ev] = []
     this.subscriptions[ev].push(cb)
   },
   dispatch: function (ev, data) {
@@ -150,6 +141,12 @@ BeatModel.prototype = {
   getPattern: function () {
 
   },
+  instrument: function (number) {
+    if (!number) return this.model.instrument
+    number += ''
+    this.model.instrument = number
+    this.dispatch('SelectInstrument', number)
+  },
   instruments: function (changeUrls) {
     if (!changeUrls) return this.model.instruments
     throw new Error('TODO: set instruments')
@@ -174,6 +171,9 @@ BeatModel.prototype = {
     this.model.instruments[i].name = newName
     var cb = this.subscriptions.ChangeName
     if (typeof cb === 'function') cb(this)
+  },
+  toString: function () {
+    return JSON.stringify(this.model, 0, 2)
   }
 }
 

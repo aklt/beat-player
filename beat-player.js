@@ -41,7 +41,7 @@ function KeyboardView (o) {
     [2, 'Q', 'R'],
     [3, 'B', 'M']
   ]
-  this.selectedInstrument = (o.selectedInstrument || 3) + ''
+  o.model.instrument(o.selectedInstrument || 3)
 }
 
 KeyboardView.prototype = {
@@ -89,8 +89,8 @@ KeyboardView.prototype = {
     if (this.lastInstrumentEl) classRemove(this.lastInstrumentEl, 'active-instrument')
     for (var i = 0; i < samples.length; i += 1) {
       var s1 = samples[i]
-      console.warn('afterRender', s1.innerText, this.selectedInstrument)
-      if (s1.innerText === this.selectedInstrument) {
+      console.warn('afterRender', s1.innerText, this.model.instrument())
+      if (s1.innerText === this.model.instrument()) {
         classAdd(s1, 'active-instrument')
         this.lastInstrumentEl = s1
         break
@@ -106,14 +106,12 @@ KeyboardView.prototype = {
   },
   selectInstrument: function (sample, el) {
     if (!el) el = this.findElTypeWithInnerText('b', sample)
-    console.warn('XX', sample, el, type(sample))
     if (this.lastInstrumentEl) {
       classRemove(this.lastInstrumentEl, 'active-instrument')
     }
     classAdd(el, 'active-instrument')
     this.lastInstrumentEl = el
-    this.selectedInstrument = sample
-    this.model.dispatch('SelectInstrument', this.selectedInstrument)
+    this.model.instrument(sample)
   }
 }
 
@@ -130,7 +128,7 @@ mixinHandlers(KeyboardView, {
         // Define range for instrument and surround with a span
         if (this.lastKeyEl) {
           classRemove(this.lastKeyEl, 'active-key')
-          this.markRange(this.lastKeyEl, el, this.selectedInstrument)
+          this.markRange(this.lastKeyEl, el, this.model.instrument())
           this.lastKeyEl = null
         // Mark the start of the range
         } else {
@@ -459,6 +457,10 @@ mixinHandlers(InputHandler, {
 
 // {{{1 InstrumentsView
 function InstrumentsView (o) {
+  var self = this
+  o.model.subscribe('SelectInstrument', function (number) {
+    console.warn('InstrumentsView select', number, self.model)
+  })
 }
 
 InstrumentsView.prototype = {
