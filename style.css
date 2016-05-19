@@ -1,0 +1,187 @@
+* {
+  box-sizing: border-box;
+}
+.player {
+  font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+  position: absolute;
+  top: 10rem;
+  width: 95%;
+  cursor: pointer;
+}
+.player .instruments {
+  text-align: center;
+  margin: 0.8rem 0 1rem 0;
+  float: left;
+  padding-top: 0.2rem;
+}
+.player .instruments p {
+  margin: 0;
+  display: block;
+  clear: left;
+  height: 1rem;
+}
+.player .score {
+  text-align: left;
+  display: block;
+  margin: 0;
+  padding: 0;
+  float: left;
+}
+.player .score p {
+  margin: 0;
+  float: left;
+  display: block;
+}
+.player .score i {
+  margin: 0;
+  padding: 0;
+  width: 1rem;
+  text-align: center;
+  display: block;
+  float: left;
+}
+.player .score span {
+  clear: left;
+  display: block;
+}
+.player .score-columns {
+  position: absolute;
+  top: 2.5rem;
+  display: block;
+  float: left;
+}
+.player .score-columns b {
+  margin: 0;
+  padding: 0;
+  display: block;
+  clear: left;
+  width: 1rem;
+  height: 1rem;
+  text-align: center;
+}
+.active {
+  background-color: lightblue;
+  /*border-left: 1px solid blue;*/
+}
+.boxed {
+  border: 1px solid blue;
+}
+.active-key {
+  background-color: lightgrey;
+}
+.active-instrument {
+  background-color: lightgreen;
+}
+.instrument-editor {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  top: -1rem;
+  left: 14rem;
+  border: 1px solid red;
+  background-color: white;
+}
+.instrument-editor dl,
+.instrument-editor dt,
+.instrument-editor dd {
+  display: inline;
+}
+.instrument-editor dt {
+  font-weight: bold;
+}
+.instrument-editor dd {
+  margin: 0 0.3rem 0 0.5rem;
+}
+.slider-input {
+  border: 1px solid green;
+  width: 2rem;
+  position: absolute;
+  z-index: 100;
+}
+.slider-input input {
+  width: 2rem;
+  margin: 0;
+}
+.slider-input input[type=range] {
+  width: 2rem;
+  -webkit-appearance: slider-vertical;
+  writing-mode: bt-lr;
+  padding: 0 1px 0 0;
+}
+.slider-input input[type=text] {
+  width: 1.9rem;
+  text-align: center;
+}
+.keyboard {
+  cursor: pointer;
+  font-size: 130%;
+  border: 1px solid red;
+  position: absolute;
+  margin: 0;
+  top: 0rem;
+  left: 0rem;
+}
+.keyboard pre {
+  border: 1px solid green;
+}
+.keyboard b {
+  font-weight: normal;
+}
+.keyboard .color0 i {
+  background-color: #9eecda;
+}
+.keyboard .color1 i {
+  background-color: #ac78b5;
+}
+.keyboard .color2 i {
+  background-color: #dab58f;
+}
+.keyboard .color3 i {
+  background-color: #78f19a;
+}
+.keyboard .color4 i {
+  background-color: #b72e75;
+}
+.keyboard .color5 i {
+  background-color: #b56acf;
+}
+.keyboard .color6 i {
+  background-color: #93a7fa;
+}
+.keyboard .color7 i {
+  background-color: #f1e3d5;
+}
+.keyboard .color8 i {
+  background-color: #8fafaf;
+}
+.keyboard .color9 i {
+  background-color: #bd9bc9;
+}
+.settings dl,
+.settings dt,
+.settings dd {
+  display: inline;
+}
+.settings dt {
+  font-weight: bold;
+}
+.settings dd {
+  margin: 0 0.3rem 0 0;
+}
+.foo {
+  position: absolute;
+  top: 12rem;
+}
+.input-text {
+  position: absolute;
+  font-size: 110%;
+  text-decoration: bold;
+  background-color: white;
+}
+.input-text input {
+  width: 100%;
+  text-align: center;
+}
+.hidden {
+  display: none;
+}
