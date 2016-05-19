@@ -1,6 +1,6 @@
 /*global __window __document Audio requestAnimationFrame htmlEl insertBefore
 appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
-rect attr newColor randInt*/
+rect attr newColor randInt type*/
 var bp = __window.bp = {}
 
 const alphaNum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -76,8 +76,8 @@ KeyboardView.prototype = {
       if (!begin) break
     }
   },
-  findKeyEl: function (character) {
-    var keys = qa('i', this.parentEl)
+  findElTypeWithInnerText: function (elType, character) {
+    var keys = qa(elType, this.parentEl)
     for (var i = 0; i < keys.length; i += 1) {
       var k1 = keys[i]
       if (k1.innerText === character) return k1
@@ -99,14 +99,21 @@ KeyboardView.prototype = {
     // Set selected ranges
     for (i = 0; i < this.ranges.length; i += 1) {
       var assignment = this.ranges[i]
-      var begin = this.findKeyEl(assignment[1])
-      var end = this.findKeyEl(assignment[2])
+      var begin = this.findElTypeWithInnerText('i', assignment[1])
+      var end = this.findElTypeWithInnerText('i', assignment[2])
       this.markRange(begin, end, assignment[0])
     }
   },
-  selectSample: function (sample) {
-    this.selectedInstrument = sample + ''
-    this.afterAttach()
+  selectInstrument: function (sample, el) {
+    if (!el) el = this.findElTypeWithInnerText('b', sample)
+    console.warn('XX', sample, el, type(sample))
+    if (this.lastInstrumentEl) {
+      classRemove(this.lastInstrumentEl, 'active-instrument')
+    }
+    classAdd(el, 'active-instrument')
+    this.lastInstrumentEl = el
+    this.selectedInstrument = sample
+    this.model.dispatch('SelectInstrument', this.selectedInstrument)
   }
 }
 
@@ -115,13 +122,7 @@ mixinHandlers(KeyboardView, {
   click: function (event, el) {
     // Instrument
     if (el.nodeName === 'B') {
-      if (this.lastInstrumentEl) {
-        classRemove(this.lastInstrumentEl, 'active-instrument')
-      }
-      classAdd(el, 'active-instrument')
-      this.lastInstrumentEl = el
-      this.selectedInstrument = el.innerText
-      this.model.dispatch('SelectInstrument', this.selectedInstrument)
+      this.selectInstrument(el.innerText, el)
     // Keyboard layout
     } else if (el.nodeName === 'I') {
       var parentName = el.parentNode.nodeName
@@ -386,9 +387,9 @@ var keyEsc = 27
 var keyTab = 9
 
 function InputHandler (o) {
-  console.warn('InputHandler', o)
   if (!o.keyboardView) throw new Error('Need o.keyboardView')
   if (!o.player) throw new Error('o.player')
+  if (!o.model) throw new Error('o.model')
   this.keyboardView = o.keyboardView
   this.player = o.player
   this.parentEl = __document
@@ -402,7 +403,7 @@ mixinHandlers(InputHandler, {
     var code = ev.which
     console.warn('Key', code, ev.charCode, String.fromCharCode(code))
     if (code <= key9 && code >= key0) {
-      this.keyboardView.selectSample(String.fromCharCode(code))
+      this.keyboardView.selectInstrument(String.fromCharCode(code))
     } else if (code === keyUp) {
       console.warn('keyUp')
       if (bp.lastPopUp && bp.lastPopUp.keyUp) bp.lastPopUp.keyUp()

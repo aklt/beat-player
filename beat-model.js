@@ -32,15 +32,16 @@ BeatModel.prototype = {
   // * ChangeNote:
   subscribe: function (ev, cb) {
     if (!subscriptionEvents[ev]) throw new Error('Illegal event name ' + ev)
-    this.subscriptions[ev] = cb
+    if (this.subscriptions[ev]) this.subscriptions[ev] = []
+    this.subscriptions[ev].push(cb)
   },
   dispatch: function (ev, data) {
     if (!subscriptionEvents[ev]) throw new Error('Illegal subscription event name ' + ev)
-    var cb = this.subscriptions[ev]
-    if (cb) {
-      if (!cb.disabled) cb(data)
-    } else {
-      console.warn('No subscription for event', ev, data)
+    var cbs = this.subscriptions[ev] || []
+    if (!cbs.disabled) {
+      for (var i = 0; i < cbs.length; i += 1) {
+        cbs[i](data)
+      }
     }
   },
   // Read a text pattern without instruments

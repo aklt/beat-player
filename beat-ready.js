@@ -64,6 +64,7 @@ ready(function () {
 
   // InputHandler handles events on body
   var ih1 = new InputHandler({
+    model: beatModel,
     keyboardView: kv1,
     player: player1
   })
