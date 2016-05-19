@@ -6,9 +6,9 @@ all: style.css templates.js bp.js
 style.css: style.less
 	lessc $< > $@
 
-templates.js: $(TEMPLATES)
+templates.js: $(TEMPLATES) makefile
 	timber builtin                > $@
-	timber templates ab.templates >> $@
+	timber templates bp.templates >> $@
 
 bp.js: beat-model.js beat-audio.js beat-player.js templates.js beat-ready.js
 	./node_modules/ab.js/bin/ab.js cat $^ > $@

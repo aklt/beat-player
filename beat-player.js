@@ -1,28 +1,31 @@
-/*global ab __window Audio requestAnimationFrame htmlEl insertBefore
- appendChild, removeChild mixinDom mixinHandlers*/
-var bp = __window.beatPlayer = {}
+/*global __window __document Audio requestAnimationFrame htmlEl insertBefore
+appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
+rect attr newColor randInt*/
+var bp = __window.bp = {}
 
-var keyboardKeys = [
+const alphaNum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+const keyboardKeys = [
   '1234567890',
   'QWERTYUIOP',
   'ASDFGHJKL',
   'ZXCVBNM,.']
 
-var keyboardKeyMap = {}
+const keyboardKeyMap = {}
 
 keyboardKeys.join('').split('').forEach(function (k, i) {
   keyboardKeyMap[k] = i
 })
 
 // TODO Remove this
-ab.mix.focus = function (AClass) {
+function mixinFocus (AClass) {
   AClass.prototype.focus = function () {
-    ab.css(this.parentEl, {
+    css(this.parentEl, {
       border: '1px solid blue'
     })
   }
   AClass.prototype.unfocus = function () {
-    ab.css(this.parentEl, {
+    css(this.parentEl, {
       border: 'none'
     })
   }
@@ -44,10 +47,10 @@ function KeyboardView (o) {
 KeyboardView.prototype = {
   tpl: function (o) {
     o = o || {}
-    return ab.templates.keyboard(keyboardKeys.map((row, j) => {
+    return bp.templates.keyboard(keyboardKeys.map((row, j) => {
       var keys = ''
       var chars = row.split('')
-      if (j === 0) return ab.templates.keyboardRow(chars)
+      if (j === 0) return bp.templates.keyboardRow(chars)
       for (var i = 0; i < chars.length; i += 1) {
         var ch = chars[i]
         keys += '<i>' + ch + '</i>'
@@ -74,7 +77,7 @@ KeyboardView.prototype = {
     }
   },
   findKeyEl: function (character) {
-    var keys = ab.qa('i', this.parentEl)
+    var keys = qa('i', this.parentEl)
     for (var i = 0; i < keys.length; i += 1) {
       var k1 = keys[i]
       if (k1.innerText === character) return k1
@@ -82,13 +85,13 @@ KeyboardView.prototype = {
   },
   afterAttach: function (el) {
     // Select the active sample
-    var samples = ab.qa('b', this.parentEl)
-    if (this.lastInstrumentEl) ab.classRemove(this.lastInstrumentEl, 'active-instrument')
+    var samples = qa('b', this.parentEl)
+    if (this.lastInstrumentEl) classRemove(this.lastInstrumentEl, 'active-instrument')
     for (var i = 0; i < samples.length; i += 1) {
       var s1 = samples[i]
       console.warn('afterRender', s1.innerText, this.selectedInstrument)
       if (s1.innerText === this.selectedInstrument) {
-        ab.classAdd(s1, 'active-instrument')
+        classAdd(s1, 'active-instrument')
         this.lastInstrumentEl = s1
         break
       }
@@ -113,9 +116,9 @@ mixinHandlers(KeyboardView, {
     // Instrument
     if (el.nodeName === 'B') {
       if (this.lastInstrumentEl) {
-        ab.classRemove(this.lastInstrumentEl, 'active-instrument')
+        classRemove(this.lastInstrumentEl, 'active-instrument')
       }
-      ab.classAdd(el, 'active-instrument')
+      classAdd(el, 'active-instrument')
       this.lastInstrumentEl = el
       this.selectedInstrument = el.innerText
       this.model.dispatch('SelectInstrument', this.selectedInstrument)
@@ -125,12 +128,12 @@ mixinHandlers(KeyboardView, {
       if (parentName === 'PRE') {
         // Define range for instrument and surround with a span
         if (this.lastKeyEl) {
-          ab.classRemove(this.lastKeyEl, 'active-key')
+          classRemove(this.lastKeyEl, 'active-key')
           this.markRange(this.lastKeyEl, el, this.selectedInstrument)
           this.lastKeyEl = null
         // Mark the start of the range
         } else {
-          ab.classAdd(el, 'active-key')
+          classAdd(el, 'active-key')
           this.lastKeyEl = el
         }
       } else if (parentName === 'SPAN') {
@@ -146,7 +149,7 @@ mixinHandlers(KeyboardView, {
   }
 })
 
-ab.mix.focus(KeyboardView)
+mixinFocus(KeyboardView)
 
 KeyboardView.prototype.keyLeft = function (ev, el) {
   console.warn(ev, el)
@@ -162,90 +165,7 @@ KeyboardView.prototype.keyDown = function (ev, el) {
 }
 // 1}}} KeyboardView
 
-// {{{1 InputHandler
-var key0 = '0'.charCodeAt(0)
-var key9 = '9'.charCodeAt(0)
-var keyUp = 38
-var keyDown = 40
-var keyLeft = 37
-var keyRight = 39
-var keyEnter = 13
-var keySpace = 32
-var keyEsc = 27
-var keyTab = 9
-
-function InputHandler (o) {
-  console.warn('InputHandler', o)
-  if (!o.keyboardView) throw new Error('Need o.keyboardView')
-  if (!o.player) throw new Error('o.player')
-  this.keyboardView = o.keyboardView
-  this.player = o.player
-  this.el = document
-}
-
-InputHandler.prototype = {
-}
-
-ab.mix.handlers(InputHandler, 'el', {
-  keydown: function (ev, el) {
-    var code = ev.which
-    console.warn('Key', code, ev.charCode, String.fromCharCode(code))
-    if (code <= key9 && code >= key0) {
-      this.keyboardView.selectSample(String.fromCharCode(code))
-    } else if (code === keyUp) {
-      console.warn('keyUp')
-      if (ab.lastPopUp && ab.lastPopUp.keyUp) ab.lastPopUp.keyUp()
-      ev.preventDefault()
-    } else if (code === keyDown) {
-      console.warn('keyDown')
-      if (ab.lastPopUp && ab.lastPopUp.keyDown) ab.lastPopUp.keyDown()
-      ev.preventDefault()
-    } else if (code === keyLeft) {
-      console.warn('keyLeft')
-      if (ab.lastPopUp && ab.lastPopUp.keyLeft) ab.lastPopUp.keyLeft()
-      ev.preventDefault()
-    } else if (code === keyRight) {
-      console.warn('keyRight')
-      if (ab.lastPopUp && ab.lastPopUp.keyRight) ab.lastPopUp.keyRight()
-      ev.preventDefault()
-    } else if (code === keySpace) {
-      console.warn('keySpace')
-      ev.preventDefault()
-    } else if (code === keyEsc) {
-      console.warn('keyEsc')
-      if (ab.lastPopUp) ab.lastPopUp.inputEl.hide()
-      ev.preventDefault()
-    } else if (code === keyEnter) {
-      console.warn('keyEnter')
-      ev.preventDefault()
-    } else if (code === keyTab) {
-      console.warn('keyTab')
-      if (!this.activeTab) this.activeTab = this.keyboardView
-      this.activeTab.unfocus()
-      if (this.activeTab === this.keyboardView) this.activeTab = this.player
-      else this.activeTab = this.keyboardView
-      this.activeTab.focus()
-
-      return ev.preventDefault()
-    } else {
-      var k = String.fromCharCode(code)
-      if (keyboardKeyMap[k]) {
-        console.warn('play key', k)
-      }
-    }
-  },
-  keyup: function () {
-    console.warn('up', arguments)
-  },
-  wheel: function () {
-    console.warn('scroll', arguments)
-  }
-
-})
-
-// 1}}} InputHandler
-
-// {{{1 PlayerView  TODO Rename to PlayerView
+// {{{1 PlayerView
 bp.sounds = {
   bd: new Audio('samples/bd.wav'),
   // bd: new Audio('http://download.wavetlan.com/SVV/Media/HTTP/WAV/Media-Convert/Media-Convert_test6_PCM_Stereo_VBR_16SS_8000Hz.wav'),
@@ -254,8 +174,8 @@ bp.sounds = {
 }
 
 function ScoreColumns (el) {
-  // console.warn(ab.type(el));
-  this.els = ab.qa('* p', el).filter(function (el1) {
+  // console.warn(type(el));
+  this.els = qa('* p', el).filter(function (el1) {
     return el1.childNodes.length > 1
   })
   this.selectedIndex = -1
@@ -273,17 +193,17 @@ ScoreColumns.prototype = {
     this.selectedEl = this.els[this.selectedIndex]
 
     if (!this.selectedEl) throw new Error('BAd ' + this.selectedIndex)
-    if (this.lastSelectedEl) ab.classRemove(this.lastSelectedEl, 'active')
-    ab.classAdd(this.selectedEl, 'active')
+    if (this.lastSelectedEl) classRemove(this.lastSelectedEl, 'active')
+    classAdd(this.selectedEl, 'active')
   }
 }
 
 function PlayerView (o) {
   o = o || {}
-  this.el = o.el || ab.dom('<div class="player"></div>')
-  if (typeof this.el === 'string') this.el = ab.qs(this.el)
-  if (!this.el) throw new Error('Bad el ' + this.el)
-  // this.scoreColumns = new ScoreColumns(this.el)
+  // this.parentEl = ab.dom('<div class="player"></div>')
+  // if (typeof this.parentEl === 'string') this.parentEl = ab.qs(this.parentEl)
+  // if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
+  // this.scoreColumns = new ScoreColumns(this.parentEl)
 
   this.bpm = o.bpm || 100
   this.tpb = o.tpb || 4
@@ -305,9 +225,9 @@ function PlayerView (o) {
 PlayerView.prototype = {
   tpl: function (o) {
     console.warn('PlayerView template', o)
-    var t = ab.templates
+    var t = bp.templates
     o.settings = t.settings(o.settings)
-    o.score = ab.templates.scoreSpan([1, 2, 3, 4, 5, 6, 7, 8, 9, 'A'])
+    o.score = bp.templates.scoreSpan([1, 2, 3, 4, 5, 6, 7, 8, 9, 'A'])
     o.instruments = t.instruments(o.instruments)
     o.columns = t.columnEmpty() + this.tracks.map(t.column).join('\n')
     var player = t.player(o)
@@ -351,22 +271,22 @@ PlayerView.prototype = {
 }
 
 mixinDom(PlayerView)
-ab.mix.focus(PlayerView)
+mixinFocus(PlayerView)
 
 PlayerView.prototype.unfocus = function () {
-  console.warn('aa', this.el)
-  ab.css(this.el.childNodes[0], {
+  console.warn('aa', this.parentEl)
+  css(this.parentEl.childNodes[0], {
     border: 'none'
   })
-  if (ab.lastPopUp) ab.lastPopUp.hide()
+  if (bp.lastPopUp) bp.lastPopUp.hide()
 }
 PlayerView.prototype.focus = function () {
-  ab.css(this.el.childNodes[0], {
+  css(this.parentEl.childNodes[0], {
     border: '1px solid blue'
   })
-  if (ab.lastPopUp) {
-    ab.lastPopUp.show()
-    ab.lastPopUp.inputEl.select()
+  if (bp.lastPopUp) {
+    bp.lastPopUp.show()
+    bp.lastPopUp.inputEl.select()
   }
 }
 
@@ -383,7 +303,6 @@ PlayerView.prototype.keyDown = function (ev, el) {
   console.warn(ev, el)
 }
 
-const alphaNum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 // function decToalphanum (num) {
   // if (num >= alphaNum.length) {
     // console.warn('reset num from ', num)
@@ -397,51 +316,56 @@ function alphanumToDec (anum) {
   return alphaNum.indexOf(anum + '')
 }
 
-mixinHandlers(PlayerView, 'el', {
+mixinHandlers(PlayerView, {
   click: function (ev, el) {
-    console.warn('You clicked', ev, el, el.parentNode)
-    var rowIndex = [].slice.call(el.parentNode.childNodes).indexOf(el)
-    var columnIndex
+    // console.warn('You clicked', ev, el, el.parentNode)
+    // var rowIndex = [].slice.call(el.parentNode.childNodes).indexOf(el)
+    // var columnIndex
     var r1
+    var textInputWidth
     switch (el.nodeName) {
       case 'P':
         console.warn('P Instrument', el)
         // var dom2 = ab.dom('<div class="instruments">${instruments}</div>')
         textInputWidth = '4rem'
+        // falls through
       case 'B':
         textInputWidth = '1rem'
-        r1 = ab.rect(el)
+        r1 = rect(el)
         var value = el.innerText
         if (!value || /^\s*$/.test(value)) value = '.'
-        ab.smallInput1.popup({
+        bp.smallInput1.popup({
           top: r1.top,
           left: r1.left,
           value: value,
+          width: textInputWidth,
           set: function (value) {
             el.innerText = value
           }
         })
-        ab.lastPopUp = ab.smallInput1
+        bp.lastPopUp = bp.smallInput1
         break
       case 'I': // Click top row to go to position
         console.warn('I', alphanumToDec(el.innerText))
         // TODO  this.gotoPos(alphanumToDec(el.innerText))
         break
       case 'ABBR':
-        r1 = ab.rect(ab.qs('dd', el))
+        r1 = rect(qs('dd', el))
+        // falls through
       case 'DT':
+        // falls through
       case 'DD':
-        r1 = ab.rect(el)
-        // if (ab.lastPopUp) ab.lastPopUp.hide()
-        ab.sliderInput1.popup({
+        r1 = rect(el)
+        // if (bp.lastPopUp) bp.lastPopUp.hide()
+        bp.sliderInput1.popup({
           top: r1.top,
           left: r1.left,
           value: el.innerText,
           set: function (value) {
-            el.innerText = value +''
+            el.innerText = value + ''
           }
         })
-        ab.lastPopUp = ab.sliderInput1
+        bp.lastPopUp = bp.sliderInput1
         break
     }
     this.focus()
@@ -449,13 +373,96 @@ mixinHandlers(PlayerView, 'el', {
 })
 // 1}}} PlayerView
 
+// {{{1 InputHandler
+var key0 = '0'.charCodeAt(0)
+var key9 = '9'.charCodeAt(0)
+var keyUp = 38
+var keyDown = 40
+var keyLeft = 37
+var keyRight = 39
+var keyEnter = 13
+var keySpace = 32
+var keyEsc = 27
+var keyTab = 9
+
+function InputHandler (o) {
+  console.warn('InputHandler', o)
+  if (!o.keyboardView) throw new Error('Need o.keyboardView')
+  if (!o.player) throw new Error('o.player')
+  this.keyboardView = o.keyboardView
+  this.player = o.player
+  this.parentEl = __document
+}
+
+InputHandler.prototype = {
+}
+
+mixinHandlers(InputHandler, {
+  keydown: function (ev, el) {
+    var code = ev.which
+    console.warn('Key', code, ev.charCode, String.fromCharCode(code))
+    if (code <= key9 && code >= key0) {
+      this.keyboardView.selectSample(String.fromCharCode(code))
+    } else if (code === keyUp) {
+      console.warn('keyUp')
+      if (bp.lastPopUp && bp.lastPopUp.keyUp) bp.lastPopUp.keyUp()
+      ev.preventDefault()
+    } else if (code === keyDown) {
+      console.warn('keyDown')
+      if (bp.lastPopUp && bp.lastPopUp.keyDown) bp.lastPopUp.keyDown()
+      ev.preventDefault()
+    } else if (code === keyLeft) {
+      console.warn('keyLeft')
+      if (bp.lastPopUp && bp.lastPopUp.keyLeft) bp.lastPopUp.keyLeft()
+      ev.preventDefault()
+    } else if (code === keyRight) {
+      console.warn('keyRight')
+      if (bp.lastPopUp && bp.lastPopUp.keyRight) bp.lastPopUp.keyRight()
+      ev.preventDefault()
+    } else if (code === keySpace) {
+      console.warn('keySpace')
+      ev.preventDefault()
+    } else if (code === keyEsc) {
+      console.warn('keyEsc')
+      if (bp.lastPopUp) bp.lastPopUp.inputEl.hide()
+      ev.preventDefault()
+    } else if (code === keyEnter) {
+      console.warn('keyEnter')
+      ev.preventDefault()
+    } else if (code === keyTab) {
+      console.warn('keyTab')
+      if (!this.activeTab) this.activeTab = this.keyboardView
+      this.activeTab.unfocus()
+      if (this.activeTab === this.keyboardView) this.activeTab = this.player
+      else this.activeTab = this.keyboardView
+      this.activeTab.focus()
+
+      return ev.preventDefault()
+    } else {
+      var k = String.fromCharCode(code)
+      if (keyboardKeyMap[k]) {
+        console.warn('play key', k)
+      }
+    }
+  },
+  keyup: function () {
+    console.warn('up', arguments)
+  },
+  wheel: function () {
+    console.warn('scroll', arguments)
+  }
+
+})
+
+// 1}}} InputHandler
+
 // {{{1 InstrumentsView
 function InstrumentsView (o) {
 }
 
 InstrumentsView.prototype = {
   tpl: function (o) {
-    return ab.templates.instrument(o)
+    return bp.templates.instrument(o)
   }
 }
 mixinDom(InstrumentsView)
@@ -470,21 +477,21 @@ mixinHandlers(InstrumentsView, {
 function SliderInput (o) {
   o = o || {}
   this.el = o.el
-  if (typeof this.el === 'string') this.el = ab.qs(this.el)
-  this.sliderEl = ab.qs('input[type=range]', this.el)
-  this.textEl = ab.qs('input[type=text]', this.el)
+  if (typeof this.el === 'string') this.el = qs(this.el)
+  this.sliderEl = qs('input[type=range]', this.el)
+  this.textEl = qs('input[type=text]', this.el)
   if (!this.el) throw new Error('Need o.el')
   if (!this.sliderEl) throw new Error('Need o.sliderEl')
   if (!this.textEl) throw new Error('Need o.textEl')
 }
 
 SliderInput.prototype = {
-  template: function (o) {
-    return ab.templates.sliderInput(o)
+  tpl: function (o) {
+    return bp.templates.sliderInput(o)
   },
   setRange: function (start, stop, value) {
     value = value || (start + stop) / 2
-    ab.attr(this.sliderEl, {min: start,
+    attr(this.sliderEl, {min: start,
                             max: stop,
                             value: value})
     this.textEl.value = value
@@ -498,7 +505,7 @@ SliderInput.prototype = {
     // this.detach()
     // if (o.value !== this.lastValue) this.render(o)
     // this.attach(this.parent)
-    ab.css(this.el, {
+    css(this.el, {
       position: 'absolute',
       top: o.top + 'px',
       left: o.left + 'px'
@@ -512,9 +519,9 @@ SliderInput.prototype = {
   }
 }
 
-ab.mix.dom(SliderInput)
+mixinDom(SliderInput)
 
-ab.mix.handlers(SliderInput, 'el', {
+mixinHandlers(SliderInput, {
   input: function (ev, el) {
     var v1 = this.sliderEl.value = this.textEl.value = Math.round(el.value)
     if (this.setValue) this.setValue(v1)
@@ -534,18 +541,17 @@ ab.mix.handlers(SliderInput, 'el', {
 
 // {{{1 SmallInput
 function SmallInput (o) {
-  
 }
 
 SmallInput.prototype = {
-  template: function (o) {
-    return ab.templates.smallInput(o)
+  tpl: function (o) {
+    return bp.templates.smallInput(o)
   },
   afterRender: function () {
-    this.inputEl = ab.qs('input[type=text]', this.el)
+    this.inputEl = qs('input[type=text]', this.el)
   },
   afterAttach: function (el) {
-    ab.classRemove(this.el, 'hidden')
+    classRemove(this.el, 'hidden')
   },
   popup: function (o) {
     o.value = o.value || this.inputEl.value
@@ -554,11 +560,11 @@ SmallInput.prototype = {
       this.attached = true
     }
     this.show()
-    ab.css(this.el, {
+    css(this.el, {
       position: 'absolute',
       top: o.top + 'px',
       left: o.left + 'px',
-      'background-color': ab.color(ab.randInt(1, 100), 0x99, 0xEE),
+      'background-color': newColor(randInt(1, 100), 0x99, 0xEE),
       width: o.width || '1rem'
     })
     this.setValue = o.set
@@ -568,9 +574,9 @@ SmallInput.prototype = {
   }
 }
 
-ab.mix.dom(SmallInput)
+mixinDom(SmallInput)
 
-ab.mix.handlers(SmallInput, 'el', {
+mixinHandlers(SmallInput, {
   keyup: function (ev, el) {
     var key = String.fromCharCode(ev.keyCode).toLowerCase()
     if (this.setValue) this.setValue(key)
@@ -579,18 +585,17 @@ ab.mix.handlers(SmallInput, 'el', {
     return ev.stopPropagation()
   }
 })
-
 // 1}}} SmallInput
 
-// {{{1 
+// {{{1
 function Samples () {
 }
 
-ab.mix.dom(Samples)
+mixinDom(Samples)
 
 Samples.prototype = {
   draw: function (el) {
-    ab.templates.keyboard({
+    bp.templates.keyboard({
     })
   }
 }
