@@ -66,6 +66,7 @@ KeyboardView.prototype = {
       begin = endEl
       end = beginEl
     }
+    this.model.selectedInstrumentRange([begin.innerText, end.innerText])
     var span = htmlEl('span', {'class': 'color' + instrumentNumber})
     span = insertBefore(begin.parentNode, span, begin)
     while (1) {
@@ -458,25 +459,18 @@ mixinHandlers(InputHandler, {
 // {{{1 InstrumentsView
 function InstrumentsView (o) {
   o.model.subscribe('SelectInstrument', this.selectInstrumentNumber, this)
+  o.model.subscribe('SelectInstrumentRange', this.selectInstrumentRange, this)
 }
 
 InstrumentsView.prototype = {
   tpl: function (o) {
     return bp.templates.instrument(o)
   },
-  selectInstrumentNumber: function (number) {
-    var opts = {
-      name: 'Unnamed',
-      number: number,
-      url: 'None'
-    }
-    var i1 = this.model.instrument(number)
-    if (i1) {
-      opts = i1
-    }
-    this.detach()
-    this.render(opts)
-    this.attach()
+  selectInstrumentNumber: function selectInstrumentNumber (number) {
+    this.update(this.model.instrument(number))
+  },
+  selectInstrumentRange: function selectInstrumentRange (range) {
+    console.warn('Range', this.model.instrument(this.model.selectedInstrument()))
   }
 }
 mixinDom(InstrumentsView)

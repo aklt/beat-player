@@ -1,3 +1,4 @@
+/*global extend*/
 // # BeatModel
 //
 // Represents the model of the current beat.
@@ -13,13 +14,20 @@ function BeatModel (text) {
   if (typeof text === 'string') this.readBeatText(text)
 }
 
+BeatModel.defaultInstrument = {
+  name: 'Unknown Instrument',
+  url: 'Unknown URL',
+  range: null
+}
+
 var subscriptionEvents = {
   NewText: 1,
   ChangeBpm: 1,
   ChangeTpb: 1,
   ChangeBeats: 1,
   ChangeNote: 1,
-  SelectInstrument: 1
+  SelectInstrument: 1,
+  SelectInstrumentRange: 1
 }
 
 BeatModel.prototype = {
@@ -32,9 +40,11 @@ BeatModel.prototype = {
   dispatch: function (ev, data) {
     if (!subscriptionEvents[ev]) throw new Error('Illegal subscription event name ' + ev)
     var cbs = this.subscriptions[ev] || []
+    console.warn('dispatch', ev, data)
     if (!cbs.disabled) {
       for (var i = 0; i < cbs.length; i += 1) {
         var cb = cbs[i]
+        console.warn('  call', cb[0].name, data)
         cb[0].call(cb[1], data)
       }
     }
@@ -159,13 +169,28 @@ BeatModel.prototype = {
   },
   // ## Modifying the model with getters and setters
   instrument: function (number) {
-    return this.model.instruments[number]
+    var i1 = this.model.instruments[number]
+    if (!i1) {
+      i1 = extend({}, BeatModel.defaultInstrument, {number: number})
+      this.model.instruments[number] = i1
+    }
+    return i1
   },
   selectedInstrument: function (number) {
     if (!number) return this.model.selectedInstrument
     number += ''
     this.model.selectedInstrument = number
     this.dispatch('SelectInstrument', number)
+  },
+  selectedInstrumentRange: function (range) {
+    var i1 = this.selectedInstrument()
+    this.model.instruments[i1] = extend({},
+      this.model.instruments[i1] || BeatModel.defaultInstrument,
+      {
+        number: i1,
+        range: range})
+    console.warn('inst', this.model.instruments[i1], range)
+    this.dispatch('SelectInstrumentRange', range)
   },
   instrumentUrl: function (i, newUrl) {
     if (!newUrl) return this.model.instruments[i]
@@ -204,13 +229,12 @@ function mixinGetSet (AClass, prop, defaultValue) {
 }
 
 mixinGetSet(BeatModel, 'bpm', 100)
-mixinGetSet(BeatModel, 'tpb',   4)
+mixinGetSet(BeatModel, 'tpb', 4)
 mixinGetSet(BeatModel, 'beats', 4)
 
 function ucfirst (s) {
   return s[0].toUpperCase() + s.slice(1)
 }
-
 
 // test
 //
