@@ -169,6 +169,7 @@ BeatModel.prototype = {
   },
   // ## Modifying the model with getters and setters
   instrument: function (number) {
+    number = number || this.model.selectedInstrument
     var i1 = this.model.instruments[number]
     if (!i1) {
       i1 = extend({}, BeatModel.defaultInstrument, {number: number})
@@ -189,7 +190,6 @@ BeatModel.prototype = {
       {
         number: i1,
         range: range})
-    console.warn('inst', this.model.instruments[i1], range)
     this.dispatch('SelectInstrumentRange', range)
   },
   instrumentUrl: function (i, newUrl) {

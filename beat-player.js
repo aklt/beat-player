@@ -143,6 +143,7 @@ mixinHandlers(KeyboardView, {
           insertBefore(top, el, span)
         }
         removeChild(top, span)
+        this.model.selectedInstrumentRange()
       }
     }
     this.focus()
@@ -466,16 +467,16 @@ InstrumentsView.prototype = {
   tpl: function (o) {
     return bp.templates.instrument(o)
   },
-  selectInstrumentNumber: function selectInstrumentNumber (number) {
-    this.update(this.model.instrument(number))
+  selectInstrumentNumber: function (number) {
+    this.update(this.model.instrument())
   },
-  selectInstrumentRange: function selectInstrumentRange (range) {
-    console.warn('Range', this.model.instrument(this.model.selectedInstrument()))
+  selectInstrumentRange: function (range) {
+    this.update(this.model.instrument())
   }
 }
 mixinDom(InstrumentsView)
 mixinHandlers(InstrumentsView, {
-  click: function () {
+  click: function (ev, el) {
     console.warn('Hello Instruments', this.model)
   }
 })
