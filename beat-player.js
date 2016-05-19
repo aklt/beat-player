@@ -41,7 +41,7 @@ function KeyboardView (o) {
     [2, 'Q', 'R'],
     [3, 'B', 'M']
   ]
-  o.model.instrument(o.selectedInstrument || 3)
+  o.model.selectedInstrument(o.selectedInstrument || 3)
 }
 
 KeyboardView.prototype = {
@@ -89,8 +89,8 @@ KeyboardView.prototype = {
     if (this.lastInstrumentEl) classRemove(this.lastInstrumentEl, 'active-instrument')
     for (var i = 0; i < samples.length; i += 1) {
       var s1 = samples[i]
-      console.warn('afterRender', s1.innerText, this.model.instrument())
-      if (s1.innerText === this.model.instrument()) {
+      console.warn('afterRender', s1.innerText, this.model.selectedInstrument())
+      if (s1.innerText === this.model.selectedInstrument()) {
         classAdd(s1, 'active-instrument')
         this.lastInstrumentEl = s1
         break
@@ -111,7 +111,7 @@ KeyboardView.prototype = {
     }
     classAdd(el, 'active-instrument')
     this.lastInstrumentEl = el
-    this.model.instrument(sample)
+    this.model.selectedInstrument(sample)
   }
 }
 
@@ -128,7 +128,7 @@ mixinHandlers(KeyboardView, {
         // Define range for instrument and surround with a span
         if (this.lastKeyEl) {
           classRemove(this.lastKeyEl, 'active-key')
-          this.markRange(this.lastKeyEl, el, this.model.instrument())
+          this.markRange(this.lastKeyEl, el, this.model.selectedInstrument())
           this.lastKeyEl = null
         // Mark the start of the range
         } else {
@@ -457,15 +457,26 @@ mixinHandlers(InputHandler, {
 
 // {{{1 InstrumentsView
 function InstrumentsView (o) {
-  var self = this
-  o.model.subscribe('SelectInstrument', function (number) {
-    console.warn('InstrumentsView select', number, self.model)
-  })
+  o.model.subscribe('SelectInstrument', this.selectInstrumentNumber, this)
 }
 
 InstrumentsView.prototype = {
   tpl: function (o) {
     return bp.templates.instrument(o)
+  },
+  selectInstrumentNumber: function (number) {
+    var opts = {
+      name: 'Unnamed',
+      number: number,
+      url: 'None'
+    }
+    var i1 = this.model.instrument(number)
+    if (i1) {
+      opts = i1
+    }
+    this.detach()
+    this.render(opts)
+    this.attach()
   }
 }
 mixinDom(InstrumentsView)

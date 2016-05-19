@@ -6,7 +6,9 @@
 //
 // TODO Add subscriptions to events
 function BeatModel (text) {
-  this.model = {}
+  this.model = {
+    instruments: []
+  }
   this.subscriptions = {}
   if (typeof text === 'string') this.readBeatText(text)
 }
@@ -21,17 +23,19 @@ var subscriptionEvents = {
 }
 
 BeatModel.prototype = {
-  subscribe: function (ev, cb) {
+  subscribe: function (ev, cb, context) {
     if (!subscriptionEvents[ev]) throw new Error('Illegal event name ' + ev)
     if (!this.subscriptions[ev]) this.subscriptions[ev] = []
-    this.subscriptions[ev].push(cb)
+    if (!context) context = this
+    this.subscriptions[ev].push([cb, context])
   },
   dispatch: function (ev, data) {
     if (!subscriptionEvents[ev]) throw new Error('Illegal subscription event name ' + ev)
     var cbs = this.subscriptions[ev] || []
     if (!cbs.disabled) {
       for (var i = 0; i < cbs.length; i += 1) {
-        cbs[i](data)
+        var cb = cbs[i]
+        cb[0].call(cb[1], data)
       }
     }
   },
@@ -141,12 +145,6 @@ BeatModel.prototype = {
   getPattern: function () {
 
   },
-  instrument: function (number) {
-    if (!number) return this.model.instrument
-    number += ''
-    this.model.instrument = number
-    this.dispatch('SelectInstrument', number)
-  },
   instruments: function (changeUrls) {
     if (!changeUrls) return this.model.instruments
     throw new Error('TODO: set instruments')
@@ -160,6 +158,15 @@ BeatModel.prototype = {
     throw new Error('TODO: set patternLength')
   },
   // ## Modifying the model with getters and setters
+  instrument: function (number) {
+    return this.model.instruments[number]
+  },
+  selectedInstrument: function (number) {
+    if (!number) return this.model.selectedInstrument
+    number += ''
+    this.model.selectedInstrument = number
+    this.dispatch('SelectInstrument', number)
+  },
   instrumentUrl: function (i, newUrl) {
     if (!newUrl) return this.model.instruments[i]
     this.model.instruments[i].url = newUrl
