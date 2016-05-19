@@ -225,3 +225,4 @@ HiHat:
 var b1 = new BeatModel()
 
 b1.readBeatText(beat1)
+console.warn(JSON.stringify(b1, 0, 2))

@@ -2,13 +2,17 @@
  appendChild, removeChild mixinDom mixinHandlers*/
 var bp = __window.beatPlayer = {}
 
-ab.classes = {}
-
 var keyboardKeys = [
   '1234567890',
   'QWERTYUIOP',
   'ASDFGHJKL',
   'ZXCVBNM,.']
+
+var keyboardKeyMap = {}
+
+keyboardKeys.join('').split('').forEach(function (k, i) {
+  keyboardKeyMap[k] = i
+})
 
 // TODO Remove this
 ab.mix.focus = function (AClass) {
@@ -40,7 +44,6 @@ function KeyboardView (o) {
 KeyboardView.prototype = {
   tpl: function (o) {
     o = o || {}
-    o.classes = o.classes || this.classes || 'color1'
     return ab.templates.keyboard(keyboardKeys.map((row, j) => {
       var keys = ''
       var chars = row.split('')
@@ -56,7 +59,7 @@ KeyboardView.prototype = {
   markRange: function (beginEl, endEl, instrumentNumber) {
     var begin = beginEl
     var end = endEl
-    if (keyKeys[begin.innerText] > keyKeys[end.innerText]) {
+    if (keyboardKeyMap[begin.innerText] > keyboardKeyMap[end.innerText]) {
       begin = endEl
       end = beginEl
     }
@@ -170,11 +173,6 @@ var keyEnter = 13
 var keySpace = 32
 var keyEsc = 27
 var keyTab = 9
-var keyKeys = {}
-
-keyboardKeys.join('').split('').forEach(function (k, i) {
-  keyKeys[k] = i
-})
 
 function InputHandler (o) {
   console.warn('InputHandler', o)
@@ -184,8 +182,6 @@ function InputHandler (o) {
   this.player = o.player
   this.el = document
 }
-
-ab.classes.InputHandler = InputHandler
 
 InputHandler.prototype = {
 }
@@ -233,7 +229,7 @@ ab.mix.handlers(InputHandler, 'el', {
       return ev.preventDefault()
     } else {
       var k = String.fromCharCode(code)
-      if (keyKeys[k]) {
+      if (keyboardKeyMap[k]) {
         console.warn('play key', k)
       }
     }
@@ -249,29 +245,7 @@ ab.mix.handlers(InputHandler, 'el', {
 
 // 1}}} InputHandler
 
-// {{{1 PlayerView
-function PlayerView () {
-}
-
-PlayerView.prototype = {
-  tpl: function (o) {
-    var t = ab.templates
-    o.settings = t.settings(o.settings)
-    o.score = ab.templates.scoreSpan([1, 2, 3, 4, 5, 6, 7, 8, 9, 'A'])
-    o.instruments = t.instruments(o.instruments)
-    o.columns = t.columnEmpty() + this.tracks.map(t.column).join('\n')
-    var player = t.player(o)
-    console.warn('Player Template:', player, o)
-    return player
-  }
-}
-
-mixinDom(PlayerView)
-
-
-// 1}}} PlayerView
-
-// {{{1 Player  TODO Rename to PlayerView
+// {{{1 PlayerView  TODO Rename to PlayerView
 bp.sounds = {
   bd: new Audio('samples/bd.wav'),
   // bd: new Audio('http://download.wavetlan.com/SVV/Media/HTTP/WAV/Media-Convert/Media-Convert_test6_PCM_Stereo_VBR_16SS_8000Hz.wav'),
@@ -304,7 +278,7 @@ ScoreColumns.prototype = {
   }
 }
 
-function Player (o) {
+function PlayerView (o) {
   o = o || {}
   this.el = o.el || ab.dom('<div class="player"></div>')
   if (typeof this.el === 'string') this.el = ab.qs(this.el)
@@ -325,19 +299,19 @@ function Player (o) {
       if (!this.tracks[ibar][itpb]) this.tracks[ibar][itpb] = '·'
     }
   }
-  console.warn('Player', this)
+  console.warn('PlayerView', this)
 }
 
-Player.prototype = {
-  template: function (o) {
-    console.warn('Player template', o)
+PlayerView.prototype = {
+  tpl: function (o) {
+    console.warn('PlayerView template', o)
     var t = ab.templates
     o.settings = t.settings(o.settings)
     o.score = ab.templates.scoreSpan([1, 2, 3, 4, 5, 6, 7, 8, 9, 'A'])
     o.instruments = t.instruments(o.instruments)
     o.columns = t.columnEmpty() + this.tracks.map(t.column).join('\n')
     var player = t.player(o)
-    console.warn('Player Template:', player, o)
+    console.warn('PlayerView Template:', player, o)
     return player
   },
   afterRender: function (el) {
@@ -376,17 +350,17 @@ Player.prototype = {
   }
 }
 
-ab.mix.dom(Player)
-ab.mix.focus(Player)
+mixinDom(PlayerView)
+ab.mix.focus(PlayerView)
 
-Player.prototype.unfocus = function () {
+PlayerView.prototype.unfocus = function () {
   console.warn('aa', this.el)
   ab.css(this.el.childNodes[0], {
     border: 'none'
   })
   if (ab.lastPopUp) ab.lastPopUp.hide()
 }
-Player.prototype.focus = function () {
+PlayerView.prototype.focus = function () {
   ab.css(this.el.childNodes[0], {
     border: '1px solid blue'
   })
@@ -396,16 +370,16 @@ Player.prototype.focus = function () {
   }
 }
 
-Player.prototype.keyLeft = function (ev, el) {
+PlayerView.prototype.keyLeft = function (ev, el) {
   console.warn(ev, el)
 }
-Player.prototype.keyRight = function (ev, el) {
+PlayerView.prototype.keyRight = function (ev, el) {
   console.warn(ev, el)
 }
-Player.prototype.keyUp = function (ev, el) {
+PlayerView.prototype.keyUp = function (ev, el) {
   console.warn(ev, el)
 }
-Player.prototype.keyDown = function (ev, el) {
+PlayerView.prototype.keyDown = function (ev, el) {
   console.warn(ev, el)
 }
 
@@ -423,7 +397,7 @@ function alphanumToDec (anum) {
   return alphaNum.indexOf(anum + '')
 }
 
-ab.mix.handlers(Player, 'el', {
+mixinHandlers(PlayerView, 'el', {
   click: function (ev, el) {
     console.warn('You clicked', ev, el, el.parentNode)
     var rowIndex = [].slice.call(el.parentNode.childNodes).indexOf(el)
@@ -473,7 +447,8 @@ ab.mix.handlers(Player, 'el', {
     this.focus()
   }
 })
-// 1}}} Player
+// 1}}} PlayerView
+
 // {{{1 InstrumentsView
 function InstrumentsView (o) {
 }
