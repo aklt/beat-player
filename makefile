@@ -16,7 +16,10 @@ bp.js: beat-model.js beat-audio.js beat-player.js templates.js beat-ready.js
 bp-min.js: bp.js
 	uglifyjs bp.js -c -m > $@
 
-.PHONY: clean dev
+.PHONY: clean dev tags
+
+tags:
+	tagdir
 
 dev:
 	freshen

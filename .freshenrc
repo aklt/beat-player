@@ -25,7 +25,7 @@ report:
 # expressions in deps changes.
 # The value of `deps` can be a string of suffix names or an Array of RegExps
 build:
-  command: 'make'
+  command: 'make all tags'
   deps: 'less md html js'
 
 # Where to access server
