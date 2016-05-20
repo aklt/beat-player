@@ -1026,7 +1026,7 @@ ab.mix.handlers = mixinHandlers
 ab.htmlEl = htmlEl
 ab.Elem = Elem
 
-  // /*global extend*/
+  // /*global __window extend xhr AudioContext webkitAudioContext */
 // # BeatModel
 //
 // Represents the model of the current beat.
@@ -1034,6 +1034,10 @@ ab.Elem = Elem
 // Holds all data of the current beat and is referenced from all Views.
 //
 // TODO Add subscriptions to events
+
+var bp = __window.bp = {}
+bp.test = {}
+
 function BeatModel (text) {
   this.model = {
     instruments: []
@@ -1090,6 +1094,7 @@ BeatModel.prototype = {
     for (var i = 0; i < lines.length; i += 1) {
       line = lines[i]
       if (/^\s*$/.test(line)) continue
+      if (/^\s*#/.test(line)) continue
       if (/^--/.test(line)) break
       var idx = line.indexOf(':')
       if (idx < 0) throw new Error('Bad pattern format on line ' + i)
@@ -1179,6 +1184,41 @@ BeatModel.prototype = {
     var cb = this.subscriptions.NewText
     if (typeof cb === 'function') cb(this)
   },
+  // Lead a beat text
+  loadBeat: function (url, cb) {
+    var self = this
+    xhr({
+      url: url
+    }, function (err, data) {
+      if (err) return cb(err)
+      self.readBeatText(data)
+      cb(null, self)
+    })
+  },
+  // Load the samples referenced
+  loadBeatSamples: function (cb) {
+    var instruments = this.model.instruments
+    var ikeys = Object.keys(instruments)
+    var self = this
+    var count = 0
+    // TODO Share the audio context
+    var context = new (AudioContext || webkitAudioContext)()
+    function loadOne (i) {
+      xhr({
+        url: instruments[i + ''].url,
+        responseType: 'arraybuffer'
+      }, function (err, result) {
+        if (err) return cb(err)
+        context.decodeAudioData(result, function (buffer) {
+          instruments[i].buffer = buffer
+          count += 1
+          if (count === ikeys.length) return cb(null, self)
+        })
+      })
+    }
+    for (var i = 0; i < ikeys.length; i += 1) loadOne(i)
+    // TODO: mixin and effects
+  },
   // TODO Return a text string representing the pattern
   getPattern: function () {
 
@@ -1264,30 +1304,17 @@ function ucfirst (s) {
   return s[0].toUpperCase() + s.slice(1)
 }
 
-// test
-//
-// TODO: encapsulate pattern block in '--'
-var beat1 = `
-Bass Drum: b... b... b...
-Snare:     ..s. ..s. .s.s
-HiHat:     x.x. x.x. .x.x
---
-Bass Drum:
-  url: samples/bd.wav
+bp.test.beatModel = function () {
+  var bm1 = new BeatModel()
+  bm1.loadBeat('data/beat1.beat', function (err, model) {
+    console.warn(err, model)
+    bm1.loadBeatSamples(function (err, bm) {
+      console.warn(err, bm)
+    })
+  })
+}
 
-Snare:
-  url: samples/sd.wav
-
-HiHat:
-  url: samples/hat.wav
-`
-
-var b1 = new BeatModel()
-
-b1.readBeatText(beat1)
-console.warn(JSON.stringify(b1, 0, 2))
-
-/*global ab, AudioContext, webkitAudioContext, BeatModel*/
+/*global bp, AudioContext, webkitAudioContext, BeatModel*/
 
 // # BeatAudio
 //
@@ -1338,27 +1365,6 @@ BeatAudio.prototype = {
       self.calculateNoteBuckets()
       if (typeof cb === 'function') cb(null, self)
     })
-  },
-  // Load instruments
-  loadSamples: function (cb) {
-    var ikeys = Object.keys(this.instruments)
-    var self = this
-    var count = 0
-    function loadOne (i) {
-      ab.xhr({
-        url: self.instruments[i + ''].url,
-        responseType: 'arraybuffer'
-      }, function (err, result) {
-        if (err) return cb(err)
-        self.context.decodeAudioData(result, function (buffer) {
-          self.instruments[i].buffer = buffer
-          count += 1
-          if (count === ikeys.length) return cb(null, self.instruments)
-        })
-      })
-    }
-    for (var i = 0; i < ikeys.length; i += 1) loadOne(i)
-    // TODO: mixin and effects
   },
   // Schedule offset times of samples according to pattern
   calculateNoteBuckets: function () {
@@ -1431,49 +1437,25 @@ BeatAudio.prototype = {
   // TODO Mixing https://developer.mozilla.org/en-US/docs/Web/API/OfflineAudioContext
 }
 
-ab.BeatAudio = BeatAudio
+bp.BeatAudio = BeatAudio
 
-// test
-
-var beat1 = `
-HiHat:     x.x. x.x. x.x.
-Bass Drum: b... .... b...
-Snare:     .... s... ..s.
---
-Bass Drum:
-  url: samples/bd.wav
-
-Snare:
-  url: samples/sd.wav
-
-HiHat:
-  url: samples/hat.wav
-`
-var beat1Model = new BeatModel(beat1)
-
-ab.beat1 = new BeatAudio(beat1Model)
-
-ab.beat1.test = function () {
-  console.warn('Boob', ab.beat1)
-  ab.beat1.load(function (err) {
+bp.testBeatAudio = function () {
+  var beat1Model = new BeatModel(beat1)
+  var beat1 = new BeatAudio(beat1Model)
+  beat1.load(function (err) {
     if (err) throw err
     console.warn('loaded')
-    ab.beat1.model.bpm(80)
-    ab.beat1.play()
+    beat1.model.bpm(80)
+    beat1.play()
     setTimeout(function (o) {
-      ab.beat1.stop()
+      beat1.stop()
     }, 3000)
   })
 }
 
-// setTimeout(function () {
-  // ab.beat1.test()
-// }, 200)
-
-/*global __window __document Audio requestAnimationFrame htmlEl insertBefore
-appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
-rect attr newColor randInt */
-var bp = __window.bp = {}
+/*global bp __document requestAnimationFrame htmlEl insertBefore
+  appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
+  rect attr nextSibling prevSibling $id mixinHideShow*/
 
 const alphaNum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -1514,6 +1496,7 @@ function KeyboardView (o) {
     [3, 'B', 'M']
   ]
   o.model.selectedInstrument(o.selectedInstrument || 3)
+  // properties on o added
 }
 
 KeyboardView.prototype = {
@@ -1562,7 +1545,7 @@ KeyboardView.prototype = {
     if (this.lastInstrumentEl) classRemove(this.lastInstrumentEl, 'active-instrument')
     for (var i = 0; i < samples.length; i += 1) {
       var s1 = samples[i]
-      console.warn('afterRender', s1.innerText, this.model.selectedInstrument())
+      // console.warn('afterRender', s1.innerText, this.model.selectedInstrument())
       if (s1.innerText === this.model.selectedInstrument()) {
         classAdd(s1, 'active-instrument')
         this.lastInstrumentEl = s1
@@ -1638,14 +1621,7 @@ KeyboardView.prototype.keyDown = function (ev, el) {
 }
 // 1}}} KeyboardView
 
-// {{{1 PlayerView
-bp.sounds = {
-  bd: new Audio('samples/bd.wav'),
-  // bd: new Audio('http://download.wavetlan.com/SVV/Media/HTTP/WAV/Media-Convert/Media-Convert_test6_PCM_Stereo_VBR_16SS_8000Hz.wav'),
-  sd: new Audio('samples/sd.wav'),
-  hat: new Audio('samples/hat.wav')
-}
-
+// {{{1 ScoreColumns
 function ScoreColumns (el) {
   // console.warn(type(el));
   this.els = qa('* p', el).filter(function (el1) {
@@ -1670,7 +1646,9 @@ ScoreColumns.prototype = {
     classAdd(this.selectedEl, 'active')
   }
 }
+// 1}}} ScoreColumns
 
+// {{{1 PlayerView
 function PlayerView (o) {
   o = o || {}
   // this.parentEl = ab.dom('<div class="player"></div>')
@@ -1678,37 +1656,33 @@ function PlayerView (o) {
   // if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
   // this.scoreColumns = new ScoreColumns(this.parentEl)
 
-  this.bpm = o.bpm || 100
-  this.tpb = o.tpb || 4
-  this.bar = o.bar || 4
-  this.bars = this.bar
+  // this.bpm = o.bpm || 100
+  // this.tpb = o.tpb || 4
+  // this.bar = o.bar || 4
+  // this.bars = this.bar
 
-  this.tracks = []
+  // this.tracks = []
 
-  for (var ibar = 0; ibar < this.bars; ibar += 1) {
-    this.tracks[ibar] = []
-    for (var itpb = 0; itpb < this.tpb; itpb += 1) {
-      this.tracks[ibar][itpb] = (o.tracks && o.tracks[ibar] && o.tracks[ibar][itpb])
-      if (!this.tracks[ibar][itpb]) this.tracks[ibar][itpb] = '·'
-    }
-  }
-  console.warn('PlayerView', this)
+  // for (var ibar = 0; ibar < this.bars; ibar += 1) {
+  //   this.tracks[ibar] = []
+  //   for (var itpb = 0; itpb < this.tpb; itpb += 1) {
+  //     this.tracks[ibar][itpb] = (o.tracks && o.tracks[ibar] && o.tracks[ibar][itpb])
+  //     if (!this.tracks[ibar][itpb]) this.tracks[ibar][itpb] = '·'
+  //   }
+  // }
+  // console.warn('PlayerView', this)
+  // properties on o added
 }
 
 PlayerView.prototype = {
   tpl: function (o) {
-    console.warn('PlayerView template', o)
     var t = bp.templates
     o.settings = t.settings(o.settings)
-    o.score = bp.templates.scoreSpan([1, 2, 3, 4, 5, 6, 7, 8, 9, 'A'])
+    o.score = t.scoreSpan([1, 2, 3, 4, 5, 6, 7, 8, 9, 'A'])
     o.instruments = t.instruments(o.instruments)
     o.columns = t.columnEmpty() + this.tracks.map(t.column).join('\n')
     var player = t.player(o)
-    console.warn('PlayerView Template:', player, o)
     return player
-  },
-  afterRender: function (el) {
-    this.el = el
   },
   renderTrack: function (track) {
     // var columns = []
@@ -1747,7 +1721,6 @@ mixinDom(PlayerView)
 mixinFocus(PlayerView)
 
 PlayerView.prototype.unfocus = function () {
-  console.warn('aa', this.parentEl)
   css(this.parentEl.childNodes[0], {
     border: 'none'
   })
@@ -2101,7 +2074,6 @@ Samples.prototype = {
 
 // 1}}} Samples
 
-
 // Include definitions for timber v0.1.1
 var escapeMap = {
         '&': '&amp;',
@@ -2130,7 +2102,7 @@ function escapeJson(o) {
 function escapeNone(o) { return o + ''; }
 
 
-// Timber templates v0.1.1 compiled 2016-05-19T22:43:33.494Z
+// Timber templates v0.1.1 compiled 2016-05-20T13:18:30.519Z
 bp.templates = {
   column: function (o) {
   var result =   "<p>\n";
@@ -2214,6 +2186,11 @@ ready(function () {
   bp.started = Date.now()
   bp.live = {}
 
+  // Test
+  bp.test.beatModel()
+
+  // Main
+
   var beatModel = new BeatModel()
 
   // KeyboardView
@@ -2230,12 +2207,11 @@ ready(function () {
   })
   iv1.render({
     name: 'goo',
-    url: '/samples/bd.wav'
+    url: '/data/bd.wav'
   })
   iv1.attach('#instruments')
   bp.live.iv1 = iv1
 
-  // TODO Read settings from model
   var player1 = bp.player1 = PlayerView.create({
     settings: {
       bpm: 100,

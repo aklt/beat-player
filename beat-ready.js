@@ -5,6 +5,11 @@ ready(function () {
   bp.started = Date.now()
   bp.live = {}
 
+  // Test
+  bp.test.beatModel()
+
+  // Main
+
   var beatModel = new BeatModel()
 
   // KeyboardView
@@ -21,12 +26,11 @@ ready(function () {
   })
   iv1.render({
     name: 'goo',
-    url: '/samples/bd.wav'
+    url: '/data/bd.wav'
   })
   iv1.attach('#instruments')
   bp.live.iv1 = iv1
 
-  // TODO Read settings from model
   var player1 = bp.player1 = PlayerView.create({
     settings: {
       bpm: 100,

@@ -1,7 +1,6 @@
-/*global __window __document Audio requestAnimationFrame htmlEl insertBefore
-appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
-rect attr newColor randInt */
-var bp = __window.bp = {}
+/*global bp __document requestAnimationFrame htmlEl insertBefore
+  appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
+  rect attr nextSibling prevSibling $id mixinHideShow*/
 
 const alphaNum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -42,6 +41,7 @@ function KeyboardView (o) {
     [3, 'B', 'M']
   ]
   o.model.selectedInstrument(o.selectedInstrument || 3)
+  // properties on o added
 }
 
 KeyboardView.prototype = {
@@ -90,7 +90,7 @@ KeyboardView.prototype = {
     if (this.lastInstrumentEl) classRemove(this.lastInstrumentEl, 'active-instrument')
     for (var i = 0; i < samples.length; i += 1) {
       var s1 = samples[i]
-      console.warn('afterRender', s1.innerText, this.model.selectedInstrument())
+      // console.warn('afterRender', s1.innerText, this.model.selectedInstrument())
       if (s1.innerText === this.model.selectedInstrument()) {
         classAdd(s1, 'active-instrument')
         this.lastInstrumentEl = s1
@@ -166,14 +166,7 @@ KeyboardView.prototype.keyDown = function (ev, el) {
 }
 // 1}}} KeyboardView
 
-// {{{1 PlayerView
-bp.sounds = {
-  bd: new Audio('samples/bd.wav'),
-  // bd: new Audio('http://download.wavetlan.com/SVV/Media/HTTP/WAV/Media-Convert/Media-Convert_test6_PCM_Stereo_VBR_16SS_8000Hz.wav'),
-  sd: new Audio('samples/sd.wav'),
-  hat: new Audio('samples/hat.wav')
-}
-
+// {{{1 ScoreColumns
 function ScoreColumns (el) {
   // console.warn(type(el));
   this.els = qa('* p', el).filter(function (el1) {
@@ -198,7 +191,9 @@ ScoreColumns.prototype = {
     classAdd(this.selectedEl, 'active')
   }
 }
+// 1}}} ScoreColumns
 
+// {{{1 PlayerView
 function PlayerView (o) {
   o = o || {}
   // this.parentEl = ab.dom('<div class="player"></div>')
@@ -206,37 +201,33 @@ function PlayerView (o) {
   // if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
   // this.scoreColumns = new ScoreColumns(this.parentEl)
 
-  this.bpm = o.bpm || 100
-  this.tpb = o.tpb || 4
-  this.bar = o.bar || 4
-  this.bars = this.bar
+  // this.bpm = o.bpm || 100
+  // this.tpb = o.tpb || 4
+  // this.bar = o.bar || 4
+  // this.bars = this.bar
 
-  this.tracks = []
+  // this.tracks = []
 
-  for (var ibar = 0; ibar < this.bars; ibar += 1) {
-    this.tracks[ibar] = []
-    for (var itpb = 0; itpb < this.tpb; itpb += 1) {
-      this.tracks[ibar][itpb] = (o.tracks && o.tracks[ibar] && o.tracks[ibar][itpb])
-      if (!this.tracks[ibar][itpb]) this.tracks[ibar][itpb] = '·'
-    }
-  }
-  console.warn('PlayerView', this)
+  // for (var ibar = 0; ibar < this.bars; ibar += 1) {
+  //   this.tracks[ibar] = []
+  //   for (var itpb = 0; itpb < this.tpb; itpb += 1) {
+  //     this.tracks[ibar][itpb] = (o.tracks && o.tracks[ibar] && o.tracks[ibar][itpb])
+  //     if (!this.tracks[ibar][itpb]) this.tracks[ibar][itpb] = '·'
+  //   }
+  // }
+  // console.warn('PlayerView', this)
+  // properties on o added
 }
 
 PlayerView.prototype = {
   tpl: function (o) {
-    console.warn('PlayerView template', o)
     var t = bp.templates
     o.settings = t.settings(o.settings)
-    o.score = bp.templates.scoreSpan([1, 2, 3, 4, 5, 6, 7, 8, 9, 'A'])
+    o.score = t.scoreSpan([1, 2, 3, 4, 5, 6, 7, 8, 9, 'A'])
     o.instruments = t.instruments(o.instruments)
     o.columns = t.columnEmpty() + this.tracks.map(t.column).join('\n')
     var player = t.player(o)
-    console.warn('PlayerView Template:', player, o)
     return player
-  },
-  afterRender: function (el) {
-    this.el = el
   },
   renderTrack: function (track) {
     // var columns = []
@@ -275,7 +266,6 @@ mixinDom(PlayerView)
 mixinFocus(PlayerView)
 
 PlayerView.prototype.unfocus = function () {
-  console.warn('aa', this.parentEl)
   css(this.parentEl.childNodes[0], {
     border: 'none'
   })
@@ -628,4 +618,3 @@ Samples.prototype = {
 }
 
 // 1}}} Samples
-

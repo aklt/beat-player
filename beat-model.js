@@ -1,4 +1,4 @@
-/*global extend*/
+/*global __window extend xhr AudioContext webkitAudioContext */
 // # BeatModel
 //
 // Represents the model of the current beat.
@@ -6,6 +6,10 @@
 // Holds all data of the current beat and is referenced from all Views.
 //
 // TODO Add subscriptions to events
+
+var bp = __window.bp = {}
+bp.test = {}
+
 function BeatModel (text) {
   this.model = {
     instruments: []
@@ -62,6 +66,7 @@ BeatModel.prototype = {
     for (var i = 0; i < lines.length; i += 1) {
       line = lines[i]
       if (/^\s*$/.test(line)) continue
+      if (/^\s*#/.test(line)) continue
       if (/^--/.test(line)) break
       var idx = line.indexOf(':')
       if (idx < 0) throw new Error('Bad pattern format on line ' + i)
@@ -151,6 +156,41 @@ BeatModel.prototype = {
     var cb = this.subscriptions.NewText
     if (typeof cb === 'function') cb(this)
   },
+  // Lead a beat text
+  loadBeat: function (url, cb) {
+    var self = this
+    xhr({
+      url: url
+    }, function (err, data) {
+      if (err) return cb(err)
+      self.readBeatText(data)
+      cb(null, self)
+    })
+  },
+  // Load the samples referenced
+  loadBeatSamples: function (cb) {
+    var instruments = this.model.instruments
+    var ikeys = Object.keys(instruments)
+    var self = this
+    var count = 0
+    // TODO Share the audio context
+    var context = new (AudioContext || webkitAudioContext)()
+    function loadOne (i) {
+      xhr({
+        url: instruments[i + ''].url,
+        responseType: 'arraybuffer'
+      }, function (err, result) {
+        if (err) return cb(err)
+        context.decodeAudioData(result, function (buffer) {
+          instruments[i].buffer = buffer
+          count += 1
+          if (count === ikeys.length) return cb(null, self)
+        })
+      })
+    }
+    for (var i = 0; i < ikeys.length; i += 1) loadOne(i)
+    // TODO: mixin and effects
+  },
   // TODO Return a text string representing the pattern
   getPattern: function () {
 
@@ -236,25 +276,12 @@ function ucfirst (s) {
   return s[0].toUpperCase() + s.slice(1)
 }
 
-// test
-//
-// TODO: encapsulate pattern block in '--'
-var beat1 = `
-Bass Drum: b... b... b...
-Snare:     ..s. ..s. .s.s
-HiHat:     x.x. x.x. .x.x
---
-Bass Drum:
-  url: samples/bd.wav
-
-Snare:
-  url: samples/sd.wav
-
-HiHat:
-  url: samples/hat.wav
-`
-
-var b1 = new BeatModel()
-
-b1.readBeatText(beat1)
-console.warn(JSON.stringify(b1, 0, 2))
+bp.test.beatModel = function () {
+  var bm1 = new BeatModel()
+  bm1.loadBeat('data/beat1.beat', function (err, model) {
+    console.warn(err, model)
+    bm1.loadBeatSamples(function (err, bm) {
+      console.warn(err, bm)
+    })
+  })
+}

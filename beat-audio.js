@@ -1,4 +1,4 @@
-/*global ab, AudioContext, webkitAudioContext, BeatModel*/
+/*global bp, AudioContext, webkitAudioContext, BeatModel*/
 
 // # BeatAudio
 //
@@ -49,27 +49,6 @@ BeatAudio.prototype = {
       self.calculateNoteBuckets()
       if (typeof cb === 'function') cb(null, self)
     })
-  },
-  // Load instruments
-  loadSamples: function (cb) {
-    var ikeys = Object.keys(this.instruments)
-    var self = this
-    var count = 0
-    function loadOne (i) {
-      ab.xhr({
-        url: self.instruments[i + ''].url,
-        responseType: 'arraybuffer'
-      }, function (err, result) {
-        if (err) return cb(err)
-        self.context.decodeAudioData(result, function (buffer) {
-          self.instruments[i].buffer = buffer
-          count += 1
-          if (count === ikeys.length) return cb(null, self.instruments)
-        })
-      })
-    }
-    for (var i = 0; i < ikeys.length; i += 1) loadOne(i)
-    // TODO: mixin and effects
   },
   // Schedule offset times of samples according to pattern
   calculateNoteBuckets: function () {
@@ -142,41 +121,18 @@ BeatAudio.prototype = {
   // TODO Mixing https://developer.mozilla.org/en-US/docs/Web/API/OfflineAudioContext
 }
 
-ab.BeatAudio = BeatAudio
+bp.BeatAudio = BeatAudio
 
-// test
-
-var beat1 = `
-HiHat:     x.x. x.x. x.x.
-Bass Drum: b... .... b...
-Snare:     .... s... ..s.
---
-Bass Drum:
-  url: samples/bd.wav
-
-Snare:
-  url: samples/sd.wav
-
-HiHat:
-  url: samples/hat.wav
-`
-var beat1Model = new BeatModel(beat1)
-
-ab.beat1 = new BeatAudio(beat1Model)
-
-ab.beat1.test = function () {
-  console.warn('Boob', ab.beat1)
-  ab.beat1.load(function (err) {
+bp.testBeatAudio = function () {
+  var beat1Model = new BeatModel(beat1)
+  var beat1 = new BeatAudio(beat1Model)
+  beat1.load(function (err) {
     if (err) throw err
     console.warn('loaded')
-    ab.beat1.model.bpm(80)
-    ab.beat1.play()
+    beat1.model.bpm(80)
+    beat1.play()
     setTimeout(function (o) {
-      ab.beat1.stop()
+      beat1.stop()
     }, 3000)
   })
 }
-
-// setTimeout(function () {
-  // ab.beat1.test()
-// }, 200)
