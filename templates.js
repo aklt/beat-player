@@ -26,7 +26,7 @@ function escapeJson(o) {
 function escapeNone(o) { return o + ''; }
 
 
-// Timber templates v0.1.1 compiled 2016-05-20T13:18:30.519Z
+// Timber templates v0.1.1 compiled 2016-05-20T16:22:06.810Z
 bp.templates = {
   column: function (o) {
   var result =   "<p>\n";
@@ -81,7 +81,7 @@ return result; }
 return result; }
 ,
   player: function (o) {
-  var result =   "<div class=settings>\n" + o.settings + "\n</div>\n<div class=instruments>\n" + o.instruments + "\n</div>\n<div class=score>\n  " + o.score + "\n  <div class=score-columns>\n   " + o.columns + "\n  </div>\n</div>\n";
+  var result =   "<div class=\"player\">\n  <div class=settings>\n  " + o.settings + "\n  </div>\n  <div class=instruments>\n  " + o.instruments + "\n  </div>\n  <div class=score>\n  " + o.score + "\n  <div class=score-columns>\n  " + o.columns + "\n  </div>\n  </div>\n</div>\n";
 return result; }
 ,
   scoreSpan: function (o) {
@@ -94,7 +94,7 @@ return result; }
 return result; }
 ,
   settings: function (o) {
-  var result =   "<dl>\n  <dt><abbr title=\"Beats Per Minute\"> BPM</abbr> </dt><dd>" + escapeHtml(o.bpm) + "</dd>\n  <dt><abbr title=\"Ticks Per Beat\"> LPB  </abbr> </dt><dd>" + escapeHtml(o.tpb) + "</dd>\n  <dt><abbr title=\"Total Beats\"> Beats            </abbr> </dt><dd>" + escapeHtml(o.bar) + "</dd>\n</dl>\n";
+  var result =   "<dl>\n  <dt><abbr title=\"Beats Per Minute\">BPM</abbr></dt> <dd>" + escapeHtml(o.bpm) + "</dd>\n  <dt><abbr title=\"Ticks Per Beat\">LPB</abbr></dt> <dd>" + escapeHtml(o.tpb) + "</dd>\n  <dt><abbr title=\"Total Beats\">Beats</abbr></dt> <dd>" + escapeHtml(o.beats) + "</dd>\n</dl>\n";
 return result; }
 ,
   sliderInput: function (o) {

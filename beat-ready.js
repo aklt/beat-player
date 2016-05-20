@@ -5,9 +5,6 @@ ready(function () {
   bp.started = Date.now()
   bp.live = {}
 
-  // Test
-  bp.test.beatModel()
-
   // Main
 
   var beatModel = new BeatModel()
@@ -31,6 +28,7 @@ ready(function () {
   iv1.attach('#instruments')
   bp.live.iv1 = iv1
 
+  // PlayerView
   var player1 = bp.player1 = PlayerView.create({
     settings: {
       bpm: 100,
@@ -48,6 +46,11 @@ ready(function () {
       return s1.split('')
     })
   })
+
+  // Test
+  bp.test.player()
+
+
 
   player1.render({
     settings: {

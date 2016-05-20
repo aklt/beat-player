@@ -196,7 +196,17 @@ BeatModel.prototype = {
 
   },
   instruments: function (changeUrls) {
-    if (!changeUrls) return this.model.instruments
+    if (!changeUrls) {
+      // TODO This is a bit strange
+      var inst = this.model.instruments
+      var keys = Object.keys(inst)
+      var result = []
+      for (var i = 0; i < keys.length; i += 1) {
+        var i1 = inst[keys[i]]
+        result.push(extend({number: keys[i]}, i1))
+      }
+      return result
+    }
     throw new Error('TODO: set instruments')
   },
   patterns: function (newPatterns) {

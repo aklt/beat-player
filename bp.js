@@ -1224,7 +1224,17 @@ BeatModel.prototype = {
 
   },
   instruments: function (changeUrls) {
-    if (!changeUrls) return this.model.instruments
+    if (!changeUrls) {
+      // TODO This is a bit strange
+      var inst = this.model.instruments
+      var keys = Object.keys(inst)
+      var result = []
+      for (var i = 0; i < keys.length; i += 1) {
+        var i1 = inst[keys[i]]
+        result.push(extend({number: keys[i]}, i1))
+      }
+      return result
+    }
     throw new Error('TODO: set instruments')
   },
   patterns: function (newPatterns) {
@@ -1661,7 +1671,12 @@ function PlayerView (o) {
   // this.bar = o.bar || 4
   // this.bars = this.bar
 
-  // this.tracks = []
+  this.tracks = [
+    '....'.split(''),
+    '....'.split(''),
+    '....'.split(''),
+    '....'.split('')
+  ]
 
   // for (var ibar = 0; ibar < this.bars; ibar += 1) {
   //   this.tracks[ibar] = []
@@ -1681,8 +1696,23 @@ PlayerView.prototype = {
     o.score = t.scoreSpan([1, 2, 3, 4, 5, 6, 7, 8, 9, 'A'])
     o.instruments = t.instruments(o.instruments)
     o.columns = t.columnEmpty() + this.tracks.map(t.column).join('\n')
+    console.warn('Player tpl', o)
     var player = t.player(o)
     return player
+  },
+  renderModel: function () {
+    // Extract the parts needed for the playerview
+    var m = this.model
+    var o = {
+      settings: {
+        bpm: m.bpm(),
+        tpb: m.tpb(),
+        beats: m.beats()
+      },
+      instruments: m.instruments()
+    }
+    console.warn('obj', o)
+    this.render(o)
   },
   renderTrack: function (track) {
     // var columns = []
@@ -2074,6 +2104,23 @@ Samples.prototype = {
 
 // 1}}} Samples
 
+
+bp.test.player = function () {
+  var bm1 = new BeatModel()
+  bm1.loadBeat('data/beat1.beat', function (err, model) {
+    if (err) throw err
+    bm1.loadBeatSamples(function (err, bm) {
+      if (err) throw err
+      var pl1 = PlayerView.create({
+        model: bm
+      })
+      pl1.renderModel()
+      pl1.attach('#test1')
+    })
+  })
+}
+
+
 // Include definitions for timber v0.1.1
 var escapeMap = {
         '&': '&amp;',
@@ -2102,7 +2149,7 @@ function escapeJson(o) {
 function escapeNone(o) { return o + ''; }
 
 
-// Timber templates v0.1.1 compiled 2016-05-20T13:18:30.519Z
+// Timber templates v0.1.1 compiled 2016-05-20T16:22:06.810Z
 bp.templates = {
   column: function (o) {
   var result =   "<p>\n";
@@ -2157,7 +2204,7 @@ return result; }
 return result; }
 ,
   player: function (o) {
-  var result =   "<div class=settings>\n" + o.settings + "\n</div>\n<div class=instruments>\n" + o.instruments + "\n</div>\n<div class=score>\n  " + o.score + "\n  <div class=score-columns>\n   " + o.columns + "\n  </div>\n</div>\n";
+  var result =   "<div class=\"player\">\n  <div class=settings>\n  " + o.settings + "\n  </div>\n  <div class=instruments>\n  " + o.instruments + "\n  </div>\n  <div class=score>\n  " + o.score + "\n  <div class=score-columns>\n  " + o.columns + "\n  </div>\n  </div>\n</div>\n";
 return result; }
 ,
   scoreSpan: function (o) {
@@ -2170,7 +2217,7 @@ return result; }
 return result; }
 ,
   settings: function (o) {
-  var result =   "<dl>\n  <dt><abbr title=\"Beats Per Minute\"> BPM</abbr> </dt><dd>" + escapeHtml(o.bpm) + "</dd>\n  <dt><abbr title=\"Ticks Per Beat\"> LPB  </abbr> </dt><dd>" + escapeHtml(o.tpb) + "</dd>\n  <dt><abbr title=\"Total Beats\"> Beats            </abbr> </dt><dd>" + escapeHtml(o.bar) + "</dd>\n</dl>\n";
+  var result =   "<dl>\n  <dt><abbr title=\"Beats Per Minute\">BPM</abbr></dt> <dd>" + escapeHtml(o.bpm) + "</dd>\n  <dt><abbr title=\"Ticks Per Beat\">LPB</abbr></dt> <dd>" + escapeHtml(o.tpb) + "</dd>\n  <dt><abbr title=\"Total Beats\">Beats</abbr></dt> <dd>" + escapeHtml(o.beats) + "</dd>\n</dl>\n";
 return result; }
 ,
   sliderInput: function (o) {
@@ -2185,9 +2232,6 @@ return result; }
 ready(function () {
   bp.started = Date.now()
   bp.live = {}
-
-  // Test
-  bp.test.beatModel()
 
   // Main
 
@@ -2212,6 +2256,7 @@ ready(function () {
   iv1.attach('#instruments')
   bp.live.iv1 = iv1
 
+  // PlayerView
   var player1 = bp.player1 = PlayerView.create({
     settings: {
       bpm: 100,
@@ -2229,6 +2274,11 @@ ready(function () {
       return s1.split('')
     })
   })
+
+  // Test
+  bp.test.player()
+
+
 
   player1.render({
     settings: {

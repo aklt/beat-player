@@ -206,7 +206,12 @@ function PlayerView (o) {
   // this.bar = o.bar || 4
   // this.bars = this.bar
 
-  // this.tracks = []
+  this.tracks = [
+    '....'.split(''),
+    '....'.split(''),
+    '....'.split(''),
+    '....'.split('')
+  ]
 
   // for (var ibar = 0; ibar < this.bars; ibar += 1) {
   //   this.tracks[ibar] = []
@@ -226,8 +231,23 @@ PlayerView.prototype = {
     o.score = t.scoreSpan([1, 2, 3, 4, 5, 6, 7, 8, 9, 'A'])
     o.instruments = t.instruments(o.instruments)
     o.columns = t.columnEmpty() + this.tracks.map(t.column).join('\n')
+    console.warn('Player tpl', o)
     var player = t.player(o)
     return player
+  },
+  renderModel: function () {
+    // Extract the parts needed for the playerview
+    var m = this.model
+    var o = {
+      settings: {
+        bpm: m.bpm(),
+        tpb: m.tpb(),
+        beats: m.beats()
+      },
+      instruments: m.instruments()
+    }
+    console.warn('obj', o)
+    this.render(o)
   },
   renderTrack: function (track) {
     // var columns = []
@@ -618,3 +638,20 @@ Samples.prototype = {
 }
 
 // 1}}} Samples
+
+
+bp.test.player = function () {
+  var bm1 = new BeatModel()
+  bm1.loadBeat('data/beat1.beat', function (err, model) {
+    if (err) throw err
+    bm1.loadBeatSamples(function (err, bm) {
+      if (err) throw err
+      var pl1 = PlayerView.create({
+        model: bm
+      })
+      pl1.renderModel()
+      pl1.attach('#test1')
+    })
+  })
+}
+
