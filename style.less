@@ -1,6 +1,7 @@
 
 @col-width: 1rem;
 @bg-input:  #AAE;
+@topline:   16rem;
 
 * {
   box-sizing: border-box;
@@ -11,7 +12,7 @@
     position: absolute;
     // top: 10rem;
     // left: 12rem;
-    width: 95%;
+    // width: 95%;
     cursor: pointer;
     border: 1px solid blue;
     .instruments {
@@ -51,8 +52,8 @@
         }
     }
     .score-columns {
-        position: absolute;
-        top: 2rem;
+        position: relative;
+        // top: 0.2rem;
         display: block;
         float: left;
         b {
@@ -74,10 +75,6 @@
     /*border-left: 1px solid blue;*/
 }
 
-.boxed {
-    border: 1px solid blue;
-}
-
 .active-key {
     background-color: lightgrey;
 }
@@ -90,8 +87,9 @@
    position: relative;
    margin: 0;
    padding: 0;
-   top: -1rem;
-   left: 14rem;
+   top: @topline;
+   left: 18rem;
+   width: auto;
    border: 1px solid red;
    background-color: white;
    dl, dt, dd {
@@ -128,15 +126,11 @@
 
 .keyboard {
     cursor: pointer;
-    font-size: 130%;
+    font-size: 160%;
     border: 1px solid red;
     position: absolute;
+    top: @topline;
     margin: 0;
-    top: 0rem;
-    left: 0rem;
-    pre {
-        border: 1px solid green;
-    }
     b {
         font-weight: normal;
     }

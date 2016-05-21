@@ -1211,6 +1211,7 @@ BeatModel.prototype = {
         if (err) return cb(err)
         context.decodeAudioData(result, function (buffer) {
           instruments[i].buffer = buffer
+          instruments[i].number = i + ''
           count += 1
           if (count === ikeys.length) return cb(null, self)
         })
@@ -1672,10 +1673,10 @@ function PlayerView (o) {
   // this.bars = this.bar
 
   this.tracks = [
-    '....'.split(''),
-    '....'.split(''),
-    '....'.split(''),
-    '....'.split('')
+    '1...'.split(''),
+    '.2..'.split(''),
+    '..3.'.split(''),
+    '...4'.split('')
   ]
 
   // for (var ibar = 0; ibar < this.bars; ibar += 1) {
@@ -1977,14 +1978,13 @@ mixinHandlers(InstrumentsView, {
 })
 // 1}}} InstrumentsView
 
-// {{{1 Slider Input
+// {{{1 SliderInput
 function SliderInput (o) {
   o = o || {}
-  this.el = o.el
-  if (typeof this.el === 'string') this.el = qs(this.el)
-  this.sliderEl = qs('input[type=range]', this.el)
-  this.textEl = qs('input[type=text]', this.el)
-  if (!this.el) throw new Error('Need o.el')
+  this.parentEl = $id(o.id)
+  this.sliderEl = qs('input[type=range]', this.parentEl)
+  this.textEl = qs('input[type=text]', this.parentEl)
+  if (!this.parentEl) throw new Error('Need o.id')
   if (!this.sliderEl) throw new Error('Need o.sliderEl')
   if (!this.textEl) throw new Error('Need o.textEl')
 }
@@ -2149,7 +2149,7 @@ function escapeJson(o) {
 function escapeNone(o) { return o + ''; }
 
 
-// Timber templates v0.1.1 compiled 2016-05-20T16:22:06.810Z
+// Timber templates v0.1.1 compiled 2016-05-21T00:56:45.701Z
 bp.templates = {
   column: function (o) {
   var result =   "<p>\n";
@@ -2165,15 +2165,15 @@ return result; }
 return result; }
 ,
   instrument: function (o) {
-  var result =   "<h4>instrument " + escapeHtml(o.number) + "</h4>\n<dl>\n  <dt>Name</dt><dd>" + escapeHtml(o.name) + "</dd>\n  <dt>Url</dt><dd>" + escapeHtml(o.url) + "</dd>\n";
+  var result =   "<h4>instrument " + escapeHtml(o.number) + "</h4><dl><dt>Name</dt><dd>" + escapeHtml(o.name) + "</dd><dt>Url</dt><dd>" + escapeHtml(o.url) + "</dd>";
   if (o.range) {
-    result +=     "    <dt>Range</dt><dd>" + escapeHtml(o.range) + "</dd>\n";
+    result +=     "<dt>Range</dt><dd>" + escapeHtml(o.range) + "</dd>";
   }
   result += "";
   if (o.buffer) {
-    result +=     "    <dt>Duration</dt><dd>" + escapeHtml(o["o.buffer.duration"]) + "</dd>\n";
+    result +=     "<dt>Duration</dt><dd>" + escapeHtml(Math.round(o.buffer.duration * 100) / 100) + "</dd>";
   }
-  result += "</dl>\n";
+  result += "</dl>";
 return result; }
 ,
   instruments: function (o) {
@@ -2189,7 +2189,7 @@ return result; }
   var result =   "<pre>\n";
   for (var v0 = 0; v0 < o.length; v0 += 1) {
     var v1 = o[v0];
-    result +=     "  " + v1 + "\n";
+    result +=     "  " + (v1) + "\n";
   }
   result += "</pre>\n";
 return result; }
@@ -2204,7 +2204,7 @@ return result; }
 return result; }
 ,
   player: function (o) {
-  var result =   "<div class=\"player\">\n  <div class=settings>\n  " + o.settings + "\n  </div>\n  <div class=instruments>\n  " + o.instruments + "\n  </div>\n  <div class=score>\n  " + o.score + "\n  <div class=score-columns>\n  " + o.columns + "\n  </div>\n  </div>\n</div>\n";
+  var result =   "<div class=settings>\n" + (o.settings) + "\n</div>\n<div class=instruments>\n" + (o.instruments) + "\n</div>\n<div class=score>\n" + (o.score) + "\n<div class=score-columns>\n" + (o.columns) + "\n</div>\n</div>\n";
 return result; }
 ,
   scoreSpan: function (o) {
@@ -2257,51 +2257,17 @@ ready(function () {
   bp.live.iv1 = iv1
 
   // PlayerView
-  var player1 = bp.player1 = PlayerView.create({
-    settings: {
-      bpm: 100,
-      tpb: 6,
-      bar: 4
-    },
-    tracks: [
-      'ab..',
-      'cd..',
-      'cd..',
-      '00..',
-      'cd..',
-      'cd..'
-    ].map((s1) => {
-      return s1.split('')
-    })
+  var pl1 = PlayerView.create({
+    model: beatModel
   })
-
-  // Test
-  bp.test.player()
-
-
-
-  player1.render({
-    settings: {
-      bpm: 100,
-      tpb: 9,
-      bar: 4
-    },
-    score: [
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 'A', 'B', 'C', 'D', 'E', 'F'
-    ],
-    instruments: [
-      {name: 'bb'},
-      {name: 'cc'}
-    ]
-  })
-  console.warn('Rendered Player: ', player1)
-  player1.attach('#player1')
+  pl1.renderModel()
+  pl1.attach('#player1')
 
   // InputHandler handles events on body
   var ih1 = new InputHandler({
     model: beatModel,
     keyboardView: kv1,
-    player: player1
+    player: pl1
   })
   ih1.eventsAttach()
   bp.live.ih1 = ih1
@@ -2309,6 +2275,21 @@ ready(function () {
   // TextInput pops up to get input
   var ti1 = TextInput.create({id: 'textInput1'})
   bp.live.ti1 = ti1
+
+  var si1 = SliderInput.create({id: 'sliderInput1'})
+  bp.live.si1 = si1
+
+  // Ready
+  beatModel.loadBeat('data/beat1.beat', function (err, model) {
+    if (err) throw err
+    beatModel.loadBeatSamples(function (err, bm) {
+      if (err) throw err
+      console.warn('Loaded beat1')
+      pl1.detach()
+      pl1.renderModel()
+      pl1.attach()
+    })
+  })
 
   // SliderInput for slidable values
   // var si1 = SliderInput.create({el: '#slider1'})

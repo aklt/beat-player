@@ -9,15 +9,18 @@
     <div class="player" id="player1"> </div>
     <div class="instrument-editor" id="instruments"> </div>
     <div class="keyboard" id="keyboard"></div>
-    <div class="test" id="test1">
-      <p>Test1</p>
-    </div>
 
     <div class="input-text hidden" id="textInput1">
       <input type="text" name="small-input" value="{h value}" />
     </div>
 
-    <div class="ontop">
+    <div class="slider-input hidden" id="sliderInput1">
+      <input type="text" name="val" value="{t value}" />
+      <input orient="vertical" type="range" min="0" max="100" step="1"
+             value="{t value}" />
+    </div>
+
+    <div class="message hidden">
     </div>
 
 
@@ -119,16 +122,7 @@
       </div>
     </div>
     -->
-
     <script src="bp.js"></script> 
-    <script src="test.js"></script> 
-    <!--
-    <script src="ab.js"></script> 
-    <script src="templates.js"></script> 
-    <script src="beat-player.js"></script> 
-    <script src="beat-model.js"></script> 
-    <script src="beat-audio.js"></script> 
-    -->
   </body>
 </html>
 

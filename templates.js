@@ -26,7 +26,7 @@ function escapeJson(o) {
 function escapeNone(o) { return o + ''; }
 
 
-// Timber templates v0.1.1 compiled 2016-05-20T16:22:06.810Z
+// Timber templates v0.1.1 compiled 2016-05-21T00:56:45.701Z
 bp.templates = {
   column: function (o) {
   var result =   "<p>\n";
@@ -42,15 +42,15 @@ return result; }
 return result; }
 ,
   instrument: function (o) {
-  var result =   "<h4>instrument " + escapeHtml(o.number) + "</h4>\n<dl>\n  <dt>Name</dt><dd>" + escapeHtml(o.name) + "</dd>\n  <dt>Url</dt><dd>" + escapeHtml(o.url) + "</dd>\n";
+  var result =   "<h4>instrument " + escapeHtml(o.number) + "</h4><dl><dt>Name</dt><dd>" + escapeHtml(o.name) + "</dd><dt>Url</dt><dd>" + escapeHtml(o.url) + "</dd>";
   if (o.range) {
-    result +=     "    <dt>Range</dt><dd>" + escapeHtml(o.range) + "</dd>\n";
+    result +=     "<dt>Range</dt><dd>" + escapeHtml(o.range) + "</dd>";
   }
   result += "";
   if (o.buffer) {
-    result +=     "    <dt>Duration</dt><dd>" + escapeHtml(o["o.buffer.duration"]) + "</dd>\n";
+    result +=     "<dt>Duration</dt><dd>" + escapeHtml(Math.round(o.buffer.duration * 100) / 100) + "</dd>";
   }
-  result += "</dl>\n";
+  result += "</dl>";
 return result; }
 ,
   instruments: function (o) {
@@ -66,7 +66,7 @@ return result; }
   var result =   "<pre>\n";
   for (var v0 = 0; v0 < o.length; v0 += 1) {
     var v1 = o[v0];
-    result +=     "  " + v1 + "\n";
+    result +=     "  " + (v1) + "\n";
   }
   result += "</pre>\n";
 return result; }
@@ -81,7 +81,7 @@ return result; }
 return result; }
 ,
   player: function (o) {
-  var result =   "<div class=\"player\">\n  <div class=settings>\n  " + o.settings + "\n  </div>\n  <div class=instruments>\n  " + o.instruments + "\n  </div>\n  <div class=score>\n  " + o.score + "\n  <div class=score-columns>\n  " + o.columns + "\n  </div>\n  </div>\n</div>\n";
+  var result =   "<div class=settings>\n" + (o.settings) + "\n</div>\n<div class=instruments>\n" + (o.instruments) + "\n</div>\n<div class=score>\n" + (o.score) + "\n<div class=score-columns>\n" + (o.columns) + "\n</div>\n</div>\n";
 return result; }
 ,
   scoreSpan: function (o) {

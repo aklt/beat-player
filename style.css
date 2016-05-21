@@ -4,7 +4,6 @@
 .player {
   font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif;
   position: absolute;
-  width: 95%;
   cursor: pointer;
   border: 1px solid blue;
 }
@@ -44,8 +43,7 @@
   display: block;
 }
 .player .score-columns {
-  position: absolute;
-  top: 2rem;
+  position: relative;
   display: block;
   float: left;
 }
@@ -62,9 +60,6 @@
   background-color: lightblue;
   /*border-left: 1px solid blue;*/
 }
-.boxed {
-  border: 1px solid blue;
-}
 .active-key {
   background-color: lightgrey;
 }
@@ -75,8 +70,9 @@
   position: relative;
   margin: 0;
   padding: 0;
-  top: -1rem;
-  left: 14rem;
+  top: 16rem;
+  left: 18rem;
+  width: auto;
   border: 1px solid red;
   background-color: white;
 }
@@ -113,15 +109,11 @@
 }
 .keyboard {
   cursor: pointer;
-  font-size: 130%;
+  font-size: 160%;
   border: 1px solid red;
   position: absolute;
+  top: 16rem;
   margin: 0;
-  top: 0rem;
-  left: 0rem;
-}
-.keyboard pre {
-  border: 1px solid green;
 }
 .keyboard b {
   font-weight: normal;

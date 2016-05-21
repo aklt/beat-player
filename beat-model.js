@@ -183,6 +183,7 @@ BeatModel.prototype = {
         if (err) return cb(err)
         context.decodeAudioData(result, function (buffer) {
           instruments[i].buffer = buffer
+          instruments[i].number = i + ''
           count += 1
           if (count === ikeys.length) return cb(null, self)
         })

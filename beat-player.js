@@ -207,10 +207,10 @@ function PlayerView (o) {
   // this.bars = this.bar
 
   this.tracks = [
-    '....'.split(''),
-    '....'.split(''),
-    '....'.split(''),
-    '....'.split('')
+    '1...'.split(''),
+    '.2..'.split(''),
+    '..3.'.split(''),
+    '...4'.split('')
   ]
 
   // for (var ibar = 0; ibar < this.bars; ibar += 1) {
@@ -512,14 +512,13 @@ mixinHandlers(InstrumentsView, {
 })
 // 1}}} InstrumentsView
 
-// {{{1 Slider Input
+// {{{1 SliderInput
 function SliderInput (o) {
   o = o || {}
-  this.el = o.el
-  if (typeof this.el === 'string') this.el = qs(this.el)
-  this.sliderEl = qs('input[type=range]', this.el)
-  this.textEl = qs('input[type=text]', this.el)
-  if (!this.el) throw new Error('Need o.el')
+  this.parentEl = $id(o.id)
+  this.sliderEl = qs('input[type=range]', this.parentEl)
+  this.textEl = qs('input[type=text]', this.parentEl)
+  if (!this.parentEl) throw new Error('Need o.id')
   if (!this.sliderEl) throw new Error('Need o.sliderEl')
   if (!this.textEl) throw new Error('Need o.textEl')
 }

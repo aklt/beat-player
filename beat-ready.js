@@ -29,51 +29,17 @@ ready(function () {
   bp.live.iv1 = iv1
 
   // PlayerView
-  var player1 = bp.player1 = PlayerView.create({
-    settings: {
-      bpm: 100,
-      tpb: 6,
-      bar: 4
-    },
-    tracks: [
-      'ab..',
-      'cd..',
-      'cd..',
-      '00..',
-      'cd..',
-      'cd..'
-    ].map((s1) => {
-      return s1.split('')
-    })
+  var pl1 = PlayerView.create({
+    model: beatModel
   })
-
-  // Test
-  bp.test.player()
-
-
-
-  player1.render({
-    settings: {
-      bpm: 100,
-      tpb: 9,
-      bar: 4
-    },
-    score: [
-      1, 2, 3, 4, 5, 6, 7, 8, 9, 'A', 'B', 'C', 'D', 'E', 'F'
-    ],
-    instruments: [
-      {name: 'bb'},
-      {name: 'cc'}
-    ]
-  })
-  console.warn('Rendered Player: ', player1)
-  player1.attach('#player1')
+  pl1.renderModel()
+  pl1.attach('#player1')
 
   // InputHandler handles events on body
   var ih1 = new InputHandler({
     model: beatModel,
     keyboardView: kv1,
-    player: player1
+    player: pl1
   })
   ih1.eventsAttach()
   bp.live.ih1 = ih1
@@ -81,6 +47,21 @@ ready(function () {
   // TextInput pops up to get input
   var ti1 = TextInput.create({id: 'textInput1'})
   bp.live.ti1 = ti1
+
+  var si1 = SliderInput.create({id: 'sliderInput1'})
+  bp.live.si1 = si1
+
+  // Ready
+  beatModel.loadBeat('data/beat1.beat', function (err, model) {
+    if (err) throw err
+    beatModel.loadBeatSamples(function (err, bm) {
+      if (err) throw err
+      console.warn('Loaded beat1')
+      pl1.detach()
+      pl1.renderModel()
+      pl1.attach()
+    })
+  })
 
   // SliderInput for slidable values
   // var si1 = SliderInput.create({el: '#slider1'})
