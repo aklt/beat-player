@@ -88,7 +88,9 @@ BeatModel.prototype = {
             tpb = k
             lastLpb = k
           } else {
-            if (k - lastLpb - 1 !== tpb) throw new Error('Bad tpb ' + lastLpb + ' ' + k)
+            if (k - lastLpb - 1 !== tpb) {
+              console.warn(new Error('Bad tpb ' + lastLpb + ' ' + k))
+            }
           }
         } else {
           chars.push(ch)
@@ -156,7 +158,18 @@ BeatModel.prototype = {
     var cb = this.subscriptions.NewText
     if (typeof cb === 'function') cb(this)
   },
-  // Lead a beat text
+  // Load a beat including samples
+  load: function (url, cb) {
+    var self = this
+    this.loadBeat(url, function (err) {
+      if (err) return cb(err)
+      self.loadBeatSamples(function (err, model) {
+        if (err) return cb(err)
+        cb(null, model)
+      })
+    })
+  },
+  // Load a beat text
   loadBeat: function (url, cb) {
     var self = this
     xhr({
@@ -289,10 +302,8 @@ function ucfirst (s) {
 
 bp.test.beatModel = function () {
   var bm1 = new BeatModel()
-  bm1.loadBeat('data/beat1.beat', function (err, model) {
-    console.warn(err, model)
-    bm1.loadBeatSamples(function (err, bm) {
-      console.warn(err, bm)
-    })
+  bm1.load('data/beat1.beat', function (err, model) {
+    if (err) throw err
+    console.warn('Loaded', model)
   })
 }

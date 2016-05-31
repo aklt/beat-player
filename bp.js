@@ -1116,7 +1116,9 @@ BeatModel.prototype = {
             tpb = k
             lastLpb = k
           } else {
-            if (k - lastLpb - 1 !== tpb) throw new Error('Bad tpb ' + lastLpb + ' ' + k)
+            if (k - lastLpb - 1 !== tpb) {
+              console.warn(new Error('Bad tpb ' + lastLpb + ' ' + k))
+            }
           }
         } else {
           chars.push(ch)
@@ -1184,7 +1186,18 @@ BeatModel.prototype = {
     var cb = this.subscriptions.NewText
     if (typeof cb === 'function') cb(this)
   },
-  // Lead a beat text
+  // Load a beat including samples
+  load: function (url, cb) {
+    var self = this
+    this.loadBeat(url, function (err) {
+      if (err) return cb(err)
+      self.loadBeatSamples(function (err, model) {
+        if (err) return cb(err)
+        cb(null, model)
+      })
+    })
+  },
+  // Load a beat text
   loadBeat: function (url, cb) {
     var self = this
     xhr({
@@ -1317,11 +1330,9 @@ function ucfirst (s) {
 
 bp.test.beatModel = function () {
   var bm1 = new BeatModel()
-  bm1.loadBeat('data/beat1.beat', function (err, model) {
-    console.warn(err, model)
-    bm1.loadBeatSamples(function (err, bm) {
-      console.warn(err, bm)
-    })
+  bm1.load('data/beat1.beat', function (err, model) {
+    if (err) throw err
+    console.warn('Loaded', model)
   })
 }
 
@@ -1336,6 +1347,7 @@ bp.test.beatModel = function () {
 function BeatAudio (model) {
   this.model = model
   this.instruments = model.instruments()
+  // TODO There is a max. limit on the number of AudioContexts
   this.context = new (AudioContext || webkitAudioContext)()
   this.volume = this.context.createGain()
   this.volume.gain.value = 1
@@ -1343,7 +1355,7 @@ function BeatAudio (model) {
   this.playing = []
   this.position = 0
   this.positionTime = 0
-  this.lookaheadTime = 0.3
+  this.lookaheadTime = 0.4
 }
 
 // divide notes on property `note.time` into buckets of `intervalTime` size
@@ -1370,9 +1382,10 @@ function timeBuckets (notes, intervalTime) {
 
 BeatAudio.prototype = {
   // load and reset variables
-  load: function (cb) {
+  load: function (url, cb) {
     var self = this
-    this.loadSamples(function () {
+    this.model.load(url, function (err, model) {
+      if (err) return cb(err)
       self.calculateNoteBuckets()
       if (typeof cb === 'function') cb(null, self)
     })
@@ -1380,8 +1393,8 @@ BeatAudio.prototype = {
   // Schedule offset times of samples according to pattern
   calculateNoteBuckets: function () {
     var patterns = this.model.patterns()
-    this.secondsPerTick = (this.model.bpm() / 60) /
-                         (this.model.tpb() * this.model.beats())
+    this.secondsPerTick = (60 / this.model.bpm()) / this.model.tpb()
+    console.warn('bpm, secondsPerTick', this.model.bpm(), this.secondsPerTick)
     this.orderedNotes = []
     for (var instrumentNumber in patterns) {
       var notes = patterns[instrumentNumber]
@@ -1394,43 +1407,51 @@ BeatAudio.prototype = {
         })
       }
     }
-    this.orderedNotes.sort(function (a, b) {
-      return a.time - b.time
-    })
-
+    this.orderedNotes.sort(function (a, b) { return a.time - b.time })
     this.noteBuckets = timeBuckets(this.orderedNotes, this.lookaheadTime)
     this.noteBucketsIndex = 0
-    console.warn('buckets', this.noteBuckets)
   },
   // Start playback at pattern position
-  tick: function (currentTime) {
-    var self = this
-    var time = this.context.currentTime
-    this.timeout = setInterval(function () {
-      var delta = self.context.currentTime - time
-      console.warn(time, delta)
-      time += self.secondsPerTick
-      console.warn('time', time, delta, self.secondsPerTick, self.context.currentTime)
-    }, this.lookaheadTime * 1000)
-  },
   play: function () {
-    this.tick()
+    var self = this
+    var ctx = this.context
+    var time0 = ctx.currentTime
+    var bucketIndex = this.noteBucketsIndex
+    var length = this.noteBuckets.length
+    var jitterTime = 0
+    this.timeout = setInterval(function () {
+      var timePassed = ctx.currentTime - time0
+      var bucketTime = bucketIndex * self.lookaheadTime
+      jitterTime = bucketTime - timePassed
+      var bucket = self.noteBuckets[bucketIndex]
+      for (var i = 0; i < bucket.length; i += 1) {
+        var note = bucket[i]
+        var xTime = self.lookaheadTime + note.time - bucketTime + jitterTime
+        self.playSample(note.instrument, xTime)
+        console.warn('playSample', bucketIndex, xTime)
+      }
+      bucketIndex += 1
+      if (bucketIndex === length) {
+        bucketIndex = 0
+        time0 += timePassed
+      }
+    }, this.lookaheadTime * 1000)
   },
   // Stop all playing samples
   stop: function () {
     clearTimeout(this.timeout)
   },
   // Play a sample in `when` seconds
-  playSample: function (i, when, detune) {
+  playSample: function (i, when) {
     when = when || 0
-    detune = detune || 0
+    // detune = detune || 0
     var source = this.context.createBufferSource()
-    var instrument = this.instruments[i + '']
+    var instrument = this.model.instruments()[i]
     if (!instrument) throw new Error('Please init')
     source.buffer = instrument.buffer
     source.connect(this.volume)
     // TODO Make ranges of notes
-    source.detune.value = detune
+    // source.detune.value = detune
     // source.playbackRate.value = 2
     source.start(this.context.currentTime + when)
     source.onended = function () {
@@ -1452,21 +1473,21 @@ bp.BeatAudio = BeatAudio
 
 bp.testBeatAudio = function () {
   var beat1Model = new BeatModel(beat1)
-  var beat1 = new BeatAudio(beat1Model)
-  beat1.load(function (err) {
+  var beat1 = bp.beat1 = new BeatAudio(beat1Model)
+  beat1.model.bpm(90)
+  beat1.load('data/beat0.beat', function (err, audio) {
     if (err) throw err
-    console.warn('loaded')
-    beat1.model.bpm(80)
+    console.warn('beat', beat1)
     beat1.play()
     setTimeout(function (o) {
       beat1.stop()
-    }, 3000)
+    }, 6000)
   })
 }
 
 /*global bp __document requestAnimationFrame htmlEl insertBefore
   appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
-  rect attr nextSibling prevSibling $id mixinHideShow*/
+  rect attr nextSibling prevSibling $id mixinHideShow BeatModel */
 
 const alphaNum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -1675,8 +1696,8 @@ function PlayerView (o) {
   this.tracks = [
     '1...'.split(''),
     '.2..'.split(''),
-    '..3.'.split(''),
-    '...4'.split('')
+    '.3..'.split(''),
+    '.4..'.split('')
   ]
 
   // for (var ibar = 0; ibar < this.bars; ibar += 1) {
@@ -1843,6 +1864,7 @@ mixinHandlers(PlayerView, {
         break
     }
     this.focus()
+    return ev.stopPropagation()
   }
 })
 // 1}}} PlayerView
@@ -2083,8 +2105,11 @@ mixinHandlers(TextInput, {
     var key = String.fromCharCode(ev.keyCode).toLowerCase()
     if (/^[\s\b]*$/.test(key)) key = '.'
     if (this.setValue) this.setValue(key)
-    ev.stopPropagation()
     this.popdown()
+  },
+  keydown: function (ev) {
+    // Prevent InputHandler from changing instrument
+    return ev.stopPropagation()
   }
 })
 // 1}}} TextInput
@@ -2103,7 +2128,6 @@ Samples.prototype = {
 }
 
 // 1}}} Samples
-
 
 bp.test.player = function () {
   var bm1 = new BeatModel()
@@ -2149,7 +2173,7 @@ function escapeJson(o) {
 function escapeNone(o) { return o + ''; }
 
 
-// Timber templates v0.1.1 compiled 2016-05-21T00:56:45.701Z
+// Timber templates v0.1.1 compiled 2016-05-31T14:30:20.388Z
 bp.templates = {
   column: function (o) {
   var result =   "<p>\n";
@@ -2279,7 +2303,13 @@ ready(function () {
   var si1 = SliderInput.create({id: 'sliderInput1'})
   bp.live.si1 = si1
 
-  // Ready
+  // 
+
+  // Main
+
+  bp.testBeatAudio()
+
+  return true
   beatModel.loadBeat('data/beat1.beat', function (err, model) {
     if (err) throw err
     beatModel.loadBeatSamples(function (err, bm) {
@@ -2297,8 +2327,6 @@ ready(function () {
   // si1.setRange(0, 100)
   // si1.render()
   // bp.sliderInput1 = si1
-
-  return true
 
   // test audio
   // bp.beat1.test()

@@ -1,6 +1,6 @@
 /*global bp __document requestAnimationFrame htmlEl insertBefore
   appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
-  rect attr nextSibling prevSibling $id mixinHideShow*/
+  rect attr nextSibling prevSibling $id mixinHideShow BeatModel */
 
 const alphaNum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -209,8 +209,8 @@ function PlayerView (o) {
   this.tracks = [
     '1...'.split(''),
     '.2..'.split(''),
-    '..3.'.split(''),
-    '...4'.split('')
+    '.3..'.split(''),
+    '.4..'.split('')
   ]
 
   // for (var ibar = 0; ibar < this.bars; ibar += 1) {
@@ -377,6 +377,7 @@ mixinHandlers(PlayerView, {
         break
     }
     this.focus()
+    return ev.stopPropagation()
   }
 })
 // 1}}} PlayerView
@@ -617,8 +618,11 @@ mixinHandlers(TextInput, {
     var key = String.fromCharCode(ev.keyCode).toLowerCase()
     if (/^[\s\b]*$/.test(key)) key = '.'
     if (this.setValue) this.setValue(key)
-    ev.stopPropagation()
     this.popdown()
+  },
+  keydown: function (ev) {
+    // Prevent InputHandler from changing instrument
+    return ev.stopPropagation()
   }
 })
 // 1}}} TextInput
@@ -637,7 +641,6 @@ Samples.prototype = {
 }
 
 // 1}}} Samples
-
 
 bp.test.player = function () {
   var bm1 = new BeatModel()

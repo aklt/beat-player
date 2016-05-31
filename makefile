@@ -20,6 +20,7 @@ bp-min.js: bp.js
 
 tags:
 	tagdir
+	ls -l
 
 dev:
 	freshen

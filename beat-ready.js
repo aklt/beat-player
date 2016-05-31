@@ -51,7 +51,13 @@ ready(function () {
   var si1 = SliderInput.create({id: 'sliderInput1'})
   bp.live.si1 = si1
 
-  // Ready
+  // 
+
+  // Main
+
+  bp.testBeatAudio()
+
+  return true
   beatModel.loadBeat('data/beat1.beat', function (err, model) {
     if (err) throw err
     beatModel.loadBeatSamples(function (err, bm) {
@@ -69,8 +75,6 @@ ready(function () {
   // si1.setRange(0, 100)
   // si1.render()
   // bp.sliderInput1 = si1
-
-  return true
 
   // test audio
   // bp.beat1.test()
