@@ -1,6 +1,6 @@
-Bass Drum: b... b...
-Snare:     ..s. ..s.
-Hat:       hhhh hhhh
+Bass Drum: b... b... b... b... 
+Snare:     ..s. ..s. ..s. ..s. 
+Hat:       hhhh hhhh hhhh hhhh 
 --
 Bass Drum:
   url: data/bd.wav

@@ -302,8 +302,9 @@ function ucfirst (s) {
 
 bp.test.beatModel = function () {
   var bm1 = new BeatModel()
-  bm1.load('data/beat1.beat', function (err, model) {
+  bm1.load('data/beat0.beat', function (err, model) {
     if (err) throw err
     console.warn('Loaded', model)
+    console.warn('instruments', model.instruments())
   })
 }

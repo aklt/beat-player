@@ -51,23 +51,18 @@ ready(function () {
   var si1 = SliderInput.create({id: 'sliderInput1'})
   bp.live.si1 = si1
 
-  // 
+  // bp.testBeatAudio()
+  // bp.test.beatModel()
 
-  // Main
-
-  bp.testBeatAudio()
+  beatModel.load('data/beat0.beat', function (err, model) {
+    if (err) throw err
+    console.warn('Loaded beat1')
+    pl1.detach()
+    pl1.renderModel()
+    pl1.attach()
+  })
 
   return true
-  beatModel.loadBeat('data/beat1.beat', function (err, model) {
-    if (err) throw err
-    beatModel.loadBeatSamples(function (err, bm) {
-      if (err) throw err
-      console.warn('Loaded beat1')
-      pl1.detach()
-      pl1.renderModel()
-      pl1.attach()
-    })
-  })
 
   // SliderInput for slidable values
   // var si1 = SliderInput.create({el: '#slider1'})

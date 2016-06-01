@@ -167,6 +167,7 @@ KeyboardView.prototype.keyDown = function (ev, el) {
 // 1}}} KeyboardView
 
 // {{{1 ScoreColumns
+// TODO Get rid of this
 function ScoreColumns (el) {
   // console.warn(type(el));
   this.els = qa('* p', el).filter(function (el1) {
@@ -198,20 +199,11 @@ function PlayerView (o) {
   o = o || {}
   // this.parentEl = ab.dom('<div class="player"></div>')
   // if (typeof this.parentEl === 'string') this.parentEl = ab.qs(this.parentEl)
-  // if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
-  // this.scoreColumns = new ScoreColumns(this.parentEl)
 
   // this.bpm = o.bpm || 100
   // this.tpb = o.tpb || 4
   // this.bar = o.bar || 4
   // this.bars = this.bar
-
-  this.tracks = [
-    '1...'.split(''),
-    '.2..'.split(''),
-    '.3..'.split(''),
-    '.4..'.split('')
-  ]
 
   // for (var ibar = 0; ibar < this.bars; ibar += 1) {
   //   this.tracks[ibar] = []
@@ -228,16 +220,43 @@ PlayerView.prototype = {
   tpl: function (o) {
     var t = bp.templates
     o.settings = t.settings(o.settings)
-    o.score = t.scoreSpan([1, 2, 3, 4, 5, 6, 7, 8, 9, 'A'])
+    o.score = t.scoreSpan(scoreNumbersArray(this.model.patternLength()))
     o.instruments = t.instruments(o.instruments)
     o.columns = t.columnEmpty() + this.tracks.map(t.column).join('\n')
-    console.warn('Player tpl', o)
     var player = t.player(o)
     return player
   },
   renderModel: function () {
     // Extract the parts needed for the playerview
+    var i
     var m = this.model
+    if (!m) throw new Error('Need model')
+
+    this.tracks = []
+    var instruments = m.instruments()
+
+    console.warn('=============', instruments, m.model.instruments)
+
+    var patternLength = m.patternLength()
+    for (i = 0; i < instruments.length; i += 1) {
+      this.tracks.push(charArray(patternLength, '.'))
+    }
+
+    var patterns = m.patterns()
+
+    // FIXME This is an ugly hack to handle initial state of the PlayerView
+    if (patterns) {
+      var pats = Object.keys(patterns)
+      for (i = 0; i < pats.length; i += 1) {
+        var p = patterns[pats[i]]
+        var cols = Object.keys(p)
+        for (var j = 0; j < cols.length; j += 1) {
+          this.tracks[pats[i]][cols[j]] = p[cols[j]]
+        }
+      }
+      this.tracks = transpose(this.tracks)
+    }
+
     var o = {
       settings: {
         bpm: m.bpm(),
@@ -246,16 +265,11 @@ PlayerView.prototype = {
       },
       instruments: m.instruments()
     }
-    console.warn('obj', o)
     this.render(o)
   },
-  renderTrack: function (track) {
-    // var columns = []
-    var i = 0
-    var length = this.tpb * this.bar * this.bars
-    while (i < length) {
-      i += 1
-    }
+  afterAttach: function () {
+    if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
+    this.scoreColumns = new ScoreColumns(this.parentEl)
   },
   gotoPos: function (pos) {
     this.scoreColumns.selectedIndex = -1
@@ -314,17 +328,27 @@ PlayerView.prototype.keyDown = function (ev, el) {
   console.warn(ev, el)
 }
 
-// function decToalphanum (num) {
-  // if (num >= alphaNum.length) {
-    // console.warn('reset num from ', num)
-    // num = alphaNum.length - 1
-    // console.warn('reset num to', num)
-  // }
-  // return alphaNum[num]
-// }
+function decToalphanum (num) {
+  if (num >= alphaNum.length) {
+    console.warn('reset num from ', num)
+    num = alphaNum.length - 1
+    console.warn('reset num to', num)
+  }
+  return alphaNum[num]
+}
 
 function alphanumToDec (anum) {
-  return alphaNum.indexOf(anum + '')
+  var result = alphaNum.indexOf(anum + '')
+  if (result < 0) throw new Error('TODO Beat is too long')
+  return result
+}
+
+function scoreNumbersArray (length) {
+  var result = []
+  for (var i = 1; i <= length; i += 1) {
+    result.push(decToalphanum(i))
+  }
+  return result
 }
 
 mixinHandlers(PlayerView, {
@@ -355,7 +379,7 @@ mixinHandlers(PlayerView, {
         break
       case 'I': // Click top row to go to position
         console.warn('I', alphanumToDec(el.innerText))
-        // TODO  this.gotoPos(alphanumToDec(el.innerText))
+        this.gotoPos(alphanumToDec(el.innerText))
         break
       case 'ABBR':
         r1 = rect(qs('dd', el))
@@ -380,6 +404,29 @@ mixinHandlers(PlayerView, {
     return ev.stopPropagation()
   }
 })
+
+function charArray (length, character) {
+  character = character || '.'
+  var result = []
+  for (var i = 0; i < length; i += 1) {
+    result.push(character)
+  }
+  return result
+}
+
+function transpose (matrix) {
+  var height = matrix.length
+  var width = matrix[0].length
+  var result = new Array(width)
+  for (var i = 0; i < width; i += 1) {
+    result[i] = new Array(height)
+    for (var j = 0; j < height; j += 1) {
+      result[i][j] = matrix[j][i]
+    }
+  }
+  return result
+}
+
 // 1}}} PlayerView
 
 // {{{1 InputHandler
@@ -644,16 +691,12 @@ Samples.prototype = {
 
 bp.test.player = function () {
   var bm1 = new BeatModel()
-  bm1.loadBeat('data/beat1.beat', function (err, model) {
+  bm1.load('data/beat1.beat', function (err, model) {
     if (err) throw err
-    bm1.loadBeatSamples(function (err, bm) {
-      if (err) throw err
-      var pl1 = PlayerView.create({
-        model: bm
-      })
-      pl1.renderModel()
-      pl1.attach('#test1')
+    var pl1 = PlayerView.create({
+      model: model
     })
+    pl1.renderModel()
+    pl1.attach('#test1')
   })
 }
-

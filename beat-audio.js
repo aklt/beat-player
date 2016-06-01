@@ -80,17 +80,17 @@ BeatAudio.prototype = {
     var time0 = ctx.currentTime
     var bucketIndex = this.noteBucketsIndex
     var length = this.noteBuckets.length
-    var jitterTime = 0
+    var deltaTime = 0
     this.timeout = setInterval(function () {
       var timePassed = ctx.currentTime - time0
       var bucketTime = bucketIndex * self.lookaheadTime
-      jitterTime = bucketTime - timePassed
+      deltaTime = bucketTime - timePassed
       var bucket = self.noteBuckets[bucketIndex]
       for (var i = 0; i < bucket.length; i += 1) {
         var note = bucket[i]
-        var xTime = self.lookaheadTime + note.time - bucketTime + jitterTime
+        var xTime = self.lookaheadTime + note.time - bucketTime + deltaTime
         self.playSample(note.instrument, xTime)
-        console.warn('playSample', bucketIndex, xTime)
+        // console.warn('playSample', bucketIndex, xTime)
       }
       bucketIndex += 1
       if (bucketIndex === length) {
@@ -136,13 +136,13 @@ bp.BeatAudio = BeatAudio
 bp.testBeatAudio = function () {
   var beat1Model = new BeatModel(beat1)
   var beat1 = bp.beat1 = new BeatAudio(beat1Model)
-  beat1.model.bpm(90)
+  beat1.model.bpm(70)
   beat1.load('data/beat0.beat', function (err, audio) {
     if (err) throw err
     console.warn('beat', beat1)
     beat1.play()
     setTimeout(function (o) {
       beat1.stop()
-    }, 6000)
+    }, 3000)
   })
 }
