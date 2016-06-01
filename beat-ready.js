@@ -54,7 +54,7 @@ ready(function () {
   // bp.testBeatAudio()
   // bp.test.beatModel()
 
-  beatModel.load('data/beat0.beat', function (err, model) {
+  beatModel.load('data/beat1.beat', function (err, model) {
     if (err) throw err
     console.warn('Loaded beat1')
     pl1.detach()

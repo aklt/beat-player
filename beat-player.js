@@ -36,11 +36,11 @@ function KeyboardView (o) {
   this.ranges = o.ranges || [
     // Assumption: The array is sorted as the keyboard
     // and intervals do not overlap
-    [1, 'U', 'F'],
-    [2, 'Q', 'R'],
-    [3, 'B', 'M']
+    // [1, 'U', 'F'],
+    // [2, 'Q', 'R'],
+    // [3, 'B', 'M']
   ]
-  o.model.selectedInstrument(o.selectedInstrument || 3)
+  o.model.selectedInstrument(o.selectedInstrument || 1)
   // properties on o added
 }
 
@@ -153,16 +153,16 @@ mixinHandlers(KeyboardView, {
 mixinFocus(KeyboardView)
 
 KeyboardView.prototype.keyLeft = function (ev, el) {
-  console.warn(ev, el)
+  console.warn('KeyboardView', ev, el)
 }
 KeyboardView.prototype.keyRight = function (ev, el) {
-  console.warn(ev, el)
+  console.warn('KeyboardView', ev, el)
 }
 KeyboardView.prototype.keyUp = function (ev, el) {
-  console.warn(ev, el)
+  console.warn('KeyboardView', ev, el)
 }
 KeyboardView.prototype.keyDown = function (ev, el) {
-  console.warn(ev, el)
+  console.warn('KeyboardView', ev, el)
 }
 // 1}}} KeyboardView
 
@@ -196,33 +196,55 @@ ScoreColumns.prototype = {
 
 // {{{1 PlayerView
 function PlayerView (o) {
-  o = o || {}
-  // this.parentEl = ab.dom('<div class="player"></div>')
-  // if (typeof this.parentEl === 'string') this.parentEl = ab.qs(this.parentEl)
-
-  // this.bpm = o.bpm || 100
-  // this.tpb = o.tpb || 4
-  // this.bar = o.bar || 4
-  // this.bars = this.bar
-
-  // for (var ibar = 0; ibar < this.bars; ibar += 1) {
-  //   this.tracks[ibar] = []
-  //   for (var itpb = 0; itpb < this.tpb; itpb += 1) {
-  //     this.tracks[ibar][itpb] = (o.tracks && o.tracks[ibar] && o.tracks[ibar][itpb])
-  //     if (!this.tracks[ibar][itpb]) this.tracks[ibar][itpb] = '·'
-  //   }
-  // }
-  // console.warn('PlayerView', this)
-  // properties on o added
 }
+
+// {{{2 templates
+// TODO Fix bugs in timber templates or use different templates
+function scoreNumbersArray (length, tpb) {
+  var result = []
+  for (var i = 1; i <= length; i += 1) {
+    result.push(decToalphanum(i))
+    if (i % tpb === 0) result.push(' ')
+  }
+  return result
+}
+
+function scoreSpanTemplate (length, tpb) {
+  var result = '<span>'
+  for (var i = 0; i < length; i += 1) {
+    if (i % tpb === 0) result += '<i>&nbsp;</i>'
+    result += '<i>' + decToalphanum(i + 1) + '</i>'
+  }
+  result += '</span>'
+  return result
+}
+
+const emptyCol = '<p><b>&nbsp;</b></p>'
+function columnTemplate (o, tpb) {
+  var result = ''
+  for (var i = 0; i < o.length; i += 1) {
+    var e = o[i]
+    if (i % tpb === 0) result += emptyCol
+    result += '<p>'
+    for (var v0 = 0; v0 < e.length; v0 += 1) {
+      var v1 = e[v0]
+      result += '<b>' + v1 + '</b>'
+    }
+    result += '</p>'
+  }
+  return result
+}
+
+// 2}}} templates
 
 PlayerView.prototype = {
   tpl: function (o) {
     var t = bp.templates
+    var m = this.model
     o.settings = t.settings(o.settings)
-    o.score = t.scoreSpan(scoreNumbersArray(this.model.patternLength()))
+    o.score = scoreSpanTemplate(m.patternLength(), m.tpb())
     o.instruments = t.instruments(o.instruments)
-    o.columns = t.columnEmpty() + this.tracks.map(t.column).join('\n')
+    o.columns = columnTemplate(this.tracks, m.tpb())
     var player = t.player(o)
     return player
   },
@@ -340,14 +362,6 @@ function decToalphanum (num) {
 function alphanumToDec (anum) {
   var result = alphaNum.indexOf(anum + '')
   if (result < 0) throw new Error('TODO Beat is too long')
-  return result
-}
-
-function scoreNumbersArray (length) {
-  var result = []
-  for (var i = 1; i <= length; i += 1) {
-    result.push(decToalphanum(i))
-  }
   return result
 }
 
@@ -646,12 +660,21 @@ TextInput.prototype = {
     this.lastValue = this.inputEl.value = value
     this.inputEl.focus()
     this.inputEl.select()
+    this.value = ''
     this.show()
   },
   popdown: function () {
     this.inputEl.blur()
     this.hide()
+  },
+  isDone: function () {
+    return this.value.length === 1
   }
+
+}
+
+TextInput.create = function (o) {
+  return new TextInput(o)
 }
 
 TextInput.create = function (o) {
@@ -665,7 +688,7 @@ mixinHandlers(TextInput, {
     var key = String.fromCharCode(ev.keyCode).toLowerCase()
     if (/^[\s\b]*$/.test(key)) key = '.'
     if (this.setValue) this.setValue(key)
-    this.popdown()
+    if (this.isDone()) this.popdown()
   },
   keydown: function (ev) {
     // Prevent InputHandler from changing instrument

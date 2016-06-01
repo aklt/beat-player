@@ -26,7 +26,7 @@ function escapeJson(o) {
 function escapeNone(o) { return o + ''; }
 
 
-// Timber templates v0.1.1 compiled 2016-05-31T14:30:20.388Z
+// Timber templates v0.1.1 compiled 2016-06-01T08:53:57.207Z
 bp.templates = {
   column: function (o) {
   var result =   "<p>\n";
@@ -85,12 +85,12 @@ return result; }
 return result; }
 ,
   scoreSpan: function (o) {
-  var result =   "<span>\n<i>&nbsp;</i>\n";
+  var result =   "<span><i>&nbsp;</i>";
   for (var v0 = 0; v0 < o.length; v0 += 1) {
     var v1 = o[v0];
-    result +=     "  <i>" + escapeHtml(v1) + "</i>\n";
+    result +=     "<i>" + (v1.v1) + "</i>";
   }
-  result += "</span>\n";
+  result += "</span>";
 return result; }
 ,
   settings: function (o) {
