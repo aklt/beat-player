@@ -14,6 +14,7 @@ function BeatModel (text) {
   this.model = {
     instruments: []
   }
+  this.patternInstruments = {}
   this.subscriptions = {}
   if (typeof text === 'string') this.readBeatText(text)
 }
@@ -55,23 +56,34 @@ BeatModel.prototype = {
   },
   // Read a text pattern without instruments
   readBeatText: function (text) {
-    var patterns = this.model.patterns = {}
-    var patternIndex = 0
-    var patternInstruments = {}
-    var lines = text.split(/\n/)
+    var parts = text.split(/^--.*/m)
+    if (parts.length < 2) throw new Error('Need at least global anmd beat parts')
+    if (parts.length >= 2) {
+      this.readGlobal(configLines(parts[0]))
+      this.readBeats(configLines(parts[1]))
+    }
+    if (parts.length >= 3) this.readInstruments(configLines(parts[2]))
+    if (parts.length >= 4) this.readEffects(configLines(parts[3]))
+    this.dispatch('NewText', this.model)
+  },
+  readGlobal: function (lines) {
+    var conf = readConfig(lines)
+    this.model.global = extend({}, conf)
+  },
+  // TODO Fix this
+  readBeats: function (lines) {
     var patternLpb
     var patternBars
     var instrument
     var line
+    var patterns = this.model.patterns = {}
+    var patternIndex = 0
     for (var i = 0; i < lines.length; i += 1) {
       line = lines[i]
-      if (/^\s*$/.test(line)) continue
-      if (/^\s*#/.test(line)) continue
-      if (/^--/.test(line)) break
       var idx = line.indexOf(':')
       if (idx < 0) throw new Error('Bad pattern format on line ' + i)
       instrument = line.slice(0, idx).trim()
-      patternInstruments[instrument] = {}
+      this.patternInstruments[instrument] = {}
       line = line.slice(idx + 1).trim()
       var rawChars = line.split('')
       var chars = []
@@ -101,7 +113,7 @@ BeatModel.prototype = {
         ch = chars[k]
         if (ch !== '.') {
           patterns[patternIndex][k] = ch
-          patternInstruments[instrument][ch] = patternIndex
+          this.patternInstruments[instrument][ch] = patternIndex
         }
       }
       patternIndex += 1
@@ -111,39 +123,14 @@ BeatModel.prototype = {
     }
     this.model.tpb = patternLpb
     this.model.beats = patternBars
+  },
+  readInstruments: function (lines) {
+    var instruments = readConfig(lines)
 
-    // Read samples/instruments
-    i += 1
-    var instruments = {}
-    instrument = null
-    var m
-    for (; i < lines.length; i += 1) {
-      line = lines[i]
-      if (/^\s*$/.test(line)) continue
-
-      // instrument name
-      m = /^(\w+[\w\s]+):/.exec(line)
-      if (m) {
-        instrument = m[1].trim()
-        instruments[instrument] = {}
-        if (!patternInstruments[instrument]) {
-          console.warn('Unused instrument', instrument)
-        }
-        continue
-      }
-
-      // instrument properties
-      m = /^\s+([\w]+):(.*)/.exec(line)
-      if (m) {
-        if (!instrument) {
-          throw new Error('Expected an instrument name at line ' + i + 1)
-        }
-        instruments[instrument][m[1]] = m[2].trim()
-      }
-    }
+    console.warn('instruments', instruments)
 
     var ins = this.model.instruments = {}
-    Object.keys(patternInstruments).forEach(function (name, i) {
+    Object.keys(this.patternInstruments).forEach(function (name, i) {
       var obj = {
         name: name
       }
@@ -155,8 +142,8 @@ BeatModel.prototype = {
       }
       ins[i] = obj
     })
-    var cb = this.subscriptions.NewText
-    if (typeof cb === 'function') cb(this)
+  },
+  readEffects: function () {
   },
   // Load a beat including samples
   load: function (url, cb) {
@@ -271,6 +258,44 @@ BeatModel.prototype = {
   toString: function () {
     return JSON.stringify(this.model, 0, 2)
   }
+}
+
+function configLines (text) {
+  return text.split(/\n|\r\n/gm).filter(function (line) {
+    return !/^\s*$|^\s*#/.test(line)
+  })
+}
+
+function readConfig (lines) {
+  if (typeof lines === 'string') lines = configLines(lines)
+  var configs = {}
+  var config
+  var m
+  for (var i = 0; i < lines.length; i += 1) {
+    var line = lines[i]
+
+    // config name
+    m = /^(\w+[\w\s]+):(.*)$/.exec(line)
+    if (m) {
+      config = m[1].trim()
+      configs[config] = {}
+      if (m[2]) configs[config] = m[2]
+      continue
+    }
+
+    // config properties
+    m = /^\s+([\w]+):(.*)/.exec(line)
+    if (m) {
+      if (!config) {
+        throw new Error('Expected an config name at line ' + i + 1)
+      }
+      if (typeof configs[config] === 'string') {
+        throw new Error('Cannot add configs to ' + config)
+      }
+      configs[config][m[1]] = m[2].trim()
+    }
+  }
+  return configs
 }
 
 function mixinGetSet (AClass, prop, defaultValue) {

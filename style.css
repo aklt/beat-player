@@ -58,6 +58,15 @@
   height: 1rem;
   text-align: center;
 }
+.player .beatsView {
+  position: fixed;
+  top: 10rem;
+  background: transparent;
+  width: 150px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  height: 34px;
+}
 .active {
   background-color: lightblue;
   /*border-left: 1px solid blue;*/
@@ -78,16 +87,15 @@
   border: 1px solid red;
   background-color: white;
 }
-.instrument-editor dl,
-.instrument-editor dt,
-.instrument-editor dd {
-  display: inline;
-}
 .instrument-editor dt {
   font-weight: bold;
+  float: left;
+  display: inline-block;
 }
 .instrument-editor dd {
   margin: 0 0.3rem 0 0.5rem;
+  display: inline-block;
+  clear: left;
 }
 .slider-input {
   border: 1px solid green;

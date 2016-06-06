@@ -26,7 +26,7 @@ function escapeJson(o) {
 function escapeNone(o) { return o + ''; }
 
 
-// Timber templates v0.1.1 compiled 2016-06-01T08:53:57.207Z
+// Timber templates v0.1.1 compiled 2016-06-06T17:59:51.469Z
 bp.templates = {
   column: function (o) {
   var result =   "<p>\n";
@@ -94,7 +94,7 @@ return result; }
 return result; }
 ,
   settings: function (o) {
-  var result =   "<dl>\n  <dt><abbr title=\"Beats Per Minute\">BPM</abbr></dt> <dd>" + escapeHtml(o.bpm) + "</dd>\n  <dt><abbr title=\"Ticks Per Beat\">LPB</abbr></dt> <dd>" + escapeHtml(o.tpb) + "</dd>\n  <dt><abbr title=\"Total Beats\">Beats</abbr></dt> <dd>" + escapeHtml(o.beats) + "</dd>\n</dl>\n";
+  var result =   "<dl>\n  <dt><abbr title=\"Beats Per Minute\">BPM</abbr></dt> <dd>" + escapeHtml(o.bpm) + "</dd>\n  <dt><abbr title=\"Total Beats\">Beats</abbr></dt> <dd>" + escapeHtml(o.beats) + "</dd>\n  <dt><abbr title=\"Ticks Per Beat\">TPB</abbr></dt> <dd>" + escapeHtml(o.tpb) + "</dd>\n</dl>\n";
 return result; }
 ,
   sliderInput: function (o) {

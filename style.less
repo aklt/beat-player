@@ -72,6 +72,15 @@
         }
 
     }
+    .beatsView {
+        position: fixed;
+        top: 10rem;
+        background: transparent;
+        width: 150px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        height: 34px;
+    }
 }
 
 .active {
@@ -96,14 +105,15 @@
    width: auto;
    border: 1px solid red;
    background-color: white;
-   dl, dt, dd {
-       display: inline;
-   }
    dt {
        font-weight: bold;
+       float: left;
+       display: inline-block;
    }
    dd {
        margin: 0 0.3rem 0 0.5rem;
+       display: inline-block;
+       clear: left;
    }
 }
 

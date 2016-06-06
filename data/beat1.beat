@@ -1,6 +1,9 @@
-Bass Drum: b... b... b...
-Snare:     ..s. ..s. .s.s
-HiHat:     x.x. x.x. .x.x
+name: The 1st beat
+version: 0.0.1
+--
+Bass Drum: ..b ... ..b ... ..b ... ..b ...
+Snare:     s.. s.. s.. s.. s.. s.. s.. s..
+HiHat:     x.. x.. x.. x.. x.. x.. x.. x..
 --
 Bass Drum:
   url: data/bd.wav

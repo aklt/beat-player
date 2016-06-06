@@ -1,3 +1,6 @@
+name: The 0th beat
+version: 0.0.1
+--
 Bass Drum: b... b... b... b... 
 Snare:     ..s. ..s. ..s. ..s. 
 Hat:       hhhh hhhh hhhh hhhh 
@@ -10,3 +13,5 @@ Snare:
 Hat:
   url: data/hat.wav
   vol: 0.2
+--
+foo: 12

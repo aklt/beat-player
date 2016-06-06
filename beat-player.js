@@ -1,6 +1,8 @@
 /*global bp __document requestAnimationFrame htmlEl insertBefore
   appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
-  rect attr nextSibling prevSibling $id mixinHideShow BeatModel */
+  rect attr nextSibling prevSibling $id mixinHideShow BeatModel
+  eachPush $t $ts
+*/
 
 const alphaNum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -29,6 +31,89 @@ function mixinFocus (AClass) {
     })
   }
 }
+
+// {{{1 InputHandler
+var key0 = '0'.charCodeAt(0)
+var key9 = '9'.charCodeAt(0)
+var keyUp = 38
+var keyDown = 40
+var keyLeft = 37
+var keyRight = 39
+var keyEnter = 13
+var keySpace = 32
+var keyEsc = 27
+var keyTab = 9
+
+function InputHandler (o) {
+  if (!o.keyboardView) throw new Error('Need o.keyboardView')
+  if (!o.player) throw new Error('o.player')
+  if (!o.model) throw new Error('o.model')
+  this.keyboardView = o.keyboardView
+  this.player = o.player
+  this.parentEl = __document
+}
+
+InputHandler.prototype = {
+}
+
+mixinHandlers(InputHandler, {
+  keydown: function (ev, el) {
+    var code = ev.which
+    console.warn('Key', code, ev.charCode, String.fromCharCode(code))
+    if (code <= key9 && code >= key0) {
+      this.keyboardView.selectInstrument(String.fromCharCode(code))
+    } else if (code === keyUp) {
+      console.warn('keyUp')
+      if (bp.lastPopUp && bp.lastPopUp.keyUp) bp.lastPopUp.keyUp()
+      ev.preventDefault()
+    } else if (code === keyDown) {
+      console.warn('keyDown')
+      if (bp.lastPopUp && bp.lastPopUp.keyDown) bp.lastPopUp.keyDown()
+      ev.preventDefault()
+    } else if (code === keyLeft) {
+      console.warn('keyLeft')
+      if (bp.lastPopUp && bp.lastPopUp.keyLeft) bp.lastPopUp.keyLeft()
+      ev.preventDefault()
+    } else if (code === keyRight) {
+      console.warn('keyRight')
+      if (bp.lastPopUp && bp.lastPopUp.keyRight) bp.lastPopUp.keyRight()
+      ev.preventDefault()
+    } else if (code === keySpace) {
+      console.warn('keySpace')
+      ev.preventDefault()
+    } else if (code === keyEsc) {
+      console.warn('keyEsc')
+      if (bp.lastPopUp) bp.lastPopUp.inputEl.hide()
+      ev.preventDefault()
+    } else if (code === keyEnter) {
+      console.warn('keyEnter')
+      ev.preventDefault()
+    } else if (code === keyTab) {
+      console.warn('keyTab')
+      if (!this.activeTab) this.activeTab = this.keyboardView
+      this.activeTab.unfocus()
+      if (this.activeTab === this.keyboardView) this.activeTab = this.player
+      else this.activeTab = this.keyboardView
+      this.activeTab.focus()
+
+      return ev.preventDefault()
+    } else {
+      var k = String.fromCharCode(code)
+      if (keyboardKeyMap[k]) {
+        console.warn('play key', k)
+      }
+    }
+  },
+  keyup: function () {
+    console.warn('up', arguments)
+  },
+  wheel: function () {
+    console.warn('scroll', arguments)
+  }
+
+})
+
+// 1}}} InputHandler
 
 // {{{1 KeyboardView
 function KeyboardView (o) {
@@ -199,58 +284,66 @@ function PlayerView (o) {
 }
 
 // {{{2 templates
-// TODO Fix bugs in timber templates or use different templates
-function scoreNumbersArray (length, tpb) {
-  var result = []
-  for (var i = 1; i <= length; i += 1) {
-    result.push(decToalphanum(i))
-    if (i % tpb === 0) result.push(' ')
-  }
-  return result
-}
-
 function scoreSpanTemplate (length, tpb) {
-  var result = '<span>'
+  var result = []
   for (var i = 0; i < length; i += 1) {
-    if (i % tpb === 0) result += '<i>&nbsp;</i>'
-    result += '<i>' + decToalphanum(i + 1) + '</i>'
+    if (i % tpb === 0) result.push('&nbsp;')
+    result.push(decToalphanum(i + 1))
   }
-  result += '</span>'
-  return result
+  return $t('span', $ts('i', result))
 }
 
-const emptyCol = '<p><b>&nbsp;</b></p>'
+const emptyCol = $t('p', $t('b', '&nbsp;'))
+
 function columnTemplate (o, tpb) {
-  var result = ''
-  for (var i = 0; i < o.length; i += 1) {
-    var e = o[i]
+  return eachPush(o, function (i, val) {
+    var result = ''
     if (i % tpb === 0) result += emptyCol
-    result += '<p>'
-    for (var v0 = 0; v0 < e.length; v0 += 1) {
-      var v1 = e[v0]
-      result += '<b>' + v1 + '</b>'
-    }
-    result += '</p>'
-  }
-  return result
+    result += $t('p', $ts('b', val))
+    return result
+  })
+}
+
+function instrumentsTemplate (ins) {
+  return eachPush(ins, function (i, i1) {
+    return $t('p', i1.name)
+  })
+}
+
+function playerTemplate (o) {
+  var result = eachPush(['settings', 'instruments'], function (i, part) {
+    return $t('div', {'class': part}, o[part])
+  })
+  result.push($t('div', {'class': 'score'},
+    o.score,
+    $t('div', {'class': 'score-columns'},
+      o.columns)))
+  return result.join('')
 }
 
 // 2}}} templates
 
 PlayerView.prototype = {
   tpl: function (o) {
-    var t = bp.templates
     var m = this.model
-    o.settings = t.settings(o.settings)
-    o.score = scoreSpanTemplate(m.patternLength(), m.tpb())
-    o.instruments = t.instruments(o.instruments)
-    o.columns = columnTemplate(this.tracks, m.tpb())
-    var player = t.player(o)
-    return player
+    var t = {}
+
+    t.settings = $t('dl',
+      eachPush([['Beats Per Minute', 'BPM', 'bpm'],
+                ['Ticks Per Beat', 'TPB', 'tpb'],
+                ['Total Beats', 'Beats', 'beats']], function (i, val) {
+        return $t('dt',
+          $t('abbr', {title: val[0]}, val[1]),
+          $t('dd', o.settings[val[2]]))
+      }))
+
+    t.score = scoreSpanTemplate(m.patternLength(), m.tpb())
+    t.instruments = instrumentsTemplate(o.instruments)
+    t.columns = columnTemplate(this.tracks, m.tpb())
+    return playerTemplate(t)
   },
   renderModel: function () {
     // Extract the parts needed for the playerview
-    var i
     var m = this.model
     if (!m) throw new Error('Need model')
 
@@ -260,8 +353,9 @@ PlayerView.prototype = {
     console.warn('=============', instruments, m.model.instruments)
 
     var patternLength = m.patternLength()
-    for (i = 0; i < instruments.length; i += 1) {
+    for (var i = 0; i < instruments.length; i += 1) {
       this.tracks.push(charArray(patternLength, '.'))
+      // TODO Instrument lookup in pattern
     }
 
     var patterns = m.patterns()
@@ -443,88 +537,39 @@ function transpose (matrix) {
 
 // 1}}} PlayerView
 
-// {{{1 InputHandler
-var key0 = '0'.charCodeAt(0)
-var key9 = '9'.charCodeAt(0)
-var keyUp = 38
-var keyDown = 40
-var keyLeft = 37
-var keyRight = 39
-var keyEnter = 13
-var keySpace = 32
-var keyEsc = 27
-var keyTab = 9
-
-function InputHandler (o) {
-  if (!o.keyboardView) throw new Error('Need o.keyboardView')
-  if (!o.player) throw new Error('o.player')
-  if (!o.model) throw new Error('o.model')
-  this.keyboardView = o.keyboardView
-  this.player = o.player
-  this.parentEl = __document
+// {{{1 BeatsView
+function BeatsView (o) {
+  this.collection = {}
 }
 
-InputHandler.prototype = {
-}
-
-mixinHandlers(InputHandler, {
-  keydown: function (ev, el) {
-    var code = ev.which
-    console.warn('Key', code, ev.charCode, String.fromCharCode(code))
-    if (code <= key9 && code >= key0) {
-      this.keyboardView.selectInstrument(String.fromCharCode(code))
-    } else if (code === keyUp) {
-      console.warn('keyUp')
-      if (bp.lastPopUp && bp.lastPopUp.keyUp) bp.lastPopUp.keyUp()
-      ev.preventDefault()
-    } else if (code === keyDown) {
-      console.warn('keyDown')
-      if (bp.lastPopUp && bp.lastPopUp.keyDown) bp.lastPopUp.keyDown()
-      ev.preventDefault()
-    } else if (code === keyLeft) {
-      console.warn('keyLeft')
-      if (bp.lastPopUp && bp.lastPopUp.keyLeft) bp.lastPopUp.keyLeft()
-      ev.preventDefault()
-    } else if (code === keyRight) {
-      console.warn('keyRight')
-      if (bp.lastPopUp && bp.lastPopUp.keyRight) bp.lastPopUp.keyRight()
-      ev.preventDefault()
-    } else if (code === keySpace) {
-      console.warn('keySpace')
-      ev.preventDefault()
-    } else if (code === keyEsc) {
-      console.warn('keyEsc')
-      if (bp.lastPopUp) bp.lastPopUp.inputEl.hide()
-      ev.preventDefault()
-    } else if (code === keyEnter) {
-      console.warn('keyEnter')
-      ev.preventDefault()
-    } else if (code === keyTab) {
-      console.warn('keyTab')
-      if (!this.activeTab) this.activeTab = this.keyboardView
-      this.activeTab.unfocus()
-      if (this.activeTab === this.keyboardView) this.activeTab = this.player
-      else this.activeTab = this.keyboardView
-      this.activeTab.focus()
-
-      return ev.preventDefault()
-    } else {
-      var k = String.fromCharCode(code)
-      if (keyboardKeyMap[k]) {
-        console.warn('play key', k)
-      }
-    }
+BeatsView.prototype = {
+  tpl: function (o) {
+    return $t('div',{
+        id: o.id,
+        'class': 'beatsView'
+      },
+      $t('h3', 'Select a Beat'),
+      $t('select', { type: 'multi' },
+        eachPush(o.options, function (i, opt) {
+          return $t('option', opt)
+        }))
+      )
   },
-  keyup: function () {
-    console.warn('up', arguments)
-  },
-  wheel: function () {
-    console.warn('scroll', arguments)
+  afterRender: function () {
+    console.warn('AFTER', this.tpl({options: [1, 2, 3], id: 'cc'}))
   }
+}
 
+mixinDom(BeatsView)
+
+mixinHandlers(BeatsView, {
+  click: function (ev, el) {
+    this.model.load('data/' + el.value + '.beat', function (err, model) {
+      console.warn('Loaded', err, model)
+    })
+  }
 })
-
-// 1}}} InputHandler
+// 1}}}
 
 // {{{1 InstrumentsView
 function InstrumentsView (o) {

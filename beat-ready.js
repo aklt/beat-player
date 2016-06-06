@@ -1,5 +1,5 @@
 /*global ready bp BeatModel KeyboardView InstrumentsView PlayerView InputHandler
-  TextInput SliderInput InstrumentsView*/
+  TextInput SliderInput InstrumentsView BeatsView*/
 
 ready(function () {
   bp.started = Date.now()
@@ -28,6 +28,13 @@ ready(function () {
   iv1.attach('#instruments')
   bp.live.iv1 = iv1
 
+  // BeatsView
+  var bv1 = BeatsView.create({ model: beatModel })
+  bv1.render({id: 'beatView1',
+              text: 'Hello BeatsView',
+              options: ['beat0', 'beat1', 'beat2']})
+
+  bv1.attach('#player1')
   // PlayerView
   var pl1 = PlayerView.create({
     model: beatModel
@@ -54,7 +61,7 @@ ready(function () {
   // bp.testBeatAudio()
   // bp.test.beatModel()
 
-  beatModel.load('data/beat1.beat', function (err, model) {
+  beatModel.load('data/beat2.beat', function (err, model) {
     if (err) throw err
     console.warn('Loaded beat1')
     pl1.detach()

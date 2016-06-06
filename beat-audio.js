@@ -21,6 +21,7 @@ function BeatAudio (model) {
 }
 
 // divide notes on property `note.time` into buckets of `intervalTime` size
+// TODO deprecate and use setTimeout with intervals
 function timeBuckets (notes, intervalTime) {
   var time = intervalTime
   var buckets = [[]]
@@ -136,8 +137,8 @@ bp.BeatAudio = BeatAudio
 bp.testBeatAudio = function () {
   var beat1Model = new BeatModel(beat1)
   var beat1 = bp.beat1 = new BeatAudio(beat1Model)
-  beat1.model.bpm(70)
-  beat1.load('data/beat0.beat', function (err, audio) {
+  beat1.model.bpm(110)
+  beat1.load('data/beat1.beat', function (err, audio) {
     if (err) throw err
     console.warn('beat', beat1)
     beat1.play()
