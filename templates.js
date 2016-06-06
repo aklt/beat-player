@@ -26,21 +26,8 @@ function escapeJson(o) {
 function escapeNone(o) { return o + ''; }
 
 
-// Timber templates v0.1.1 compiled 2016-06-06T17:59:51.469Z
+// Timber templates v0.1.1 compiled 2016-06-06T20:28:42.890Z
 bp.templates = {
-  column: function (o) {
-  var result =   "<p>\n";
-  for (var v0 = 0; v0 < o.length; v0 += 1) {
-    var v1 = o[v0];
-    result +=     "  <b>" + escapeHtml(v1) + "</b>\n";
-  }
-  result += "</p>\n";
-return result; }
-,
-  columnEmpty: function (o) {
-  var result =   "<p><b>&nbsp;</b></p>\n";
-return result; }
-,
   instrument: function (o) {
   var result =   "<h4>instrument " + escapeHtml(o.number) + "</h4><dl><dt>Name</dt><dd>" + escapeHtml(o.name) + "</dd><dt>Url</dt><dd>" + escapeHtml(o.url) + "</dd>";
   if (o.range) {
@@ -51,15 +38,6 @@ return result; }
     result +=     "<dt>Duration</dt><dd>" + escapeHtml(Math.round(o.buffer.duration * 100) / 100) + "</dd>";
   }
   result += "</dl>";
-return result; }
-,
-  instruments: function (o) {
-  var result =   "";
-  for (var v0 = 0; v0 < o.length; v0 += 1) {
-    var v1 = o[v0];
-    result +=     "  <p>" + escapeHtml(v1.name) + "</p>\n";
-  }
-  result += "";
 return result; }
 ,
   keyboard: function (o) {
@@ -78,23 +56,6 @@ return result; }
     result +=     "<b>" + escapeHtml(v1) + "</b>";
   }
   result += "";
-return result; }
-,
-  player: function (o) {
-  var result =   "<div class=settings>\n" + (o.settings) + "\n</div>\n<div class=instruments>\n" + (o.instruments) + "\n</div>\n<div class=score>\n" + (o.score) + "\n<div class=score-columns>\n" + (o.columns) + "\n</div>\n</div>\n";
-return result; }
-,
-  scoreSpan: function (o) {
-  var result =   "<span><i>&nbsp;</i>";
-  for (var v0 = 0; v0 < o.length; v0 += 1) {
-    var v1 = o[v0];
-    result +=     "<i>" + (v1.v1) + "</i>";
-  }
-  result += "</span>";
-return result; }
-,
-  settings: function (o) {
-  var result =   "<dl>\n  <dt><abbr title=\"Beats Per Minute\">BPM</abbr></dt> <dd>" + escapeHtml(o.bpm) + "</dd>\n  <dt><abbr title=\"Total Beats\">Beats</abbr></dt> <dd>" + escapeHtml(o.beats) + "</dd>\n  <dt><abbr title=\"Ticks Per Beat\">TPB</abbr></dt> <dd>" + escapeHtml(o.tpb) + "</dd>\n</dl>\n";
 return result; }
 ,
   sliderInput: function (o) {

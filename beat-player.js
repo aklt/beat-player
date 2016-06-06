@@ -295,52 +295,38 @@ function scoreSpanTemplate (length, tpb) {
 
 const emptyCol = $t('p', $t('b', '&nbsp;'))
 
-function columnTemplate (o, tpb) {
-  return eachPush(o, function (i, val) {
-    var result = ''
-    if (i % tpb === 0) result += emptyCol
-    result += $t('p', $ts('b', val))
-    return result
-  })
-}
-
-function instrumentsTemplate (ins) {
-  return eachPush(ins, function (i, i1) {
-    return $t('p', i1.name)
-  })
-}
-
-function playerTemplate (o) {
-  var result = eachPush(['settings', 'instruments'], function (i, part) {
-    return $t('div', {'class': part}, o[part])
-  })
-  result.push($t('div', {'class': 'score'},
-    o.score,
-    $t('div', {'class': 'score-columns'},
-      o.columns)))
-  return result.join('')
-}
-
 // 2}}} templates
 
 PlayerView.prototype = {
   tpl: function (o) {
     var m = this.model
-    var t = {}
-
-    t.settings = $t('dl',
-      eachPush([['Beats Per Minute', 'BPM', 'bpm'],
-                ['Ticks Per Beat', 'TPB', 'tpb'],
-                ['Total Beats', 'Beats', 'beats']], function (i, val) {
-        return $t('dt',
-          $t('abbr', {title: val[0]}, val[1]),
-          $t('dd', o.settings[val[2]]))
-      }))
-
-    t.score = scoreSpanTemplate(m.patternLength(), m.tpb())
-    t.instruments = instrumentsTemplate(o.instruments)
-    t.columns = columnTemplate(this.tracks, m.tpb())
-    return playerTemplate(t)
+    var t = extend({tracks: this.tracks,
+                    length: m.patternLength(),
+                    tpb: m.tpb()}, o)
+    return [
+      $t('div', {'class': 'settings'},
+        $t('dl',
+          eachPush([['Beats Per Minute', 'BPM', 'bpm'],
+            ['Ticks Per Beat', 'TPB', 'tpb'],
+            ['Total Beats', 'Beats', 'beats']], function (i, val) {
+            return $t('dt',
+              $t('abbr', {title: val[0]}, val[1]),
+              $t('dd', t.settings[val[2]]))
+          }))),
+      $t('div', {'class': 'instruments'},
+        eachPush(t.instruments, function (i, i1) {
+          return $t('p', i1.name)
+        })),
+      $t('div', {'class': 'score'},
+        scoreSpanTemplate(o.length, t.tpb),
+        $t('div', {'class': 'score-columns'},
+          eachPush(t.tracks, function (i, val) {
+            var result = ''
+            if (i % t.tpb === 0) result += emptyCol
+            result += $t('p', $ts('b', val))
+            return result
+          })))
+    ].join('\n')
   },
   renderModel: function () {
     // Extract the parts needed for the playerview
@@ -579,7 +565,17 @@ function InstrumentsView (o) {
 
 InstrumentsView.prototype = {
   tpl: function (o) {
-    return bp.templates.instrument(o)
+    return [
+      $t('h4', 'Instrument ' + o.number),
+      $t('dl',
+        $t('dt', 'Name'),
+        $t('dd', o.name),
+        $t('dt', 'Url'),
+        $t('dd', o.url),
+        o.range ? ($t('dt', 'Range') + $t('dd', o.range)) : '',
+        o.buffer ? ($t('dt', 'Time') + $t('dd', Math.round(o.buffer.duration * 100) / 100)) : ''
+        )
+    ].join('\n')
   },
   selectInstrumentNumber: function (number) {
     this.update(this.model.instrument())
