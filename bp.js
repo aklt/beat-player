@@ -2375,20 +2375,8 @@ function escapeJson(o) {
 function escapeNone(o) { return o + ''; }
 
 
-// Timber templates v0.1.1 compiled 2016-06-06T20:28:42.890Z
+// Timber templates v0.1.1 compiled 2016-06-06T20:31:16.580Z
 bp.templates = {
-  instrument: function (o) {
-  var result =   "<h4>instrument " + escapeHtml(o.number) + "</h4><dl><dt>Name</dt><dd>" + escapeHtml(o.name) + "</dd><dt>Url</dt><dd>" + escapeHtml(o.url) + "</dd>";
-  if (o.range) {
-    result +=     "<dt>Range</dt><dd>" + escapeHtml(o.range) + "</dd>";
-  }
-  result += "";
-  if (o.buffer) {
-    result +=     "<dt>Duration</dt><dd>" + escapeHtml(Math.round(o.buffer.duration * 100) / 100) + "</dd>";
-  }
-  result += "</dl>";
-return result; }
-,
   keyboard: function (o) {
   var result =   "<pre>\n";
   for (var v0 = 0; v0 < o.length; v0 += 1) {
