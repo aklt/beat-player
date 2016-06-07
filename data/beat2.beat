@@ -1,0 +1,34 @@
+# global
+name: The second beat
+version: 0.0.1
+--
+# beat
+Bass Drum: b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b..
+Snare:     s.. s.. s.. s.. s.. s.. s.. s.. s.. s.. s.. s.. s.. s.. s.. s..
+HiHat:     x.. x.. x.. x.. x.. x.. x.. x.. x.. x.. x.. x.. x.. x.. x.. x..
+--
+# instruments
+Bass Drum:
+  url: data/bd.wav
+  pan: 10
+  range: b
+  display: B
+
+Snare:
+  url: data/sd.wav
+  range: s
+  pan: 10
+
+HiHat:
+  url: data/hat.wav
+  range: x
+  volume: 80%
+  pan: 20
+--
+# global effects
+pan: -10
+
+# var b1 = new BeatModel()
+# 
+# b1.readBeatText(beat1)
+# console.warn(JSON.stringify(b1, 0, 2))

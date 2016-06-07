@@ -4,7 +4,7 @@
   eachPush $t $ts
 */
 
-const alphaNum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+const alphaNum = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 const keyboardKeys = [
   '1234567890',
@@ -19,20 +19,27 @@ keyboardKeys.join('').split('').forEach(function (k, i) {
 })
 
 // TODO Remove this
+var lastFocusEl
 function mixinFocus (AClass) {
   AClass.prototype.focus = function () {
     css(this.parentEl, {
       border: '1px solid blue'
     })
-  }
-  AClass.prototype.unfocus = function () {
-    css(this.parentEl, {
-      border: 'none'
-    })
+    if (lastFocusEl) {
+      css(lastFocusEl, {
+        border: none
+      })
+    }
+    lastFocusEl = this.parentEl
   }
 }
 
 // {{{1 InputHandler
+
+// TODO CTRL + 1-9:  Select instrument, focus instruments
+//      1-9 a-z A-Z: go to position, focus player
+//
+//
 var key0 = '0'.charCodeAt(0)
 var key9 = '9'.charCodeAt(0)
 var keyUp = 38
@@ -285,11 +292,13 @@ function PlayerView (o) {
 
 // {{{2 templates
 function scoreSpanTemplate (length, tpb) {
+  console.warn('scoreSpan', length, tpb)
   var result = []
   for (var i = 0; i < length; i += 1) {
     if (i % tpb === 0) result.push('&nbsp;')
     result.push(decToalphanum(i + 1))
   }
+  console.warn('55555555', $t('span', $ts('i', result)))
   return $t('span', $ts('i', result))
 }
 
@@ -318,7 +327,7 @@ PlayerView.prototype = {
           return $t('p', i1.name)
         })),
       $t('div', {'class': 'score'},
-        scoreSpanTemplate(o.length, t.tpb),
+        scoreSpanTemplate(t.length, t.tpb),
         $t('div', {'class': 'score-columns'},
           eachPush(t.tracks, function (i, val) {
             var result = ''
@@ -333,14 +342,11 @@ PlayerView.prototype = {
     var m = this.model
     if (!m) throw new Error('Need model')
 
-    this.tracks = []
     var instruments = m.instruments()
-
-    console.warn('=============', instruments, m.model.instruments)
-
     var patternLength = m.patternLength()
+    var tracks = []
     for (var i = 0; i < instruments.length; i += 1) {
-      this.tracks.push(charArray(patternLength, '.'))
+      tracks.push(charArray(patternLength, '.'))
       // TODO Instrument lookup in pattern
     }
 
@@ -353,10 +359,10 @@ PlayerView.prototype = {
         var p = patterns[pats[i]]
         var cols = Object.keys(p)
         for (var j = 0; j < cols.length; j += 1) {
-          this.tracks[pats[i]][cols[j]] = p[cols[j]]
+          tracks[pats[i]][cols[j]] = p[cols[j]]
         }
       }
-      this.tracks = transpose(this.tracks)
+      this.tracks = transpose(tracks)
     }
 
     var o = {
@@ -372,6 +378,11 @@ PlayerView.prototype = {
   afterAttach: function () {
     if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
     this.scoreColumns = new ScoreColumns(this.parentEl)
+  },
+  reAttach: function () {
+    this.detach()
+    this.renderModel()
+    this.attach()
   },
   gotoPos: function (pos) {
     this.scoreColumns.selectedIndex = -1
@@ -551,7 +562,6 @@ mixinDom(BeatsView)
 mixinHandlers(BeatsView, {
   click: function (ev, el) {
     this.model.load('data/' + el.value + '.beat', function (err, model) {
-      console.warn('Loaded', err, model)
     })
   }
 })
@@ -559,8 +569,6 @@ mixinHandlers(BeatsView, {
 
 // {{{1 InstrumentsView
 function InstrumentsView (o) {
-  o.model.subscribe('SelectInstrument', this.selectInstrumentNumber, this)
-  o.model.subscribe('SelectInstrumentRange', this.selectInstrumentRange, this)
 }
 
 InstrumentsView.prototype = {

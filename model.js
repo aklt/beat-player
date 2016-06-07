@@ -135,7 +135,8 @@ BeatModel.prototype = {
         name: name
       }
       if (!instruments[name]) {
-        throw new Error('Undefined instrument used: ' + name)
+        console.warn(new Error('Undefined instrument used: ' + name))
+        return
       }
       for (var k in instruments[name]) {
         obj[k] = instruments[name][k]
@@ -174,7 +175,8 @@ BeatModel.prototype = {
     var self = this
     var count = 0
     // TODO Share the audio context
-    var context = new (AudioContext || webkitAudioContext)()
+    if (!this.audioContext) this.audioContext = new (AudioContext || webkitAudioContext)()
+    var context = this.audioContext
     function loadOne (i) {
       xhr({
         url: instruments[i + ''].url,
@@ -189,7 +191,7 @@ BeatModel.prototype = {
         })
       })
     }
-    for (var i = 0; i < ikeys.length; i += 1) loadOne(i)
+    for (var i = 0; i < ikeys.length; i += 1) loadOne(ikeys[i])
     // TODO: mixin and effects
   },
   // TODO Return a text string representing the pattern

@@ -26,7 +26,7 @@ function escapeJson(o) {
 function escapeNone(o) { return o + ''; }
 
 
-// Timber templates v0.1.1 compiled 2016-06-06T20:31:16.580Z
+// Timber templates v0.1.1 compiled 2016-06-06T20:31:56.481Z
 bp.templates = {
   keyboard: function (o) {
   var result =   "<pre>\n";

@@ -1231,7 +1231,8 @@ BeatModel.prototype = {
         name: name
       }
       if (!instruments[name]) {
-        throw new Error('Undefined instrument used: ' + name)
+        console.warn(new Error('Undefined instrument used: ' + name))
+        return
       }
       for (var k in instruments[name]) {
         obj[k] = instruments[name][k]
@@ -1270,7 +1271,8 @@ BeatModel.prototype = {
     var self = this
     var count = 0
     // TODO Share the audio context
-    var context = new (AudioContext || webkitAudioContext)()
+    if (!this.audioContext) this.audioContext = new (AudioContext || webkitAudioContext)()
+    var context = this.audioContext
     function loadOne (i) {
       xhr({
         url: instruments[i + ''].url,
@@ -1285,7 +1287,7 @@ BeatModel.prototype = {
         })
       })
     }
-    for (var i = 0; i < ikeys.length; i += 1) loadOne(i)
+    for (var i = 0; i < ikeys.length; i += 1) loadOne(ikeys[i])
     // TODO: mixin and effects
   },
   // TODO Return a text string representing the pattern
@@ -1586,7 +1588,7 @@ bp.testBeatAudio = function () {
   eachPush $t $ts
 */
 
-const alphaNum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+const alphaNum = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 const keyboardKeys = [
   '1234567890',
@@ -1601,20 +1603,27 @@ keyboardKeys.join('').split('').forEach(function (k, i) {
 })
 
 // TODO Remove this
+var lastFocusEl
 function mixinFocus (AClass) {
   AClass.prototype.focus = function () {
     css(this.parentEl, {
       border: '1px solid blue'
     })
-  }
-  AClass.prototype.unfocus = function () {
-    css(this.parentEl, {
-      border: 'none'
-    })
+    if (lastFocusEl) {
+      css(lastFocusEl, {
+        border: none
+      })
+    }
+    lastFocusEl = this.parentEl
   }
 }
 
 // {{{1 InputHandler
+
+// TODO CTRL + 1-9:  Select instrument, focus instruments
+//      1-9 a-z A-Z: go to position, focus player
+//
+//
 var key0 = '0'.charCodeAt(0)
 var key9 = '9'.charCodeAt(0)
 var keyUp = 38
@@ -1867,11 +1876,13 @@ function PlayerView (o) {
 
 // {{{2 templates
 function scoreSpanTemplate (length, tpb) {
+  console.warn('scoreSpan', length, tpb)
   var result = []
   for (var i = 0; i < length; i += 1) {
     if (i % tpb === 0) result.push('&nbsp;')
     result.push(decToalphanum(i + 1))
   }
+  console.warn('55555555', $t('span', $ts('i', result)))
   return $t('span', $ts('i', result))
 }
 
@@ -1900,7 +1911,7 @@ PlayerView.prototype = {
           return $t('p', i1.name)
         })),
       $t('div', {'class': 'score'},
-        scoreSpanTemplate(o.length, t.tpb),
+        scoreSpanTemplate(t.length, t.tpb),
         $t('div', {'class': 'score-columns'},
           eachPush(t.tracks, function (i, val) {
             var result = ''
@@ -1915,14 +1926,11 @@ PlayerView.prototype = {
     var m = this.model
     if (!m) throw new Error('Need model')
 
-    this.tracks = []
     var instruments = m.instruments()
-
-    console.warn('=============', instruments, m.model.instruments)
-
     var patternLength = m.patternLength()
+    var tracks = []
     for (var i = 0; i < instruments.length; i += 1) {
-      this.tracks.push(charArray(patternLength, '.'))
+      tracks.push(charArray(patternLength, '.'))
       // TODO Instrument lookup in pattern
     }
 
@@ -1935,10 +1943,10 @@ PlayerView.prototype = {
         var p = patterns[pats[i]]
         var cols = Object.keys(p)
         for (var j = 0; j < cols.length; j += 1) {
-          this.tracks[pats[i]][cols[j]] = p[cols[j]]
+          tracks[pats[i]][cols[j]] = p[cols[j]]
         }
       }
-      this.tracks = transpose(this.tracks)
+      this.tracks = transpose(tracks)
     }
 
     var o = {
@@ -1954,6 +1962,11 @@ PlayerView.prototype = {
   afterAttach: function () {
     if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
     this.scoreColumns = new ScoreColumns(this.parentEl)
+  },
+  reAttach: function () {
+    this.detach()
+    this.renderModel()
+    this.attach()
   },
   gotoPos: function (pos) {
     this.scoreColumns.selectedIndex = -1
@@ -2133,7 +2146,6 @@ mixinDom(BeatsView)
 mixinHandlers(BeatsView, {
   click: function (ev, el) {
     this.model.load('data/' + el.value + '.beat', function (err, model) {
-      console.warn('Loaded', err, model)
     })
   }
 })
@@ -2141,8 +2153,6 @@ mixinHandlers(BeatsView, {
 
 // {{{1 InstrumentsView
 function InstrumentsView (o) {
-  o.model.subscribe('SelectInstrument', this.selectInstrumentNumber, this)
-  o.model.subscribe('SelectInstrumentRange', this.selectInstrumentRange, this)
 }
 
 InstrumentsView.prototype = {
@@ -2375,7 +2385,7 @@ function escapeJson(o) {
 function escapeNone(o) { return o + ''; }
 
 
-// Timber templates v0.1.1 compiled 2016-06-06T20:31:16.580Z
+// Timber templates v0.1.1 compiled 2016-06-06T20:31:56.481Z
 bp.templates = {
   keyboard: function (o) {
   var result =   "<pre>\n";
@@ -2402,54 +2412,63 @@ return result; }
 };
 
 /*global ready bp BeatModel KeyboardView InstrumentsView PlayerView InputHandler
-  TextInput SliderInput InstrumentsView BeatsView*/
+  TextInput SliderInput InstrumentsView BeatsView each*/
+
+function lcFirst (text) {
+  return text[0].toLowerCase() + text.slice(1)
+}
+
+// Render
+var beatModel = new BeatModel()
+var live = bp.live = {}
+each([KeyboardView, InstrumentsView, BeatsView, PlayerView], function (i, Class) {
+  bp.live[lcFirst(Class.name)] = Class.create({
+    model: beatModel
+  })
+})
+
+// subscribe
+beatModel.subscribe('SelectInstrument', function () {
+  live.instrumentsView.selectInstrumentNumber()
+})
+
+beatModel.subscribe('SelectInstrumentRange', function () {
+  live.instrumentsView.selectInstrumentRange()
+})
+
+beatModel.subscribe('NewText', function () {
+  live.playerView.reAttach()
+})
 
 ready(function () {
   bp.started = Date.now()
-  bp.live = {}
-
-  // Main
-
-  var beatModel = new BeatModel()
 
   // KeyboardView
-  var kv1 = KeyboardView.create({
-    model: beatModel
-  })
-  kv1.render()
-  kv1.attach('#keyboard')
-  bp.live.kv1 = kv1
+  live.keyboardView.render()
+  live.keyboardView.attach('#keyboard')
 
   // InstrumentsView
-  var iv1 = InstrumentsView.create({
-    model: beatModel
-  })
-  iv1.render({
+  live.instrumentsView.render({
     name: 'goo',
     url: '/data/bd.wav'
   })
-  iv1.attach('#instruments')
-  bp.live.iv1 = iv1
+  live.instrumentsView.attach('#instruments')
 
   // BeatsView
-  var bv1 = BeatsView.create({ model: beatModel })
-  bv1.render({id: 'beatView1',
+  live.beatsView.render({id: 'beatView1',
               text: 'Hello BeatsView',
               options: ['beat0', 'beat1', 'beat2']})
+  live.beatsView.attach('#player1')
 
-  bv1.attach('#player1')
   // PlayerView
-  var pl1 = PlayerView.create({
-    model: beatModel
-  })
-  pl1.renderModel()
-  pl1.attach('#player1')
+  live.playerView.renderModel()
+  live.playerView.attach('#player1')
 
   // InputHandler handles events on body
   var ih1 = new InputHandler({
     model: beatModel,
-    keyboardView: kv1,
-    player: pl1
+    keyboardView: live.keyboardView,
+    player: live.playerView
   })
   ih1.eventsAttach()
   bp.live.ih1 = ih1
@@ -2467,43 +2486,10 @@ ready(function () {
   beatModel.load('data/beat2.beat', function (err, model) {
     if (err) throw err
     console.warn('Loaded beat1')
-    pl1.detach()
-    pl1.renderModel()
-    pl1.attach()
+    live.playerView.detach()
+    live.playerView.renderModel()
+    live.playerView.attach()
   })
-
-  return true
-
-  // SliderInput for slidable values
-  // var si1 = SliderInput.create({el: '#slider1'})
-  // // si1.eventsAttach()
-  // si1.setRange(0, 100)
-  // si1.render()
-  // bp.sliderInput1 = si1
-
-  // test audio
-  // bp.beat1.test()
-
-  // var instrumentsView = InstrumentsView.create()
-  // instrumentsView.render({name: 'name', url: 'foo/url.pattern'})
-  // instrumentsView.attach('#ie1')
-  // bp.iv1 = instrumentsView
-
-  // ab.delay(1001, () => {
-    // console.warn('syop')
-    // player1.stop()
-  // })
-  // ab.delay(2001, () => {
-    // console.warn('set')
-    // // player1.gotoPos(4)
-  // })
-  // // ab.delay(2501, () => {
-    // // console.warn('Hello')
-    // // // player1.start()
-  // // })
-
-  // var player = new Player({id: 'player0'})
-  // // player.eventsAttach()
 })
 
 

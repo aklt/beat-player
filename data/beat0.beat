@@ -7,11 +7,11 @@ Hat:       hhhh hhhh hhhh hhhh
 --
 Bass Drum:
   url: data/bd.wav
+
 Snare:
   url: data/sd.wav
   vol: 0.3
+
 Hat:
   url: data/hat.wav
   vol: 0.2
---
-foo: 12
