@@ -7,19 +7,25 @@
 @import compass/utilities
 @import compass/css3
 @import compass/layout/stretching
+@import singularitygs
+
+%container
+  border: 1px solid #999999
+  position: relative
+  +inline-block
 
 .player
-  +stretch
+  @extend %container
 
 .controls
-  +stretch
+  @extend %container
 
 .beats
-  +stretch
+  @extend %container
 
 .keyboard
-  +stretch
+  @extend %container
 
 .instruments
-  +stretch
+  @extend %container
 

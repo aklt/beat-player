@@ -1,17 +1,19 @@
 
 TEMPLATES=$(wildcard templates/*.html)
 JS=lib.js model.js audio.js view.js templates.js ready.js test.js
+compassCompile=bundle exec compass compile --no-debug-info
+compassStats=bundle exec compass stats
 
-all: style.css screen.css print.css ie.css templates.js bp.js bp-uglify.js bp-closure.js
+all: style.css screen.css print.css templates.js bp.js bp-uglify.js bp-closure.js
 
 screen.css: sass/screen.sass
-	compass compile
+	$(compassCompile)
 
 print.css: sass/print.sass
-	compass compile
+	$(compassCompile)
 
 ie.css: sass/ie.sass
-	compass compile
+	$(compassCompile)
 
 style.css: style.less
 	lessc $< > $@
@@ -29,14 +31,21 @@ bp-uglify.js: bp.js
 bp-closure.js: bp.js
 	closure-compiler-min $< > $@
 
-.PHONY: clean dev tags
+.PHONY: install clean dev tags distclean
+
+install:
+	bundler install --path .install
 
 tags:
 	tagdir
-	ls -l
+	ls -l bp*.js
+	$(compassStats)
 
 dev:
 	freshen
 
 clean:
 	rm -fv templates.js style.css bp.js bp-uglify.js bp-closure.js print.css screen.css ie.css
+
+distclean:
+	rm -frv .install .bundle .sass-cache
