@@ -10,7 +10,7 @@ templates.js: $(TEMPLATES) makefile
 	timber builtin                > $@
 	timber templates bp.templates >> $@
 
-bp.js: model.js audio.js player.js templates.js ready.js
+bp.js: model.js audio.js view.js templates.js ready.js
 	./node_modules/ab.js/bin/ab.js cat $^ > $@
 
 bp-min.js: bp.js

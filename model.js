@@ -7,16 +7,19 @@
 //
 // TODO Add subscriptions to events
 
-var bp = __window.bp = {}
-bp.test = {}
+var bp = __window.bp = {
+  live: {},
+  test: {}
+}
 
-function BeatModel (text) {
+function BeatModel (o) {
   this.model = {
     instruments: []
   }
   this.patternInstruments = {}
   this.subscriptions = {}
-  if (typeof text === 'string') this.readBeatText(text)
+  this.model = extend({}, this.model, o)
+  if (typeof o.text === 'string') this.readBeatText(o.text)
 }
 
 BeatModel.defaultInstrument = {
@@ -32,7 +35,8 @@ var subscriptionEvents = {
   ChangeBeats: 1,
   ChangeNote: 1,
   SelectInstrument: 1,
-  SelectInstrumentRange: 1
+  SelectInstrumentRange: 1,
+  LoadedSamples: 1
 }
 
 BeatModel.prototype = {
@@ -54,6 +58,16 @@ BeatModel.prototype = {
       }
     }
   },
+  enable: function (evName) {
+    var o = this.subscriptions[evName]
+    if (!o) throw new Error('Need model.subscriptions[' + evName + ']')
+    o.disabled = false
+  },                                    
+  disable: function (evName) {
+    var o = this.subscriptions[evName]
+    if (!o) throw new Error('Need model.subscriptions[' + evName + ']')
+    o.disabled = true
+  },
   // Read a text pattern without instruments
   readBeatText: function (text) {
     var parts = text.split(/^--.*/m)
@@ -70,7 +84,6 @@ BeatModel.prototype = {
     var conf = readConfig(lines)
     this.model.global = extend({}, conf)
   },
-  // TODO Fix this
   readBeats: function (lines) {
     var patternLpb
     var patternBars
@@ -147,9 +160,9 @@ BeatModel.prototype = {
   readEffects: function () {
   },
   // Load a beat including samples
-  load: function (url, cb) {
+  loadBeat: function (url, cb) {
     var self = this
-    this.loadBeat(url, function (err) {
+    this.loadBeatText(url, function (err) {
       if (err) return cb(err)
       self.loadBeatSamples(function (err, model) {
         if (err) return cb(err)
@@ -158,7 +171,7 @@ BeatModel.prototype = {
     })
   },
   // Load a beat text
-  loadBeat: function (url, cb) {
+  loadBeatText: function (url, cb) {
     var self = this
     xhr({
       url: url
@@ -187,12 +200,20 @@ BeatModel.prototype = {
           instruments[i].buffer = buffer
           instruments[i].number = i + ''
           count += 1
-          if (count === ikeys.length) return cb(null, self)
+          if (count === ikeys.length) {
+            self.dispatch('LoadedSamples', instruments)
+            return cb(null, self)
+          }
         })
       })
     }
     for (var i = 0; i < ikeys.length; i += 1) loadOne(ikeys[i])
     // TODO: mixin and effects
+  },
+  view: function (name, values) {
+    var val = extend({}, bp.model.view[name] || {}, values)
+    if (!values) return val
+    bp.model.view[name] = val
   },
   // TODO Return a text string representing the pattern
   getPattern: function () {
@@ -235,6 +256,7 @@ BeatModel.prototype = {
     this.model.position = pos
   },
   setNote: function (pos, value) {
+    if (typeof pos === 'string') pos = parseNotePos(pos)
     console.warn('setNote', pos, value, this)
   },
   selectedInstrument: function (number) {
@@ -267,6 +289,24 @@ BeatModel.prototype = {
   toString: function () {
     return JSON.stringify(this.model, 0, 2)
   }
+}
+
+function toInt (n) {
+  return parseInt(n, 10)
+}
+
+function parseNotePos (str) {
+  var numbers = str.split(/[,;:]/)
+  if (numbers.length !== 2) throw new Error('NOt a legal note pos ' + str)
+  return numbers.map(toInt)
+}
+
+function lcFirst (text) {
+  return text[0].toLowerCase() + text.slice(1)
+}
+
+function ucFirst (text) {
+  return text[0].toUpperCase() + text.slice(1)
 }
 
 function configLines (text) {
@@ -319,7 +359,7 @@ function mixinGetSet (AClass, prop, defaultValue) {
       change = true
     }
     if (change) {
-      var cb = this.subscriptions['Change' + ucfirst(prop)]
+      var cb = this.subscriptions['Change' + ucFirst(prop)]
       if (typeof cb === 'function') cb()
     }
     return this.model[prop]
@@ -330,15 +370,85 @@ mixinGetSet(BeatModel, 'bpm', 100)
 mixinGetSet(BeatModel, 'tpb', 4)
 mixinGetSet(BeatModel, 'beats', 4)
 
-function ucfirst (s) {
-  return s[0].toUpperCase() + s.slice(1)
+var m = bp.model = new BeatModel({
+  beats: ['beat0', 'beat1', 'beat2']
+})
+
+// var live = bp.live
+// m.subscribe('SelectInstrument', function () {
+  // live.instrumentsView1.selectInstrumentNumber()
+// })
+
+// m.subscribe('SelectInstrumentRange', function () {
+  // live.instrumentsView1.selectInstrumentRange()
+// })
+
+// m.subscribe('NewText', function () {
+  // live.playerView1.reAttach()
+// })
+//
+
+// TODO Remove this
+var lastFocusEl
+function mixinFocus (obj, elName) {
+  obj.focus = function () {
+    console.warn('focus', obj, name)
+    if (!obj[elName]) throw new Error('Need obj[' + elName + ']')
+    css(obj[elName], {
+      border: '3px solid blue'
+    })
+    if (lastFocusEl) {
+      css(lastFocusEl, {
+        border: 'none'
+      })
+    }
+    lastFocusEl = obj[elName]
+  }
 }
 
-bp.model = new BeatModel()
+function mixinViewModel (obj, name) {
+  if (!bp.model) throw new Error('Need bp.model')
+  // if (!origSave) throw new Error('Need vmSave function for ' + name)
+  // if (!origLoad) throw new Error('Need vmLoad function for ' + name)
+  var m = bp.model
+  obj.vmSave = function (values) {
+	m.view(name, values)
+  }
+  obj.vmLoad = function () {
+	return m.view(name)
+  }
+}
+
+function createView (AClass, proto, handlers, args) {
+  if (typeof bp === 'undefined') throw new Error('Need bp')
+  if (!bp.model) throw new Error('Need bp.model')
+  if (!bp.live) throw new Error('Need bp.live')
+  if (!AClass.mixedIn) {
+    if (!proto.tpl) throw new Error('Need proto.tpl function for markup')
+    if (!proto.renderModel) throw new Error('Need proto.renderModel')
+    AClass.prototype = proto
+    mixinDom(AClass)
+    mixinHandlers(AClass, handlers)
+    AClass.mixedIn = true
+  }
+  args = args || {}
+  if (!args.id) throw new Error('Need args.id')
+  if (!AClass.instance) AClass.instanceCount = 0
+  args.model = bp.model
+  args.parentEl = $id(args.id)
+  var obj = AClass.create(args)
+  mixinFocus(obj, 'parentEl')
+  AClass.instanceCount += 1
+  var name = lcFirst(AClass.name) + AClass.instanceCount
+  mixinViewModel(obj, name)
+  console.warn('createView', name, AClass, obj)
+  bp.live[name] = obj
+}
+
 
 bp.test.beatModel = function () {
   var bm1 = new BeatModel()
-  bm1.load('data/beat0.beat', function (err, model) {
+  bm1.loadBeat('data/beat0.beat', function (err, model) {
     if (err) throw err
     console.warn('Loaded', model)
     console.warn('instruments', model.instruments())

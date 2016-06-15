@@ -1,71 +1,48 @@
 /*global ready bp BeatModel KeyboardView InstrumentsView PlayerView InputHandler
   TextInput SliderInput InstrumentsView BeatsView each*/
 
-function lcFirst (text) {
-  return text[0].toLowerCase() + text.slice(1)
-}
-
-// Render
-var beatModel = bp.model = new BeatModel()
-var live = bp.live = {}
-each([KeyboardView, InstrumentsView, BeatsView, PlayerView, ControlsView], function (i, Class) {
-  var obj = Class.create({
-    model: beatModel
-  })
-  var name = lcFirst(Class.name)
-  mixinFocus(obj, 'parentEl')
-  bp.live[name] = obj
-})
-
-console.warn('BP', bp.live)
-
-// subscribe
-beatModel.subscribe('SelectInstrument', function () {
-  live.instrumentsView.selectInstrumentNumber()
-})
-
-beatModel.subscribe('SelectInstrumentRange', function () {
-  live.instrumentsView.selectInstrumentRange()
-})
-
-beatModel.subscribe('NewText', function () {
-  live.playerView.reAttach()
-})
+var live = bp.live
 
 ready(function () {
   bp.started = Date.now()
 
-  // KeyboardView
-  live.keyboardView.render()
-  live.keyboardView.attach('#keyboard')
-
-  // InstrumentsView
-  live.instrumentsView.render({
-    name: 'goo',
-    url: '/data/bd.wav'
+  Object.keys(live).forEach(function (name) {
+    var l1 = live[name]
+    l1.renderModel()
+    l1.attach()
   })
-  live.instrumentsView.attach('#instruments')
 
-  // BeatsView
-  live.beatsView.render({id: 'beatView1',
-              text: 'Hello BeatsView',
-              options: ['beat0', 'beat1', 'beat2']})
+  // // KeyboardView
+  // live.keyboardView1.render()
+  // live.keyboardView1.attach('#keyboard')
 
-  live.beatsView.attach('#beatsView')
+  // // InstrumentsView
+  // live.instrumentsView1.render({
+    // name: 'goo',
+    // url: '/data/bd.wav'
+  // })
+  // live.instrumentsView1.attach('#instruments')
 
-  // PlayerView
-  live.playerView.renderModel()
-  live.playerView.attach('#player1')
+  // // BeatsView
+  // live.beatsView1.render({id: 'beatView1',
+              // text: 'Hello BeatsView',
+              // options: ['beat0', 'beat1', 'beat2']})
 
-  // ControlsView
-  live.controlsView.render()
-  live.controlsView.attach('#controls')
+  // live.beatsView1.attach('#beatsView')
+
+  // // PlayerView
+  // // live.playerView1.renderModel()
+  // // live.playerView1.attach('#player1')
+
+  // // ControlsView
+  // live.controlsView1.render()
+  // live.controlsView1.attach('#controls')
 
   // InputHandler handles events on body
   var ih1 = new InputHandler({
-    model: beatModel,
-    keyboardView: live.keyboardView,
-    player: live.playerView
+    model: bp.model,
+    keyboardView: live.keyboardView1,
+    player: live.playerView1
   })
   ih1.eventsAttach()
   bp.live.ih1 = ih1
@@ -78,18 +55,18 @@ ready(function () {
   bp.live.sliderInput1 = sliderInput1
 
   // bp.testBeatAudio()
-  // bp.test.beatModel()
+  // bp.test.bp.model()
   //
-  live.stepFocus = stepIter([live.keyboardView, live.playerView, live.instrumentsView, live.beatsView, live.controlsView])
+  live.stepFocus = stepIter([live.keyboardView1, live.playerView1, live.instrumentsView1, live.beatsView1, live.controlsView])
 
 
-  beatModel.load('data/beat2.beat', function (err, model) {
+  bp.model.loadBeat('data/beat1.beat', function (err, model) {
     if (err) throw err
     console.warn('Loaded beat1')
-    live.playerView.detach()
-    live.playerView.renderModel()
-    live.playerView.attach()
-    live.playerView.gotoPos(1)
+    live.playerView1.detach()
+    live.playerView1.renderModel()
+    live.playerView1.attach()
+    live.playerView1.gotoPos(1)
   })
 })
 

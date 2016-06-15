@@ -1136,16 +1136,19 @@ ab.Elem = Elem
 //
 // TODO Add subscriptions to events
 
-var bp = __window.bp = {}
-bp.test = {}
+var bp = __window.bp = {
+  live: {},
+  test: {}
+}
 
-function BeatModel (text) {
+function BeatModel (o) {
   this.model = {
     instruments: []
   }
   this.patternInstruments = {}
   this.subscriptions = {}
-  if (typeof text === 'string') this.readBeatText(text)
+  this.model = extend({}, this.model, o)
+  if (typeof o.text === 'string') this.readBeatText(o.text)
 }
 
 BeatModel.defaultInstrument = {
@@ -1161,7 +1164,8 @@ var subscriptionEvents = {
   ChangeBeats: 1,
   ChangeNote: 1,
   SelectInstrument: 1,
-  SelectInstrumentRange: 1
+  SelectInstrumentRange: 1,
+  LoadedSamples: 1
 }
 
 BeatModel.prototype = {
@@ -1183,6 +1187,16 @@ BeatModel.prototype = {
       }
     }
   },
+  enable: function (evName) {
+    var o = this.subscriptions[evName]
+    if (!o) throw new Error('Need model.subscriptions[' + evName + ']')
+    o.disabled = false
+  },                                    
+  disable: function (evName) {
+    var o = this.subscriptions[evName]
+    if (!o) throw new Error('Need model.subscriptions[' + evName + ']')
+    o.disabled = true
+  },
   // Read a text pattern without instruments
   readBeatText: function (text) {
     var parts = text.split(/^--.*/m)
@@ -1199,7 +1213,6 @@ BeatModel.prototype = {
     var conf = readConfig(lines)
     this.model.global = extend({}, conf)
   },
-  // TODO Fix this
   readBeats: function (lines) {
     var patternLpb
     var patternBars
@@ -1276,9 +1289,9 @@ BeatModel.prototype = {
   readEffects: function () {
   },
   // Load a beat including samples
-  load: function (url, cb) {
+  loadBeat: function (url, cb) {
     var self = this
-    this.loadBeat(url, function (err) {
+    this.loadBeatText(url, function (err) {
       if (err) return cb(err)
       self.loadBeatSamples(function (err, model) {
         if (err) return cb(err)
@@ -1287,7 +1300,7 @@ BeatModel.prototype = {
     })
   },
   // Load a beat text
-  loadBeat: function (url, cb) {
+  loadBeatText: function (url, cb) {
     var self = this
     xhr({
       url: url
@@ -1316,12 +1329,20 @@ BeatModel.prototype = {
           instruments[i].buffer = buffer
           instruments[i].number = i + ''
           count += 1
-          if (count === ikeys.length) return cb(null, self)
+          if (count === ikeys.length) {
+            self.dispatch('LoadedSamples', instruments)
+            return cb(null, self)
+          }
         })
       })
     }
     for (var i = 0; i < ikeys.length; i += 1) loadOne(ikeys[i])
     // TODO: mixin and effects
+  },
+  view: function (name, values) {
+    var val = extend({}, bp.model.view[name] || {}, values)
+    if (!values) return val
+    bp.model.view[name] = val
   },
   // TODO Return a text string representing the pattern
   getPattern: function () {
@@ -1364,6 +1385,7 @@ BeatModel.prototype = {
     this.model.position = pos
   },
   setNote: function (pos, value) {
+    if (typeof pos === 'string') pos = parseNotePos(pos)
     console.warn('setNote', pos, value, this)
   },
   selectedInstrument: function (number) {
@@ -1396,6 +1418,24 @@ BeatModel.prototype = {
   toString: function () {
     return JSON.stringify(this.model, 0, 2)
   }
+}
+
+function toInt (n) {
+  return parseInt(n, 10)
+}
+
+function parseNotePos (str) {
+  var numbers = str.split(/[,;:]/)
+  if (numbers.length !== 2) throw new Error('NOt a legal note pos ' + str)
+  return numbers.map(toInt)
+}
+
+function lcFirst (text) {
+  return text[0].toLowerCase() + text.slice(1)
+}
+
+function ucFirst (text) {
+  return text[0].toUpperCase() + text.slice(1)
 }
 
 function configLines (text) {
@@ -1448,7 +1488,7 @@ function mixinGetSet (AClass, prop, defaultValue) {
       change = true
     }
     if (change) {
-      var cb = this.subscriptions['Change' + ucfirst(prop)]
+      var cb = this.subscriptions['Change' + ucFirst(prop)]
       if (typeof cb === 'function') cb()
     }
     return this.model[prop]
@@ -1459,15 +1499,85 @@ mixinGetSet(BeatModel, 'bpm', 100)
 mixinGetSet(BeatModel, 'tpb', 4)
 mixinGetSet(BeatModel, 'beats', 4)
 
-function ucfirst (s) {
-  return s[0].toUpperCase() + s.slice(1)
+var m = bp.model = new BeatModel({
+  beats: ['beat0', 'beat1', 'beat2']
+})
+
+// var live = bp.live
+// m.subscribe('SelectInstrument', function () {
+  // live.instrumentsView1.selectInstrumentNumber()
+// })
+
+// m.subscribe('SelectInstrumentRange', function () {
+  // live.instrumentsView1.selectInstrumentRange()
+// })
+
+// m.subscribe('NewText', function () {
+  // live.playerView1.reAttach()
+// })
+//
+
+// TODO Remove this
+var lastFocusEl
+function mixinFocus (obj, elName) {
+  obj.focus = function () {
+    console.warn('focus', obj, name)
+    if (!obj[elName]) throw new Error('Need obj[' + elName + ']')
+    css(obj[elName], {
+      border: '3px solid blue'
+    })
+    if (lastFocusEl) {
+      css(lastFocusEl, {
+        border: 'none'
+      })
+    }
+    lastFocusEl = obj[elName]
+  }
 }
 
-bp.model = new BeatModel()
+function mixinViewModel (obj, name) {
+  if (!bp.model) throw new Error('Need bp.model')
+  // if (!origSave) throw new Error('Need vmSave function for ' + name)
+  // if (!origLoad) throw new Error('Need vmLoad function for ' + name)
+  var m = bp.model
+  obj.vmSave = function (values) {
+	m.view(name, values)
+  }
+  obj.vmLoad = function () {
+	return m.view(name)
+  }
+}
+
+function createView (AClass, proto, handlers, args) {
+  if (typeof bp === 'undefined') throw new Error('Need bp')
+  if (!bp.model) throw new Error('Need bp.model')
+  if (!bp.live) throw new Error('Need bp.live')
+  if (!AClass.mixedIn) {
+    if (!proto.tpl) throw new Error('Need proto.tpl function for markup')
+    if (!proto.renderModel) throw new Error('Need proto.renderModel')
+    AClass.prototype = proto
+    mixinDom(AClass)
+    mixinHandlers(AClass, handlers)
+    AClass.mixedIn = true
+  }
+  args = args || {}
+  if (!args.id) throw new Error('Need args.id')
+  if (!AClass.instance) AClass.instanceCount = 0
+  args.model = bp.model
+  args.parentEl = $id(args.id)
+  var obj = AClass.create(args)
+  mixinFocus(obj, 'parentEl')
+  AClass.instanceCount += 1
+  var name = lcFirst(AClass.name) + AClass.instanceCount
+  mixinViewModel(obj, name)
+  console.warn('createView', name, AClass, obj)
+  bp.live[name] = obj
+}
+
 
 bp.test.beatModel = function () {
   var bm1 = new BeatModel()
-  bm1.load('data/beat0.beat', function (err, model) {
+  bm1.loadBeat('data/beat0.beat', function (err, model) {
     if (err) throw err
     console.warn('Loaded', model)
     console.warn('instruments', model.instruments())
@@ -1643,38 +1753,6 @@ keyboardKeys.join('').split('').forEach(function (k, i) {
   keyboardKeyMap[k] = i
 })
 
-// TODO Remove this
-var lastFocusEl
-function mixinFocus (obj, elName) {
-  obj.focus = function () {
-    console.warn('focus', obj, name)
-    if (!obj[elName]) throw new Error('Need obj[' + elName + ']')
-    css(obj[elName], {
-      border: '3px solid blue'
-    })
-    if (lastFocusEl) {
-      css(lastFocusEl, {
-        border: 'none'
-      })
-    }
-    lastFocusEl = obj[elName]
-  }
-}
-
-function newViewable (AClass, proto, handlers, args) {
-  if (!AClass.mixedIn) {
-    if (!proto.tpl) throw new Error('Need proto.tpl function for markup')
-    AClass.prototype = proto
-    mixinDom(AClass)
-    mixinHandlers(AClass, handlers)
-    AClass.mixedIn = true
-  }
-  args = args || {}
-  var obj = AClass.create(args)
-  mixinFocus(obj)
-  return obj
-}
-
 // {{{1 InputHandler
 
 // TODO CTRL + 1-9:  Select instrument, focus instruments
@@ -1795,7 +1873,7 @@ function KeyboardView (o) {
   // properties on o added
 }
 
-KeyboardView.prototype = {
+createView(KeyboardView, {
   tpl: function (o) {
     o = o || {}
     return bp.templates.keyboard(keyboardKeys.map((row, j) => {
@@ -1808,6 +1886,36 @@ KeyboardView.prototype = {
       }
       return (j > 1 ? ' ' : '') + keys
     }))
+  },
+  afterAttach: function (el) {
+    // Select the active sample
+    var samples = qa('b', this.parentEl)
+    if (this.lastInstrumentEl) classRemove(this.lastInstrumentEl, 'active-instrument')
+    for (var i = 0; i < samples.length; i += 1) {
+      var s1 = samples[i]
+      // console.warn('afterRender', s1.innerText, this.model.selectedInstrument())
+      if (s1.innerText === this.model.selectedInstrument()) {
+        classAdd(s1, 'active-instrument')
+        this.lastInstrumentEl = s1
+        break
+      }
+    }
+    // Set selected ranges
+    for (i = 0; i < this.ranges.length; i += 1) {
+      var assignment = this.ranges[i]
+      var begin = this.findElTypeWithInnerText('i', assignment[1])
+      var end = this.findElTypeWithInnerText('i', assignment[2])
+      this.markRange(begin, end, assignment[0])
+    }
+  },
+  renderModel: function () {
+    // TODO Render model
+    this.render({})
+  },
+  vmSave: function () {
+
+  },
+  vmLoad: function () {
   },
   // Add span around key range
   markRange: function (beginEl, endEl, instrumentNumber) {
@@ -1835,27 +1943,6 @@ KeyboardView.prototype = {
       if (k1.innerText === character) return k1
     }
   },
-  afterAttach: function (el) {
-    // Select the active sample
-    var samples = qa('b', this.parentEl)
-    if (this.lastInstrumentEl) classRemove(this.lastInstrumentEl, 'active-instrument')
-    for (var i = 0; i < samples.length; i += 1) {
-      var s1 = samples[i]
-      // console.warn('afterRender', s1.innerText, this.model.selectedInstrument())
-      if (s1.innerText === this.model.selectedInstrument()) {
-        classAdd(s1, 'active-instrument')
-        this.lastInstrumentEl = s1
-        break
-      }
-    }
-    // Set selected ranges
-    for (i = 0; i < this.ranges.length; i += 1) {
-      var assignment = this.ranges[i]
-      var begin = this.findElTypeWithInnerText('i', assignment[1])
-      var end = this.findElTypeWithInnerText('i', assignment[2])
-      this.markRange(begin, end, assignment[0])
-    }
-  },
   selectInstrument: function (sample, el) {
     if (!el) el = this.findElTypeWithInnerText('b', sample)
     if (this.lastInstrumentEl) {
@@ -1864,11 +1951,24 @@ KeyboardView.prototype = {
     classAdd(el, 'active-instrument')
     this.lastInstrumentEl = el
     this.model.selectedInstrument(sample)
-  }
-}
+  }, 
 
-mixinDom(KeyboardView)
-mixinHandlers(KeyboardView, {
+  // Keys
+  keyLeft: function (ev, el) {
+    console.warn('KeyboardView', ev, el)
+  },
+  keyRight: function (ev, el) {
+    console.warn('KeyboardView', ev, el)
+  },
+  keyUp: function (ev, el) {
+    console.warn('KeyboardView', ev, el)
+  },
+  keyDown: function (ev, el) {
+    console.warn('KeyboardView', ev, el)
+  }
+
+}, {
+  // Handlers
   click: function (event, el) {
     this.focus()
     // Instrument
@@ -1900,20 +2000,11 @@ mixinHandlers(KeyboardView, {
     }
     this.focus()
   }
+}, {
+  // Args
+  id: 'keyboard'
 })
 
-KeyboardView.prototype.keyLeft = function (ev, el) {
-  console.warn('KeyboardView', ev, el)
-}
-KeyboardView.prototype.keyRight = function (ev, el) {
-  console.warn('KeyboardView', ev, el)
-}
-KeyboardView.prototype.keyUp = function (ev, el) {
-  console.warn('KeyboardView', ev, el)
-}
-KeyboardView.prototype.keyDown = function (ev, el) {
-  console.warn('KeyboardView', ev, el)
-}
 // 1}}} KeyboardView
 
 // {{{1 ScoreColumns
@@ -1980,7 +2071,7 @@ const emptyCol = $t('p', $t('b', '&nbsp;'))
 function PlayerView (o) {
 }
 
-bp.liveplayer = newViewable(PlayerView, {
+createView(PlayerView, {
   tpl: function (o) {
     var m = this.model
     var t = extend({tracks: this.model.tracks,
@@ -2073,6 +2164,20 @@ bp.liveplayer = newViewable(PlayerView, {
     amount = amount || 1
     this.currentPos += amount
     this.scoreColumns.step(amount)
+  },
+
+  // Keys
+  keyLeft: function (ev, el) {
+    console.warn(ev, el)
+  },
+  keyRight: function (ev, el) {
+    console.warn(ev, el)
+  },
+  keyUp: function (ev, el) {
+    console.warn(ev, el)
+  },
+  keyDown: function (ev, el) {
+    console.warn(ev, el)
   }
 }, {
 // Handlers
@@ -2092,6 +2197,9 @@ bp.liveplayer = newViewable(PlayerView, {
       case 'B':
         r1 = rect(el)
         var value = el.innerText
+		var pos = attr(el, 'data-pos')
+		if (!pos) return
+		console.warn('POS', pos)
         if (!value || /^\s*$/.test(value)) value = '.'
         live.textInput1.popup({
           top: r1.top,
@@ -2141,37 +2249,24 @@ bp.liveplayer = newViewable(PlayerView, {
   }
 }, {
   // Default instance args
-
+  id: 'player1'
 })
 
-PlayerView.prototype.unfocus = function () {
-  css(this.parentEl.childNodes[0], {
-    border: 'none'
-  })
-  if (bp.lastPopUp) bp.lastPopUp.hide()
-}
-PlayerView.prototype.focus = function () {
-  css(this.parentEl.childNodes[0], {
-    border: '1px solid blue'
-  })
-  if (bp.lastPopUp) {
-    bp.lastPopUp.show()
-    bp.lastPopUp.inputEl.select()
-  }
-}
-
-PlayerView.prototype.keyLeft = function (ev, el) {
-  console.warn(ev, el)
-}
-PlayerView.prototype.keyRight = function (ev, el) {
-  console.warn(ev, el)
-}
-PlayerView.prototype.keyUp = function (ev, el) {
-  console.warn(ev, el)
-}
-PlayerView.prototype.keyDown = function (ev, el) {
-  console.warn(ev, el)
-}
+// PlayerView.prototype.unfocus = function () {
+  // css(this.parentEl.childNodes[0], {
+    // border: 'none'
+  // })
+  // if (bp.lastPopUp) bp.lastPopUp.hide()
+// }
+// PlayerView.prototype.focus = function () {
+  // css(this.parentEl.childNodes[0], {
+    // border: '1px solid blue'
+  // })
+  // if (bp.lastPopUp) {
+    // bp.lastPopUp.show()
+    // bp.lastPopUp.inputEl.select()
+  // }
+// }
 
 function decToalphanum (num) {
   if (num >= alphaNum.length) {
@@ -2187,7 +2282,6 @@ function alphanumToDec (anum) {
   if (result < 0) throw new Error('TODO Beat is too long')
   return result
 }
-
 
 function charArray (length, character) {
   character = character || '.'
@@ -2227,10 +2321,6 @@ const controlChars = {
   // right: { ch: '→', css: 'font-size: 150%' },
   pause: { ch: '▍▍', css: 'font-size: 116%; vertical-align: center; letter-spacing: -0.3rem' }
 }
-function htmlControls (o) {
-  if (o.playing) play = '►'
-  return $t('div', {'class': 'controls'}, controlsSpan(controlChars))
-}
 
 function controlsSpan (controlChars) {
   var result = []
@@ -2240,19 +2330,26 @@ function controlsSpan (controlChars) {
   return result
 }
 
-ControlsView.prototype = {
-  tpl: function (o) {
-    return htmlControls(o)
-  }
+function htmlControls (o) {
+  // if (o.playing) play = '►'
+  return $t('div', {'class': 'controls'}, controlsSpan(controlChars))
 }
 
-mixinDom(ControlsView)
-mixinHandlers(ControlsView, {
+createView(ControlsView, {
+  tpl: function (o) {
+    return htmlControls(o)
+  },
+  renderModel: function () {
+    // TODO Render model
+    this.render({})
+  }
+}, {
   click: function (ev, el) {
     console.warn('click', this)
   }
+}, {
+  id: 'bag1'
 })
-
 
 // 1}}} ControlsView
 
@@ -2261,7 +2358,7 @@ function BeatsView (o) {
   this.collection = {}
 }
 
-BeatsView.prototype = {
+createView(BeatsView, {
   tpl: function (o) {
     return $t('span', 'Beat',
       $t('select', { type: 'multi' },
@@ -2269,30 +2366,36 @@ BeatsView.prototype = {
           return $t('option', opt)
         })))
   },
+  renderModel: function () {
+    // TODO Render model
+    console.warn(this.vmLoad())
+	this.render({})
+	console.warn('BeatsView', this.vmLoad())
+    // this.render(bp.model.view('beats'))
+  },
   afterRender: function () {
     console.warn('AFTER', this.parentEl)
   }
-}
-
-mixinDom(BeatsView)
-
-mixinHandlers(BeatsView, {
+}, {
   click: function (ev, el) {
     this.focus()
     if (el.value) {
-      this.model.load('data/' + el.value + '.beat', function (err, model) {
-        bp.live.playerView.gotoPos(1)
+      this.model.loadBeat('data/' + el.value + '.beat', function (err, model) {
+        bp.live.playerView1.gotoPos(1)
       })
     }
   }
+}, {
+  id: 'beatsView'
 })
+
 // 1}}}
 
 // {{{1 InstrumentsView
 function InstrumentsView (o) {
 }
 
-InstrumentsView.prototype = {
+createView(InstrumentsView, {
   tpl: function (o) {
     return [
       $t('h4', 'Instrument ' + o.number),
@@ -2306,17 +2409,17 @@ InstrumentsView.prototype = {
         )
     ].join('\n')
   },
+  renderModel: function () {
+    // TODO Render model
+    this.render({})
+  },
   selectInstrumentNumber: function (number) {
     this.update(this.model.instrument())
   },
   selectInstrumentRange: function (range) {
     this.update(this.model.instrument())
   }
-}
-
-mixinDom(InstrumentsView)
-
-mixinHandlers(InstrumentsView, {
+}, {
   click: function (ev, el) {
     this.focus()
     var name = el.nodeName
@@ -2342,6 +2445,8 @@ mixinHandlers(InstrumentsView, {
       })
     }
   }
+}, {
+  id: 'instruments'
 })
 // 1}}} InstrumentsView
 
@@ -2492,7 +2597,7 @@ Samples.prototype = {
 
 bp.test.player = function () {
   var bm1 = new BeatModel()
-  bm1.load('data/beat1.beat', function (err, model) {
+  bm1.loadBeat('data/beat1.beat', function (err, model) {
     if (err) throw err
     var pl1 = PlayerView.create({
       model: model
@@ -2530,7 +2635,7 @@ function escapeJson(o) {
 function escapeNone(o) { return o + ''; }
 
 
-// Timber templates v0.1.1 compiled 2016-06-06T20:31:56.481Z
+// Timber templates v0.1.1 compiled 2016-06-15T11:23:21.837Z
 bp.templates = {
   keyboard: function (o) {
   var result =   "<pre>\n";
@@ -2559,71 +2664,48 @@ return result; }
 /*global ready bp BeatModel KeyboardView InstrumentsView PlayerView InputHandler
   TextInput SliderInput InstrumentsView BeatsView each*/
 
-function lcFirst (text) {
-  return text[0].toLowerCase() + text.slice(1)
-}
-
-// Render
-var beatModel = bp.model = new BeatModel()
-var live = bp.live = {}
-each([KeyboardView, InstrumentsView, BeatsView, PlayerView, ControlsView], function (i, Class) {
-  var obj = Class.create({
-    model: beatModel
-  })
-  var name = lcFirst(Class.name)
-  mixinFocus(obj, 'parentEl')
-  bp.live[name] = obj
-})
-
-console.warn('BP', bp.live)
-
-// subscribe
-beatModel.subscribe('SelectInstrument', function () {
-  live.instrumentsView.selectInstrumentNumber()
-})
-
-beatModel.subscribe('SelectInstrumentRange', function () {
-  live.instrumentsView.selectInstrumentRange()
-})
-
-beatModel.subscribe('NewText', function () {
-  live.playerView.reAttach()
-})
+var live = bp.live
 
 ready(function () {
   bp.started = Date.now()
 
-  // KeyboardView
-  live.keyboardView.render()
-  live.keyboardView.attach('#keyboard')
-
-  // InstrumentsView
-  live.instrumentsView.render({
-    name: 'goo',
-    url: '/data/bd.wav'
+  Object.keys(live).forEach(function (name) {
+    var l1 = live[name]
+    l1.renderModel()
+    l1.attach()
   })
-  live.instrumentsView.attach('#instruments')
 
-  // BeatsView
-  live.beatsView.render({id: 'beatView1',
-              text: 'Hello BeatsView',
-              options: ['beat0', 'beat1', 'beat2']})
+  // // KeyboardView
+  // live.keyboardView1.render()
+  // live.keyboardView1.attach('#keyboard')
 
-  live.beatsView.attach('#beatsView')
+  // // InstrumentsView
+  // live.instrumentsView1.render({
+    // name: 'goo',
+    // url: '/data/bd.wav'
+  // })
+  // live.instrumentsView1.attach('#instruments')
 
-  // PlayerView
-  live.playerView.renderModel()
-  live.playerView.attach('#player1')
+  // // BeatsView
+  // live.beatsView1.render({id: 'beatView1',
+              // text: 'Hello BeatsView',
+              // options: ['beat0', 'beat1', 'beat2']})
 
-  // ControlsView
-  live.controlsView.render()
-  live.controlsView.attach('#controls')
+  // live.beatsView1.attach('#beatsView')
+
+  // // PlayerView
+  // // live.playerView1.renderModel()
+  // // live.playerView1.attach('#player1')
+
+  // // ControlsView
+  // live.controlsView1.render()
+  // live.controlsView1.attach('#controls')
 
   // InputHandler handles events on body
   var ih1 = new InputHandler({
-    model: beatModel,
-    keyboardView: live.keyboardView,
-    player: live.playerView
+    model: bp.model,
+    keyboardView: live.keyboardView1,
+    player: live.playerView1
   })
   ih1.eventsAttach()
   bp.live.ih1 = ih1
@@ -2636,18 +2718,18 @@ ready(function () {
   bp.live.sliderInput1 = sliderInput1
 
   // bp.testBeatAudio()
-  // bp.test.beatModel()
+  // bp.test.bp.model()
   //
-  live.stepFocus = stepIter([live.keyboardView, live.playerView, live.instrumentsView, live.beatsView, live.controlsView])
+  live.stepFocus = stepIter([live.keyboardView1, live.playerView1, live.instrumentsView1, live.beatsView1, live.controlsView])
 
 
-  beatModel.load('data/beat2.beat', function (err, model) {
+  bp.model.loadBeat('data/beat1.beat', function (err, model) {
     if (err) throw err
     console.warn('Loaded beat1')
-    live.playerView.detach()
-    live.playerView.renderModel()
-    live.playerView.attach()
-    live.playerView.gotoPos(1)
+    live.playerView1.detach()
+    live.playerView1.renderModel()
+    live.playerView1.attach()
+    live.playerView1.gotoPos(1)
   })
 })
 
