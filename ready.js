@@ -59,6 +59,20 @@ ready(function () {
   //
   live.stepFocus = stepIter([live.keyboardView1, live.playerView1, live.instrumentsView1, live.beatsView1, live.controlsView])
 
+ // var live = bp.live
+ // m.subscribe('SelectInstrument', function () {
+   // live.instrumentsView1.selectInstrumentNumber()
+ // })
+
+ // m.subscribe('SelectInstrumentRange', function () {
+   // live.instrumentsView1.selectInstrumentRange()
+ // })
+
+ // m.subscribe('NewText', function () {
+   // live.playerView1.reAttach()
+ // })
+//
+
 
   bp.model.loadBeat('data/beat1.beat', function (err, model) {
     if (err) throw err

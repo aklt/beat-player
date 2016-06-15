@@ -143,7 +143,7 @@ function KeyboardView (o) {
 createView(KeyboardView, {
   tpl: function (o) {
     o = o || {}
-    return bp.templates.keyboard(keyboardKeys.map((row, j) => {
+    return bp.templates.keyboard(keyboardKeys.map(function (row, j) {
       var keys = ''
       var chars = row.split('')
       if (j === 0) return bp.templates.keyboardRow(chars)
@@ -160,10 +160,11 @@ createView(KeyboardView, {
     if (this.lastInstrumentEl) classRemove(this.lastInstrumentEl, 'active-instrument')
     for (var i = 0; i < samples.length; i += 1) {
       var s1 = samples[i]
-      // console.warn('afterRender', s1.innerText, this.model.selectedInstrument())
-      if (s1.innerText === this.model.selectedInstrument()) {
+	  var selected = this.model.selectedInstrument()
+      if (s1.innerText === selected) {
         classAdd(s1, 'active-instrument')
         this.lastInstrumentEl = s1
+		this.vmSave({instrument: i})
         break
       }
     }
@@ -480,7 +481,7 @@ createView(PlayerView, {
           set: function (value) {
             var pos = attr(el, 'data-pos')
             console.warn('textInput1 set', pos, value)
-            self.model.setNote(pos, value)
+            self.model.note(pos, value)
             el.innerText = value
           }
         })
@@ -816,7 +817,7 @@ TextInput.prototype = {
   },
   setValue: function (val) {
     console.warn('setValue', val)
-    this.value = key
+    this.value = val
   }
 
 }

@@ -26,7 +26,7 @@ report:
 # The value of `deps` can be a string of suffix names or an Array of RegExps
 build:
   command: 'make all tags'
-  deps: 'less md html js'
+  deps: 'less md html js bp.sh makefile'
 
 # Where to access server
 url: 'http://localhost:5005'

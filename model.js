@@ -219,6 +219,20 @@ BeatModel.prototype = {
   getPattern: function () {
 
   },
+  // ## Modifying the model with getters and setters
+  position: function (pos) {
+    if (!pos) return this.model.position
+    this.model.position = pos
+  },
+  instrument: function (number) {
+    number = number || this.model.selectedInstrument
+    var i1 = this.model.instruments[number]
+    if (!i1) {
+      i1 = extend({}, BeatModel.defaultInstrument, {number: number})
+      this.model.instruments[number] = i1
+    }
+    return i1
+  },
   instruments: function (changeUrls) {
     if (!changeUrls) {
       // TODO This is a bit strange
@@ -241,23 +255,10 @@ BeatModel.prototype = {
     if (!newLength) return this.tpb() * this.beats()
     throw new Error('TODO: set patternLength')
   },
-  // ## Modifying the model with getters and setters
-  instrument: function (number) {
-    number = number || this.model.selectedInstrument
-    var i1 = this.model.instruments[number]
-    if (!i1) {
-      i1 = extend({}, BeatModel.defaultInstrument, {number: number})
-      this.model.instruments[number] = i1
-    }
-    return i1
-  },
-  position: function (pos) {
-    if (!pos) return this.model.position
-    this.model.position = pos
-  },
-  setNote: function (pos, value) {
+  note: function (pos, value) {
     if (typeof pos === 'string') pos = parseNotePos(pos)
-    console.warn('setNote', pos, value, this)
+    if (!value) return this.tracks[pos[0]][pos[1]]
+    this.tracks[pos[0]][pos[1]] = value
   },
   selectedInstrument: function (number) {
     if (!number) return this.model.selectedInstrument
@@ -347,25 +348,6 @@ function readConfig (lines) {
   return configs
 }
 
-function mixinGetSet (AClass, prop, defaultValue) {
-  AClass.prototype[prop] = function (value) {
-    var change
-    if (typeof value !== 'undefined') {
-      this.model[prop] = value
-      change = true
-    }
-    if (typeof this.model[prop] === 'undefined') {
-      this.model[prop] = defaultValue
-      change = true
-    }
-    if (change) {
-      var cb = this.subscriptions['Change' + ucFirst(prop)]
-      if (typeof cb === 'function') cb()
-    }
-    return this.model[prop]
-  }
-}
-
 mixinGetSet(BeatModel, 'bpm', 100)
 mixinGetSet(BeatModel, 'tpb', 4)
 mixinGetSet(BeatModel, 'beats', 4)
@@ -373,78 +355,6 @@ mixinGetSet(BeatModel, 'beats', 4)
 var m = bp.model = new BeatModel({
   beats: ['beat0', 'beat1', 'beat2']
 })
-
-// var live = bp.live
-// m.subscribe('SelectInstrument', function () {
-  // live.instrumentsView1.selectInstrumentNumber()
-// })
-
-// m.subscribe('SelectInstrumentRange', function () {
-  // live.instrumentsView1.selectInstrumentRange()
-// })
-
-// m.subscribe('NewText', function () {
-  // live.playerView1.reAttach()
-// })
-//
-
-// TODO Remove this
-var lastFocusEl
-function mixinFocus (obj, elName) {
-  obj.focus = function () {
-    console.warn('focus', obj, name)
-    if (!obj[elName]) throw new Error('Need obj[' + elName + ']')
-    css(obj[elName], {
-      border: '3px solid blue'
-    })
-    if (lastFocusEl) {
-      css(lastFocusEl, {
-        border: 'none'
-      })
-    }
-    lastFocusEl = obj[elName]
-  }
-}
-
-function mixinViewModel (obj, name) {
-  if (!bp.model) throw new Error('Need bp.model')
-  // if (!origSave) throw new Error('Need vmSave function for ' + name)
-  // if (!origLoad) throw new Error('Need vmLoad function for ' + name)
-  var m = bp.model
-  obj.vmSave = function (values) {
-	m.view(name, values)
-  }
-  obj.vmLoad = function () {
-	return m.view(name)
-  }
-}
-
-function createView (AClass, proto, handlers, args) {
-  if (typeof bp === 'undefined') throw new Error('Need bp')
-  if (!bp.model) throw new Error('Need bp.model')
-  if (!bp.live) throw new Error('Need bp.live')
-  if (!AClass.mixedIn) {
-    if (!proto.tpl) throw new Error('Need proto.tpl function for markup')
-    if (!proto.renderModel) throw new Error('Need proto.renderModel')
-    AClass.prototype = proto
-    mixinDom(AClass)
-    mixinHandlers(AClass, handlers)
-    AClass.mixedIn = true
-  }
-  args = args || {}
-  if (!args.id) throw new Error('Need args.id')
-  if (!AClass.instance) AClass.instanceCount = 0
-  args.model = bp.model
-  args.parentEl = $id(args.id)
-  var obj = AClass.create(args)
-  mixinFocus(obj, 'parentEl')
-  AClass.instanceCount += 1
-  var name = lcFirst(AClass.name) + AClass.instanceCount
-  mixinViewModel(obj, name)
-  console.warn('createView', name, AClass, obj)
-  bp.live[name] = obj
-}
-
 
 bp.test.beatModel = function () {
   var bm1 = new BeatModel()

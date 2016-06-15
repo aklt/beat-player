@@ -26,7 +26,7 @@ function escapeJson(o) {
 function escapeNone(o) { return o + ''; }
 
 
-// Timber templates v0.1.1 compiled 2016-06-15T11:23:21.837Z
+// Timber templates v0.1.1 compiled 2016-06-15T15:33:52.780Z
 bp.templates = {
   keyboard: function (o) {
   var result =   "<pre>\n";
@@ -44,10 +44,6 @@ return result; }
     result +=     "<b>" + escapeHtml(v1) + "</b>";
   }
   result += "";
-return result; }
-,
-  sliderInput: function (o) {
-  var result =   "<div id=\"slider1\" class=\"slider-input\">\n  <input type=\"text\" name=\"val\" value=\"" + escapeText(o.value) + "\">\n  <input orient=\"vertical\" type=\"range\" min=\"0\" max=\"100\" step=\"1\"\n         value=\"" + escapeText(o.value) + "\">\n</div>\n";
 return result; }
 
 };
