@@ -334,6 +334,8 @@ function ucfirst (s) {
   return s[0].toUpperCase() + s.slice(1)
 }
 
+bp.model = new BeatModel()
+
 bp.test.beatModel = function () {
   var bm1 = new BeatModel()
   bm1.load('data/beat0.beat', function (err, model) {

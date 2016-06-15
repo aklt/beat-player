@@ -4,6 +4,8 @@
   eachPush $t $ts extend
 */
 
+// TODO Grid https://www.reddit.com/r/Frontend/comments/4lkww8/grid_system_research/
+
 const alphaNum = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
 const keyboardKeys = [
@@ -34,6 +36,20 @@ function mixinFocus (obj, elName) {
     }
     lastFocusEl = obj[elName]
   }
+}
+
+function newViewable (AClass, proto, handlers, args) {
+  if (!AClass.mixedIn) {
+    if (!proto.tpl) throw new Error('Need proto.tpl function for markup')
+    AClass.prototype = proto
+    mixinDom(AClass)
+    mixinHandlers(AClass, handlers)
+    AClass.mixedIn = true
+  }
+  args = args || {}
+  var obj = AClass.create(args)
+  mixinFocus(obj)
+  return obj
 }
 
 // {{{1 InputHandler
@@ -305,12 +321,29 @@ ScoreColumns.prototype = {
 }
 // 1}}} ScoreColumns
 
-// {{{1 PlayerView
-function PlayerView (o) {
+// {{{1 Settings
+
+function Settings () {
 }
 
+Settings.prototype = {
+  tpl: function (o) {
+    return $t('div', {'class': 'settings'},
+      $t('dl',
+        eachPush([{title: 'Beats Per Minute', abbr: 'BPM', name: 'bpm'},
+          {title: 'Ticks Per Beat', abbr: 'TPB', name: 'tpb'},
+          {title: 'Total Beats', abbr: 'Beats', name: 'beats'}], function (i, val) {
+          return $t('dt',
+            $t('abbr', {title: val.title}, val.abbr),
+            $t('dd', o.settings[val.name]))})))
+  }
+}
+
+// 1}}}
+//
+// {{{1 PlayerView
 function scoreSpanTemplate (length, tpb) {
-  // console.warn('scoreSpan', length, tpb)
+  console.warn('scoreSpan', length, tpb)
   var result = []
   for (var i = 0; i < length; i += 1) {
     if (i % tpb === 0) result.push('&nbsp;')
@@ -321,22 +354,16 @@ function scoreSpanTemplate (length, tpb) {
 
 const emptyCol = $t('p', $t('b', '&nbsp;'))
 
-PlayerView.prototype = {
+function PlayerView (o) {
+}
+
+bp.liveplayer = newViewable(PlayerView, {
   tpl: function (o) {
     var m = this.model
     var t = extend({tracks: this.model.tracks,
                     length: m.patternLength(),
                     tpb: m.tpb()}, o)
     return [
-      $t('div', {'class': 'settings'},
-        $t('dl',
-          eachPush([['Beats Per Minute', 'BPM', 'bpm'],
-            ['Ticks Per Beat', 'TPB', 'tpb'],
-            ['Total Beats', 'Beats', 'beats']], function (i, val) {
-            return $t('dt',
-              $t('abbr', {title: val[0]}, val[1]),
-              $t('dd', t.settings[val[2]]))
-          }))),
       $t('div', {'class': 'instruments'},
         eachPush(t.instruments, function (i, i1) {
           return $t('p', i1.name)
@@ -424,55 +451,8 @@ PlayerView.prototype = {
     this.currentPos += amount
     this.scoreColumns.step(amount)
   }
-}
-
-mixinDom(PlayerView)
-
-PlayerView.prototype.unfocus = function () {
-  css(this.parentEl.childNodes[0], {
-    border: 'none'
-  })
-  if (bp.lastPopUp) bp.lastPopUp.hide()
-}
-PlayerView.prototype.focus = function () {
-  css(this.parentEl.childNodes[0], {
-    border: '1px solid blue'
-  })
-  if (bp.lastPopUp) {
-    bp.lastPopUp.show()
-    bp.lastPopUp.inputEl.select()
-  }
-}
-
-PlayerView.prototype.keyLeft = function (ev, el) {
-  console.warn(ev, el)
-}
-PlayerView.prototype.keyRight = function (ev, el) {
-  console.warn(ev, el)
-}
-PlayerView.prototype.keyUp = function (ev, el) {
-  console.warn(ev, el)
-}
-PlayerView.prototype.keyDown = function (ev, el) {
-  console.warn(ev, el)
-}
-
-function decToalphanum (num) {
-  if (num >= alphaNum.length) {
-    console.warn('reset num from ', num)
-    num = alphaNum.length - 1
-    console.warn('reset num to', num)
-  }
-  return alphaNum[num]
-}
-
-function alphanumToDec (anum) {
-  var result = alphaNum.indexOf(anum + '')
-  if (result < 0) throw new Error('TODO Beat is too long')
-  return result
-}
-
-mixinHandlers(PlayerView, {
+}, {
+// Handlers
   click: function (ev, el) {
     // console.warn('You clicked', ev, el, el.parentNode)
     // var rowIndex = [].slice.call(el.parentNode.childNodes).indexOf(el)
@@ -536,7 +516,55 @@ mixinHandlers(PlayerView, {
     this.focus()
     return ev.stopPropagation()
   }
+}, {
+  // Default instance args
+
 })
+
+PlayerView.prototype.unfocus = function () {
+  css(this.parentEl.childNodes[0], {
+    border: 'none'
+  })
+  if (bp.lastPopUp) bp.lastPopUp.hide()
+}
+PlayerView.prototype.focus = function () {
+  css(this.parentEl.childNodes[0], {
+    border: '1px solid blue'
+  })
+  if (bp.lastPopUp) {
+    bp.lastPopUp.show()
+    bp.lastPopUp.inputEl.select()
+  }
+}
+
+PlayerView.prototype.keyLeft = function (ev, el) {
+  console.warn(ev, el)
+}
+PlayerView.prototype.keyRight = function (ev, el) {
+  console.warn(ev, el)
+}
+PlayerView.prototype.keyUp = function (ev, el) {
+  console.warn(ev, el)
+}
+PlayerView.prototype.keyDown = function (ev, el) {
+  console.warn(ev, el)
+}
+
+function decToalphanum (num) {
+  if (num >= alphaNum.length) {
+    console.warn('reset num from ', num)
+    num = alphaNum.length - 1
+    console.warn('reset num to', num)
+  }
+  return alphaNum[num]
+}
+
+function alphanumToDec (anum) {
+  var result = alphaNum.indexOf(anum + '')
+  if (result < 0) throw new Error('TODO Beat is too long')
+  return result
+}
+
 
 function charArray (length, character) {
   character = character || '.'
