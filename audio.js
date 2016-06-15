@@ -135,15 +135,12 @@ BeatAudio.prototype = {
 bp.BeatAudio = BeatAudio
 
 bp.testBeatAudio = function () {
-  var beat1Model = new BeatModel(beat1)
+  var beat1Model = bp.model || new BeatModel(beat1)
   var beat1 = bp.beat1 = new BeatAudio(beat1Model)
   beat1.model.bpm(110)
-  beat1.load('data/beat1.beat', function (err, audio) {
-    if (err) throw err
-    console.warn('beat', beat1)
-    beat1.play()
-    setTimeout(function (o) {
-      beat1.stop()
-    }, 3000)
-  })
+  beat1.calculateNoteBuckets()
+  beat1.play()
+  setTimeout(function (o) {
+    beat1.stop()
+  }, 3000)
 }

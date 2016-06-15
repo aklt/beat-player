@@ -230,6 +230,13 @@ BeatModel.prototype = {
     }
     return i1
   },
+  position: function (pos) {
+    if (!pos) return this.model.position
+    this.model.position = pos
+  },
+  setNote: function (pos, value) {
+    console.warn('setNote', pos, value, this)
+  },
   selectedInstrument: function (number) {
     if (!number) return this.model.selectedInstrument
     number += ''

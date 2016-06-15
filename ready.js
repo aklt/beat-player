@@ -6,13 +6,18 @@ function lcFirst (text) {
 }
 
 // Render
-var beatModel = new BeatModel()
+var beatModel = bp.model = new BeatModel()
 var live = bp.live = {}
-each([KeyboardView, InstrumentsView, BeatsView, PlayerView], function (i, Class) {
-  bp.live[lcFirst(Class.name)] = Class.create({
+each([KeyboardView, InstrumentsView, BeatsView, PlayerView, ControlsView], function (i, Class) {
+  var obj = Class.create({
     model: beatModel
   })
+  var name = lcFirst(Class.name)
+  mixinFocus(obj, 'parentEl')
+  bp.live[name] = obj
 })
+
+console.warn('BP', bp.live)
 
 // subscribe
 beatModel.subscribe('SelectInstrument', function () {
@@ -45,11 +50,16 @@ ready(function () {
   live.beatsView.render({id: 'beatView1',
               text: 'Hello BeatsView',
               options: ['beat0', 'beat1', 'beat2']})
-  live.beatsView.attach('#player1')
+
+  live.beatsView.attach('#beatsView')
 
   // PlayerView
   live.playerView.renderModel()
   live.playerView.attach('#player1')
+
+  // ControlsView
+  live.controlsView.render()
+  live.controlsView.attach('#controls')
 
   // InputHandler handles events on body
   var ih1 = new InputHandler({
@@ -61,14 +71,17 @@ ready(function () {
   bp.live.ih1 = ih1
 
   // TextInput pops up to get input
-  var ti1 = TextInput.create({id: 'textInput1'})
-  bp.live.ti1 = ti1
+  var textInput1 = TextInput.create({id: 'textInput1'})
+  bp.live.textInput1 = textInput1
 
-  var si1 = SliderInput.create({id: 'sliderInput1'})
-  bp.live.si1 = si1
+  var sliderInput1 = SliderInput.create({id: 'sliderInput1'})
+  bp.live.sliderInput1 = sliderInput1
 
   // bp.testBeatAudio()
   // bp.test.beatModel()
+  //
+  live.stepFocus = stepIter([live.keyboardView, live.playerView, live.instrumentsView, live.beatsView, live.controlsView])
+
 
   beatModel.load('data/beat2.beat', function (err, model) {
     if (err) throw err
@@ -76,6 +89,7 @@ ready(function () {
     live.playerView.detach()
     live.playerView.renderModel()
     live.playerView.attach()
+    live.playerView.gotoPos(1)
   })
 })
 

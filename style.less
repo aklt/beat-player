@@ -1,7 +1,7 @@
 
 @col-width: 1rem;
 @bg-input:  #AAE;
-@topline:   16rem;
+@topline:   10rem;
 
 // TODO Grid https://www.reddit.com/r/Frontend/comments/4lkww8/grid_system_research/
 
@@ -11,14 +11,29 @@
     box-sizing: border-box;
 }
 
+.bag {
+    position: absolute;
+    top: 6rem;
+    left: 1rem;
+    float: right;
+}
+
+.bag div {
+    padding-right: 1rem;
+}
+
+.clear {
+    clear: right;
+}
+
 .player {
+    display: block;
     font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif;
     position: absolute;
-    // top: 10rem;
-    // left: 12rem;
+    top: 1rem;
+    left: 1rem;
     // width: 95%;
     cursor: pointer;
-    border: 1px solid blue;
     .instruments {
         margin: 0.8rem 0 1rem 0;
         float: left;
@@ -68,24 +83,31 @@
             width: @col-width;
             height: 1rem;
             text-align: center;
-            // border: 1px solid red;
+           // border: 1px solid red;
         }
 
     }
-    .beatsView {
-        position: fixed;
-        top: 10rem;
-        background: transparent;
-        width: 150px;
-        font-size: 16px;
-        border: 1px solid #ccc;
-        height: 34px;
-    }
+}
+
+.beatsView {
+    // position: fixed;
+    background: transparent;
+    width: 150px;
+    font-size: 16px;
+}
+
+.twocolumn {
+    margin: 0.4rem 0 -1rem 0;
+    width: 24rem;
+}
+
+.twocolumn div {
+    float: left;
 }
 
 .active {
     background-color: lightblue;
-    /*border-left: 1px solid blue;*/
+    border-left: 1px solid blue;
 }
 
 .active-key {
@@ -97,30 +119,28 @@
 }
 
 .instrument-editor {
-   position: relative;
+   // position: absolute;
    margin: 0;
    padding: 0;
    top: @topline;
-   left: 18rem;
+   left: 22rem;
    width: auto;
-   border: 1px solid red;
+   // border: 1px solid red;
    background-color: white;
    dt {
        font-weight: bold;
-       float: left;
-       display: inline-block;
+       display: block;
    }
    dd {
        margin: 0 0.3rem 0 0.5rem;
        display: inline-block;
-       clear: left;
    }
 }
 
 .slider-input {
-    border: 1px solid green;
+    // border: 1px solid green;
     width: 2rem;
-    position: absolute;
+    // position: absolute;
     z-index: 100;
     input {
         width: 2rem;
@@ -141,10 +161,10 @@
 .keyboard {
     cursor: pointer;
     font-size: 160%;
-    border: 1px solid red;
-    position: absolute;
+    margin-left: -1.4rem;
+    // border: 1px solid red;
+    // position: absolute;
     top: @topline;
-    margin: 0;
     b {
         font-weight: normal;
     }
@@ -194,18 +214,25 @@
 }
 
 .foo {
-    position: absolute;
+    // position: absolute;
     top: 12rem;
 }
 
 .input-text {
-    position: absolute;
+    // position: absolute;
     font-size: 110%;
     text-decoration: bold;
     background-color: white;
     input {
         width: 100%;
         text-align: center;
+    }
+}
+
+.controls {
+    left: 1rem;
+    span {
+        margin-right: 2rem;
     }
 }
 

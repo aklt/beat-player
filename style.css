@@ -3,11 +3,25 @@
   padding: 0;
   box-sizing: border-box;
 }
+.bag {
+  position: absolute;
+  top: 6rem;
+  left: 1rem;
+  float: right;
+}
+.bag div {
+  padding-right: 1rem;
+}
+.clear {
+  clear: right;
+}
 .player {
+  display: block;
   font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif;
   position: absolute;
+  top: 1rem;
+  left: 1rem;
   cursor: pointer;
-  border: 1px solid blue;
 }
 .player .instruments {
   margin: 0.8rem 0 1rem 0;
@@ -58,18 +72,21 @@
   height: 1rem;
   text-align: center;
 }
-.player .beatsView {
-  position: fixed;
-  top: 10rem;
+.beatsView {
   background: transparent;
   width: 150px;
   font-size: 16px;
-  border: 1px solid #ccc;
-  height: 34px;
+}
+.twocolumn {
+  margin: 0.4rem 0 -1rem 0;
+  width: 24rem;
+}
+.twocolumn div {
+  float: left;
 }
 .active {
   background-color: lightblue;
-  /*border-left: 1px solid blue;*/
+  border-left: 1px solid blue;
 }
 .active-key {
   background-color: lightgrey;
@@ -78,29 +95,23 @@
   background-color: lightgreen;
 }
 .instrument-editor {
-  position: relative;
   margin: 0;
   padding: 0;
-  top: 16rem;
-  left: 18rem;
+  top: 10rem;
+  left: 22rem;
   width: auto;
-  border: 1px solid red;
   background-color: white;
 }
 .instrument-editor dt {
   font-weight: bold;
-  float: left;
-  display: inline-block;
+  display: block;
 }
 .instrument-editor dd {
   margin: 0 0.3rem 0 0.5rem;
   display: inline-block;
-  clear: left;
 }
 .slider-input {
-  border: 1px solid green;
   width: 2rem;
-  position: absolute;
   z-index: 100;
 }
 .slider-input input {
@@ -120,10 +131,8 @@
 .keyboard {
   cursor: pointer;
   font-size: 160%;
-  border: 1px solid red;
-  position: absolute;
-  top: 16rem;
-  margin: 0;
+  margin-left: -1.4rem;
+  top: 10rem;
 }
 .keyboard b {
   font-weight: normal;
@@ -170,11 +179,9 @@
   margin: 0 0.3rem 0 0;
 }
 .foo {
-  position: absolute;
   top: 12rem;
 }
 .input-text {
-  position: absolute;
   font-size: 110%;
   text-decoration: bold;
   background-color: white;
@@ -182,6 +189,12 @@
 .input-text input {
   width: 100%;
   text-align: center;
+}
+.controls {
+  left: 1rem;
+}
+.controls span {
+  margin-right: 2rem;
 }
 .hidden {
   display: none;
