@@ -4,28 +4,78 @@
  * <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css" />
 
 @import compass/reset
-@import compass/utilities
 @import compass/css3
-@import compass/layout/stretching
-@import singularitygs
+@import bourbon/bourbon
+@import neat/neat
 
-%container
-  border: 1px solid #999999
-  position: relative
-  +inline-block
+$col-width: 1rem
+$visual-grid: true !default
+
+%row-container
+  @include outer-container
+
+%view
+  // border: 1px solid #999999
+  @include row()
+  @include pad(0.1rem 1rem 0.1rem 1rem)
+
+.row-container
+  @extend %row-container
 
 .player
-  @extend %container
+  @extend %row-container
+  @extend %view
+  font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif
+  cursor: pointer
+  div
+    float: left
+  .instruments
+    margin: 0.8rem 0 1rem 0
+    padding-top: 0.4rem
+    p
+      margin: 0
+      display: block
+      clear: left
+      height: $col-width
+      // border: 1px solid blue;
+  .score
+    text-align: left
+    float: left
+    p
+      margin: 0
+      float: left
+      display: block
+    i
+      margin: 0
+      padding: 0
+      width: $col-width
+      text-align: center
+      display: block
+      float: left
+    span
+      clear: left
+      display: block
+
+  & .score-columns
+    display: block
+    b
+      margin: 0
+      padding: 0
+      display: block
+      width: $col-width
+      height: 1rem
+      text-align: center
+      // border: 1px solid red;
 
 .controls
-  @extend %container
+  @extend %view
 
 .beats
-  @extend %container
+  @extend %view
 
 .keyboard
-  @extend %container
+  @extend %view
 
 .instruments
-  @extend %container
+  @extend %view
 

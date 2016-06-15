@@ -593,7 +593,7 @@ const controlChars = {
 function controlsSpan (controlChars) {
   var result = []
   ;['left', 'play', 'pause', 'right'].forEach(function (buttonName) {
-    result.push($t('span', {style: controlChars[buttonName].css}, controlChars[buttonName].ch))
+    result.push($t('button', {style: controlChars[buttonName].css}, controlChars[buttonName].ch))
   })
   return result
 }
@@ -616,7 +616,7 @@ createView(ControlsView, {
     console.warn('click', this)
   }
 }, {
-  id: 'bag1'
+  id: 'controls'
 })
 
 // 1}}} ControlsView

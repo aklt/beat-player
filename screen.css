@@ -67,13 +67,97 @@ article, aside, details, figcaption, figure, footer, header, hgroup, main, menu,
   display: block;
 }
 
-/* line 12, sass/screen.sass */
+/* line 4, sass/neat/grid/_box-sizing.scss */
+html {
+  box-sizing: border-box;
+}
+
+/* line 9, sass/neat/grid/_box-sizing.scss */
+*, *::after, *::before {
+  box-sizing: inherit;
+}
+
+/* line 14, sass/screen.sass */
+.row-container, .player {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* line 20, sass/bourbon/addons/_clearfix.scss */
+.row-container::after, .player::after {
+  clear: both;
+  content: "";
+  display: table;
+}
+
+/* line 17, sass/screen.sass */
 .player, .controls, .beats, .keyboard, .instruments {
-  border: 1px solid #999999;
-  position: relative;
-  display: inline-block;
-  vertical-align: middle;
-  *vertical-align: auto;
-  *zoom: 1;
-  *display: inline;
+  display: block;
+  padding: 0.1rem 1rem 0.1rem 1rem;
+}
+/* line 20, sass/bourbon/addons/_clearfix.scss */
+.player::after, .controls::after, .beats::after, .keyboard::after, .instruments::after {
+  clear: both;
+  content: "";
+  display: table;
+}
+
+/* line 25, sass/screen.sass */
+.player {
+  font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+  cursor: pointer;
+}
+/* line 30, sass/screen.sass */
+.player div {
+  float: left;
+}
+/* line 32, sass/screen.sass */
+.player .instruments {
+  margin: 0.8rem 0 1rem 0;
+  padding-top: 0.4rem;
+}
+/* line 35, sass/screen.sass */
+.player .instruments p {
+  margin: 0;
+  display: block;
+  clear: left;
+  height: 1rem;
+}
+/* line 41, sass/screen.sass */
+.player .score {
+  text-align: left;
+  float: left;
+}
+/* line 44, sass/screen.sass */
+.player .score p {
+  margin: 0;
+  float: left;
+  display: block;
+}
+/* line 48, sass/screen.sass */
+.player .score i {
+  margin: 0;
+  padding: 0;
+  width: 1rem;
+  text-align: center;
+  display: block;
+  float: left;
+}
+/* line 55, sass/screen.sass */
+.player .score span {
+  clear: left;
+  display: block;
+}
+/* line 59, sass/screen.sass */
+.player .score-columns {
+  display: block;
+}
+/* line 61, sass/screen.sass */
+.player .score-columns b {
+  margin: 0;
+  padding: 0;
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  text-align: center;
 }

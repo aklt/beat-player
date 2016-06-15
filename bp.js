@@ -1724,7 +1724,7 @@
   function controlsSpan (controlChars) {
     var result = []
     ;['left', 'play', 'pause', 'right'].forEach(function (buttonName) {
-      result.push($t('span', {style: controlChars[buttonName].css}, controlChars[buttonName].ch))
+      result.push($t('button', {style: controlChars[buttonName].css}, controlChars[buttonName].ch))
     })
     return result
   }
@@ -1747,7 +1747,7 @@
       console.warn('click', this)
     }
   }, {
-    id: 'bag1'
+    id: 'controls'
   })
   
   // 1}}} ControlsView
@@ -2033,7 +2033,7 @@
   function escapeNone(o) { return o + ''; }
   
   
-  // Timber templates v0.1.1 compiled 2016-06-15T17:33:11.039Z
+  // Timber templates v0.1.1 compiled 2016-06-15T20:22:35.310Z
   bp.templates = {
     keyboard: function (o) {
     var result =   "<pre>\n";
