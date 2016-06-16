@@ -15,15 +15,20 @@ $visual-grid: true !default
   @include outer-container
 
 %view
-  // border: 1px solid #999999
+  border: 1px solid #999999
   @include row()
   @include pad(0.1rem 1rem 0.1rem 1rem)
 
 .row-container
   @extend %row-container
 
+.top
+  @extend %view
+  div
+    float: left
+
+// {{{1 components
 .player
-  @extend %row-container
   @extend %view
   font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif
   cursor: pointer
@@ -78,4 +83,6 @@ $visual-grid: true !default
 
 .instruments
   @extend %view
+
+// 1}}} components
 

@@ -1436,10 +1436,10 @@
   
   // {{{1 Settings
   
-  function Settings () {
+  function SettingsView () {
   }
   
-  Settings.prototype = {
+  createView(SettingsView,  {
     tpl: function (o) {
       return $t('div', {'class': 'settings'},
         $t('dl',
@@ -1448,9 +1448,16 @@
             {title: 'Total Beats', abbr: 'Beats', name: 'beats'}], function (i, val) {
             return $t('dt',
               $t('abbr', {title: val.title}, val.abbr),
-              $t('dd', o.settings[val.name]))})))
+              $t('dd', o[val.name]))})))
+    },
+    renderModel: function (o) {
+  	this.render(o)
     }
-  }
+  }, {
+  }, {
+    id: 'settings'
+  })
+  
   
   // 1}}}
   //
@@ -1765,12 +1772,8 @@
             return $t('option', opt)
           })))
     },
-    renderModel: function () {
-      // TODO Render model
-      console.warn(this.vmLoad())
-  	this.render({})
-  	console.warn('BeatsView', this.vmLoad())
-      // this.render(bp.model.view('beats'))
+    renderModel: function (o) {
+  	this.render(o)
     },
     afterRender: function () {
       console.warn('AFTER', this.parentEl)
@@ -2057,80 +2060,60 @@
   /*global ready bp BeatModel KeyboardView InstrumentsView PlayerView InputHandler
     TextInput SliderInput InstrumentsView BeatsView each*/
   
-  var live = bp.live
+  var defaultOptions = {
+    beatsView1: {
+      id: 'beatView1',
+      options: ['beat0', 'beat1', 'beat2']
+    },
+    settingsView1: {
+      bpm: 100,
+      tpb: 4,
+      beats: 12
+    }
+  }
   
   ready(function () {
     bp.started = Date.now()
+    var live = bp.live
   
     Object.keys(live).forEach(function (name) {
+      console.warn('live', name)
       var l1 = live[name]
-      l1.renderModel()
+      l1.renderModel(defaultOptions[name])
       l1.attach()
     })
   
-    // // KeyboardView
-    // live.keyboardView1.render()
-    // live.keyboardView1.attach('#keyboard')
-  
-    // // InstrumentsView
-    // live.instrumentsView1.render({
-      // name: 'goo',
-      // url: '/data/bd.wav'
-    // })
-    // live.instrumentsView1.attach('#instruments')
-  
-    // // BeatsView
-    // live.beatsView1.render({id: 'beatView1',
-                // text: 'Hello BeatsView',
-                // options: ['beat0', 'beat1', 'beat2']})
-  
-    // live.beatsView1.attach('#beatsView')
-  
-    // // PlayerView
-    // // live.playerView1.renderModel()
-    // // live.playerView1.attach('#player1')
-  
-    // // ControlsView
-    // live.controlsView1.render()
-    // live.controlsView1.attach('#controls')
-  
-    // InputHandler handles events on body
     var ih1 = new InputHandler({
       model: bp.model,
       keyboardView: live.keyboardView1,
       player: live.playerView1
     })
     ih1.eventsAttach()
-    bp.live.ih1 = ih1
+    live.ih1 = ih1
   
     // TextInput pops up to get input
     var textInput1 = TextInput.create({id: 'textInput1'})
-    bp.live.textInput1 = textInput1
+    live.textInput1 = textInput1
   
     var sliderInput1 = SliderInput.create({id: 'sliderInput1'})
-    bp.live.sliderInput1 = sliderInput1
+    live.sliderInput1 = sliderInput1
   
-    // bp.testBeatAudio()
-    // bp.test.bp.model()
-    //
     live.stepFocus = stepIter([live.keyboardView1, live.playerView1, live.instrumentsView1, live.beatsView1, live.controlsView])
   
-   // var live = bp.live
-   // m.subscribe('SelectInstrument', function () {
-     // live.instrumentsView1.selectInstrumentNumber()
-   // })
+    // subscriptions
+    m.subscribe('SelectInstrument', function () {
+      live.instrumentsView1.selectInstrumentNumber()
+    })
   
-   // m.subscribe('SelectInstrumentRange', function () {
-     // live.instrumentsView1.selectInstrumentRange()
-   // })
+    m.subscribe('SelectInstrumentRange', function () {
+      live.instrumentsView1.selectInstrumentRange()
+    })
   
-   // m.subscribe('NewText', function () {
-     // live.playerView1.reAttach()
-   // })
-  //
+    m.subscribe('NewText', function () {
+      live.playerView1.reAttach()
+    })
   
-  
-    bp.model.loadBeat('data/beat1.beat', function (err, model) {
+    m.loadBeat('data/beat1.beat', function (err, model) {
       if (err) throw err
       console.warn('Loaded beat1')
       live.playerView1.detach()

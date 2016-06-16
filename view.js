@@ -305,10 +305,10 @@ ScoreColumns.prototype = {
 
 // {{{1 Settings
 
-function Settings () {
+function SettingsView () {
 }
 
-Settings.prototype = {
+createView(SettingsView,  {
   tpl: function (o) {
     return $t('div', {'class': 'settings'},
       $t('dl',
@@ -317,9 +317,16 @@ Settings.prototype = {
           {title: 'Total Beats', abbr: 'Beats', name: 'beats'}], function (i, val) {
           return $t('dt',
             $t('abbr', {title: val.title}, val.abbr),
-            $t('dd', o.settings[val.name]))})))
+            $t('dd', o[val.name]))})))
+  },
+  renderModel: function (o) {
+	this.render(o)
   }
-}
+}, {
+}, {
+  id: 'settings'
+})
+
 
 // 1}}}
 //
@@ -634,12 +641,8 @@ createView(BeatsView, {
           return $t('option', opt)
         })))
   },
-  renderModel: function () {
-    // TODO Render model
-    console.warn(this.vmLoad())
-	this.render({})
-	console.warn('BeatsView', this.vmLoad())
-    // this.render(bp.model.view('beats'))
+  renderModel: function (o) {
+	this.render(o)
   },
   afterRender: function () {
     console.warn('AFTER', this.parentEl)
