@@ -15,19 +15,33 @@ $visual-grid: true !default
   @include outer-container
 
 %view
-  border: 1px solid #999999
+  //border: 1px solid #999999
   @include row()
   @include pad(0.1rem 1rem 0.1rem 1rem)
 
 .row-container
   @extend %row-container
 
-.top
+.columns
   @extend %view
   div
     float: left
 
-// {{{1 components
+.beats
+  @extend %view
+
+.settings
+  @extend %view
+  dl, dt, dd
+    display: inline
+  dt
+    font-weight: bold
+  dd
+    margin: 0 0.3rem 0 0
+
+.controls
+  @extend %view
+
 .player
   @extend %view
   font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif
@@ -72,17 +86,46 @@ $visual-grid: true !default
       text-align: center
       // border: 1px solid red;
 
-.controls
-  @extend %view
-
-.beats
-  @extend %view
-
 .keyboard
   @extend %view
+  cursor: pointer
+  font-size: 140%
+  margin-left: -1rem
+  b
+    font-weight: normal
+  .color0
+    i
+      background-color: #9eecda
+  .color1
+    i
+      background-color: #ac78b5
+  .color2
+    i
+      background-color: #dab58f
+  .color3
+    i
+      background-color: #78f19a
+  .color4
+    i
+      background-color: #b72e75
+  .color5
+    i
+      background-color: #b56acf
+  .color6
+    i
+      background-color: #93a7fa
+  .color7
+    i
+      background-color: #f1e3d5
+  .color8
+    i
+      background-color: #8fafaf
+  .color9
+    i
+      background-color: #bd9bc9
+
+.active-instrument
+  background-color: lightgreen
 
 .instruments
   @extend %view
-
-// 1}}} components
-

@@ -1441,14 +1441,13 @@
   
   createView(SettingsView,  {
     tpl: function (o) {
-      return $t('div', {'class': 'settings'},
-        $t('dl',
+  	return $t('dl',
           eachPush([{title: 'Beats Per Minute', abbr: 'BPM', name: 'bpm'},
             {title: 'Ticks Per Beat', abbr: 'TPB', name: 'tpb'},
             {title: 'Total Beats', abbr: 'Beats', name: 'beats'}], function (i, val) {
             return $t('dt',
               $t('abbr', {title: val.title}, val.abbr),
-              $t('dd', o[val.name]))})))
+              $t('dd', o[val.name]))}))
     },
     renderModel: function (o) {
   	this.render(o)
@@ -1728,17 +1727,12 @@
     pause: { ch: '▍▍', css: 'font-size: 116%; vertical-align: center; letter-spacing: -0.3rem' }
   }
   
-  function controlsSpan (controlChars) {
+  function htmlControls () {
     var result = []
     ;['left', 'play', 'pause', 'right'].forEach(function (buttonName) {
       result.push($t('button', {style: controlChars[buttonName].css}, controlChars[buttonName].ch))
     })
-    return result
-  }
-  
-  function htmlControls (o) {
-    // if (o.playing) play = '►'
-    return $t('div', {'class': 'controls'}, controlsSpan(controlChars))
+    return result.join('\n')
   }
   
   createView(ControlsView, {
