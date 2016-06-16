@@ -1,5 +1,4 @@
-/*global ready bp BeatModel KeyboardView InstrumentsView PlayerView InputHandler
-  TextInput SliderInput InstrumentsView BeatsView each*/
+/*global ready bp TextInput SliderInput InputHandler stepIter m*/
 
 var defaultOptions = {
   beatsView1: {

@@ -1,7 +1,7 @@
 /*global bp __document requestAnimationFrame htmlEl insertBefore
   appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
   rect attr nextSibling prevSibling $id mixinHideShow BeatModel
-  eachPush $t $ts extend
+  eachPush $t $ts extend createView
 */
 
 // TODO Grid https://www.reddit.com/r/Frontend/comments/4lkww8/grid_system_research/
@@ -57,6 +57,7 @@ var ih_state = IH_INIT
 mixinHandlers(InputHandler, {
   keydown: function (ev, el) {
     var code = ev.which
+    var obj
     console.warn('Key', code, ev.charCode, String.fromCharCode(code))
     switch (ih_state) {
       case IH_INIT:
@@ -71,13 +72,13 @@ mixinHandlers(InputHandler, {
           if (bp.lastPopUp && bp.lastPopUp.keyDown) bp.lastPopUp.keyDown()
           ev.preventDefault()
         } else if (code === keyLeft) {
-          var obj = bp.live.stepFocus.prev()
+          obj = bp.live.stepFocus.prev()
           console.warn('keyLeft', obj)
           obj.focus()
           if (bp.lastPopUp && bp.lastPopUp.keyLeft) bp.lastPopUp.keyLeft()
           ev.preventDefault()
         } else if (code === keyRight) {
-          var obj = bp.live.stepFocus.next()
+          obj = bp.live.stepFocus.next()
           obj.focus()
           console.warn('keyRight', obj)
           if (bp.lastPopUp && bp.lastPopUp.keyRight) bp.lastPopUp.keyRight()
@@ -107,7 +108,7 @@ mixinHandlers(InputHandler, {
             console.warn('play key', k)
           }
         }
-        break;
+        break
       case IH_END:
         break
       default:
@@ -160,11 +161,11 @@ createView(KeyboardView, {
     if (this.lastInstrumentEl) classRemove(this.lastInstrumentEl, 'active-instrument')
     for (var i = 0; i < samples.length; i += 1) {
       var s1 = samples[i]
-	  var selected = this.model.selectedInstrument()
+      var selected = this.model.selectedInstrument()
       if (s1.innerText === selected) {
         classAdd(s1, 'active-instrument')
         this.lastInstrumentEl = s1
-		this.vmSave({instrument: i})
+        this.vmSave({instrument: i})
         break
       }
     }
@@ -219,7 +220,7 @@ createView(KeyboardView, {
     classAdd(el, 'active-instrument')
     this.lastInstrumentEl = el
     this.model.selectedInstrument(sample)
-  }, 
+  },
 
   // Keys
   keyLeft: function (ev, el) {
@@ -281,7 +282,7 @@ function ScoreColumns (el) {
   // console.warn(type(el));
   this.els = qa('* p', el).filter(function (el1) {
     return el1.childNodes.length > 1
-  })    
+  })
   this.selectedIndex = -1
   this.selectedEl = this.els[this.selectedIndex]
   this.lastSelectedEl = this.selectedEl
@@ -308,24 +309,23 @@ ScoreColumns.prototype = {
 function SettingsView () {
 }
 
-createView(SettingsView,  {
+createView(SettingsView, {
   tpl: function (o) {
-	return $t('dl',
+    return $t('dl',
         eachPush([{title: 'Beats Per Minute', abbr: 'BPM', name: 'bpm'},
           {title: 'Ticks Per Beat', abbr: 'TPB', name: 'tpb'},
           {title: 'Total Beats', abbr: 'Beats', name: 'beats'}], function (i, val) {
           return $t('dt',
             $t('abbr', {title: val.title}, val.abbr),
-            $t('dd', o[val.name]))}))
+            $t('dd', o[val.name])) }))
   },
   renderModel: function (o) {
-	this.render(o)
+    this.render(o)
   }
 }, {
 }, {
   id: 'settings'
 })
-
 
 // 1}}}
 //
@@ -471,9 +471,9 @@ createView(PlayerView, {
       case 'B':
         r1 = rect(el)
         var value = el.innerText
-		var pos = attr(el, 'data-pos')
-		if (!pos) return
-		console.warn('POS', pos)
+        var pos = attr(el, 'data-pos')
+        if (!pos) return
+        console.warn('POS', pos)
         if (!value || /^\s*$/.test(value)) value = '.'
         live.textInput1.popup({
           top: r1.top,
@@ -636,7 +636,7 @@ createView(BeatsView, {
         })))
   },
   renderModel: function (o) {
-	this.render(o)
+    this.render(o)
   },
   afterRender: function () {
     console.warn('AFTER', this.parentEl)
@@ -646,6 +646,7 @@ createView(BeatsView, {
     this.focus()
     if (el.value) {
       this.model.loadBeat('data/' + el.value + '.beat', function (err, model) {
+        if (err) throw err
         bp.live.playerView1.gotoPos(1)
       })
     }
@@ -756,7 +757,7 @@ SliderInput.prototype = {
     this.setValue = o.set
     // this.lastValue = this.inputEl.value = o.value
     // this.textEl.focus()
-     this.textEl.select()
+    this.textEl.select()
   }
 }
 
@@ -840,7 +841,6 @@ mixinHandlers(TextInput, {
   keydown: function (ev) {
     // Prevent InputHandler from changing instrument
     return ev.stopPropagation()
-    console.warn('TextInput keydown', ev)
   }
 })
 // 1}}} TextInput

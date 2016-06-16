@@ -1,4 +1,4 @@
-// # a.js  =  Functions for node and the browser
+/*global bp XMLHttpRequest*/
 var __slice = [].slice
 var __hasProp = {}.hasOwnProperty
 var __proto = 'prototype'
@@ -29,11 +29,11 @@ function extend (/* target, parents... */) {
   var target = args[0]
   for (var i = 1; i < args.length; i += 1) {
     var parent = args[i]
-	if (parent) {
-	  for (var key in parent) {
-		if (__hasProp.call(parent, key)) target[key] = parent[key]
-	  }
-	}
+    if (parent) {
+      for (var key in parent) {
+        if (__hasProp.call(parent, key)) target[key] = parent[key]
+      }
+    }
   }
   return target
 }
@@ -111,7 +111,7 @@ function flatten (args) {
   return _flatten([], args)
 }
 
-// {{{1 HTtml Tags
+// HTtml Tags
 // $t('div', {id: foo})
 // $t('div', {id: foo}, 'text')
 // $t('div', text1, [text2, ...], ...)
@@ -517,7 +517,6 @@ function mixinHideShow (AClass) {
   }
 }
 
-// 1}}} Mixins
 // TODO setRequestHeader
 function xhr (o, cb) {
   var xhr1 = new XMLHttpRequest()
@@ -558,7 +557,6 @@ function mixinGetSet (AClass, prop, defaultValue) {
   }
 }
 
-
 // TODO Remove this
 var lastFocusEl
 function mixinFocus (obj, elName) {
@@ -583,10 +581,10 @@ function mixinViewModel (obj, name) {
   // if (!origLoad) throw new Error('Need vmLoad function for ' + name)
   var m = bp.model
   obj.vmSave = function (values) {
-	m.view(name, values)
+    m.view(name, values)
   }
   obj.vmLoad = function () {
-	return m.view(name)
+    return m.view(name)
   }
 }
 
@@ -616,3 +614,10 @@ function createView (AClass, proto, handlers, args) {
   bp.live[name] = obj
 }
 
+function lcFirst (text) {
+  return text[0].toLowerCase() + text.slice(1)
+}
+
+function ucFirst (text) {
+  return text[0].toUpperCase() + text.slice(1)
+}

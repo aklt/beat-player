@@ -1,5 +1,5 @@
 ;(function () {
-  // # a.js  =  Functions for node and the browser
+  /*global bp XMLHttpRequest*/
   var __slice = [].slice
   var __hasProp = {}.hasOwnProperty
   var __proto = 'prototype'
@@ -30,11 +30,11 @@
     var target = args[0]
     for (var i = 1; i < args.length; i += 1) {
       var parent = args[i]
-  	if (parent) {
-  	  for (var key in parent) {
-  		if (__hasProp.call(parent, key)) target[key] = parent[key]
-  	  }
-  	}
+      if (parent) {
+        for (var key in parent) {
+          if (__hasProp.call(parent, key)) target[key] = parent[key]
+        }
+      }
     }
     return target
   }
@@ -112,7 +112,7 @@
     return _flatten([], args)
   }
   
-  // {{{1 HTtml Tags
+  // HTtml Tags
   // $t('div', {id: foo})
   // $t('div', {id: foo}, 'text')
   // $t('div', text1, [text2, ...], ...)
@@ -518,7 +518,6 @@
     }
   }
   
-  // 1}}} Mixins
   // TODO setRequestHeader
   function xhr (o, cb) {
     var xhr1 = new XMLHttpRequest()
@@ -559,7 +558,6 @@
     }
   }
   
-  
   // TODO Remove this
   var lastFocusEl
   function mixinFocus (obj, elName) {
@@ -584,10 +582,10 @@
     // if (!origLoad) throw new Error('Need vmLoad function for ' + name)
     var m = bp.model
     obj.vmSave = function (values) {
-  	m.view(name, values)
+      m.view(name, values)
     }
     obj.vmLoad = function () {
-  	return m.view(name)
+      return m.view(name)
     }
   }
   
@@ -617,7 +615,14 @@
     bp.live[name] = obj
   }
   
-  /*global __window extend xhr AudioContext webkitAudioContext */
+  function lcFirst (text) {
+    return text[0].toLowerCase() + text.slice(1)
+  }
+  
+  function ucFirst (text) {
+    return text[0].toUpperCase() + text.slice(1)
+  }
+  /*global __window extend xhr AudioContext webkitAudioContext mixinGetSet */
   // # BeatModel
   //
   // Represents the model of the current beat.
@@ -632,6 +637,7 @@
   }
   
   function BeatModel (o) {
+    o = o || {}
     this.model = {
       instruments: []
     }
@@ -681,7 +687,7 @@
       var o = this.subscriptions[evName]
       if (!o) throw new Error('Need model.subscriptions[' + evName + ']')
       o.disabled = false
-    },                                    
+    },
     disable: function (evName) {
       var o = this.subscriptions[evName]
       if (!o) throw new Error('Need model.subscriptions[' + evName + ']')
@@ -921,14 +927,6 @@
     return numbers.map(toInt)
   }
   
-  function lcFirst (text) {
-    return text[0].toLowerCase() + text.slice(1)
-  }
-  
-  function ucFirst (text) {
-    return text[0].toUpperCase() + text.slice(1)
-  }
-  
   function configLines (text) {
     return text.split(/\n|\r\n/gm).filter(function (line) {
       return !/^\s*$|^\s*#/.test(line)
@@ -971,9 +969,7 @@
   mixinGetSet(BeatModel, 'tpb', 4)
   mixinGetSet(BeatModel, 'beats', 4)
   
-  var m = bp.model = new BeatModel({
-    beats: ['beat0', 'beat1', 'beat2']
-  })
+  var m = bp.model = new BeatModel()
   
   bp.test.beatModel = function () {
     var bm1 = new BeatModel()
@@ -1132,7 +1128,7 @@
   /*global bp __document requestAnimationFrame htmlEl insertBefore
     appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
     rect attr nextSibling prevSibling $id mixinHideShow BeatModel
-    eachPush $t $ts extend
+    eachPush $t $ts extend createView
   */
   
   // TODO Grid https://www.reddit.com/r/Frontend/comments/4lkww8/grid_system_research/
@@ -1188,6 +1184,7 @@
   mixinHandlers(InputHandler, {
     keydown: function (ev, el) {
       var code = ev.which
+      var obj
       console.warn('Key', code, ev.charCode, String.fromCharCode(code))
       switch (ih_state) {
         case IH_INIT:
@@ -1202,13 +1199,13 @@
             if (bp.lastPopUp && bp.lastPopUp.keyDown) bp.lastPopUp.keyDown()
             ev.preventDefault()
           } else if (code === keyLeft) {
-            var obj = bp.live.stepFocus.prev()
+            obj = bp.live.stepFocus.prev()
             console.warn('keyLeft', obj)
             obj.focus()
             if (bp.lastPopUp && bp.lastPopUp.keyLeft) bp.lastPopUp.keyLeft()
             ev.preventDefault()
           } else if (code === keyRight) {
-            var obj = bp.live.stepFocus.next()
+            obj = bp.live.stepFocus.next()
             obj.focus()
             console.warn('keyRight', obj)
             if (bp.lastPopUp && bp.lastPopUp.keyRight) bp.lastPopUp.keyRight()
@@ -1238,7 +1235,7 @@
               console.warn('play key', k)
             }
           }
-          break;
+          break
         case IH_END:
           break
         default:
@@ -1291,11 +1288,11 @@
       if (this.lastInstrumentEl) classRemove(this.lastInstrumentEl, 'active-instrument')
       for (var i = 0; i < samples.length; i += 1) {
         var s1 = samples[i]
-  	  var selected = this.model.selectedInstrument()
+        var selected = this.model.selectedInstrument()
         if (s1.innerText === selected) {
           classAdd(s1, 'active-instrument')
           this.lastInstrumentEl = s1
-  		this.vmSave({instrument: i})
+          this.vmSave({instrument: i})
           break
         }
       }
@@ -1350,7 +1347,7 @@
       classAdd(el, 'active-instrument')
       this.lastInstrumentEl = el
       this.model.selectedInstrument(sample)
-    }, 
+    },
   
     // Keys
     keyLeft: function (ev, el) {
@@ -1412,7 +1409,7 @@
     // console.warn(type(el));
     this.els = qa('* p', el).filter(function (el1) {
       return el1.childNodes.length > 1
-    })    
+    })
     this.selectedIndex = -1
     this.selectedEl = this.els[this.selectedIndex]
     this.lastSelectedEl = this.selectedEl
@@ -1439,24 +1436,23 @@
   function SettingsView () {
   }
   
-  createView(SettingsView,  {
+  createView(SettingsView, {
     tpl: function (o) {
-  	return $t('dl',
+      return $t('dl',
           eachPush([{title: 'Beats Per Minute', abbr: 'BPM', name: 'bpm'},
             {title: 'Ticks Per Beat', abbr: 'TPB', name: 'tpb'},
             {title: 'Total Beats', abbr: 'Beats', name: 'beats'}], function (i, val) {
             return $t('dt',
               $t('abbr', {title: val.title}, val.abbr),
-              $t('dd', o[val.name]))}))
+              $t('dd', o[val.name])) }))
     },
     renderModel: function (o) {
-  	this.render(o)
+      this.render(o)
     }
   }, {
   }, {
     id: 'settings'
   })
-  
   
   // 1}}}
   //
@@ -1602,9 +1598,9 @@
         case 'B':
           r1 = rect(el)
           var value = el.innerText
-  		var pos = attr(el, 'data-pos')
-  		if (!pos) return
-  		console.warn('POS', pos)
+          var pos = attr(el, 'data-pos')
+          if (!pos) return
+          console.warn('POS', pos)
           if (!value || /^\s*$/.test(value)) value = '.'
           live.textInput1.popup({
             top: r1.top,
@@ -1767,7 +1763,7 @@
           })))
     },
     renderModel: function (o) {
-  	this.render(o)
+      this.render(o)
     },
     afterRender: function () {
       console.warn('AFTER', this.parentEl)
@@ -1777,6 +1773,7 @@
       this.focus()
       if (el.value) {
         this.model.loadBeat('data/' + el.value + '.beat', function (err, model) {
+          if (err) throw err
           bp.live.playerView1.gotoPos(1)
         })
       }
@@ -1887,7 +1884,7 @@
       this.setValue = o.set
       // this.lastValue = this.inputEl.value = o.value
       // this.textEl.focus()
-       this.textEl.select()
+      this.textEl.select()
     }
   }
   
@@ -1971,7 +1968,6 @@
     keydown: function (ev) {
       // Prevent InputHandler from changing instrument
       return ev.stopPropagation()
-      console.warn('TextInput keydown', ev)
     }
   })
   // 1}}} TextInput
@@ -2051,8 +2047,7 @@
   return result; }
   
   };
-  /*global ready bp BeatModel KeyboardView InstrumentsView PlayerView InputHandler
-    TextInput SliderInput InstrumentsView BeatsView each*/
+  /*global ready bp TextInput SliderInput InputHandler stepIter m*/
   
   var defaultOptions = {
     beatsView1: {

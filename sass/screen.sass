@@ -5,19 +5,25 @@
 
 @import compass/reset
 @import compass/css3
+@import compass/layout/sticky-footer
 @import bourbon/bourbon
 @import neat/neat
 
 $col-width: 1rem
-$visual-grid: true !default
 
 %row-container
   @include outer-container
 
+%border
+  border: 1px solid #999999
+
 %view
-  //border: 1px solid #999999
   @include row()
   @include pad(0.1rem 1rem 0.1rem 1rem)
+  @extend %border
+
+%hidden
+  display: none
 
 .row-container
   @extend %row-container
@@ -84,7 +90,8 @@ $visual-grid: true !default
       width: $col-width
       height: 1rem
       text-align: center
-      // border: 1px solid red;
+    & .active
+      background-color: lightblue
 
 .keyboard
   @extend %view
@@ -129,3 +136,19 @@ $visual-grid: true !default
 
 .instruments
   @extend %view
+
+@include sticky-footer(24px, '.bp', '.footer-layout', '.footer-content')
+
+.footer-content
+  @extend %border
+  background-color: green
+
+.input-text
+  @extend %hidden
+
+.input-slider
+  @extend %hidden
+
+.popup
+  @extend %hidden
+

@@ -1,4 +1,4 @@
-/*global __window extend xhr AudioContext webkitAudioContext */
+/*global __window extend xhr AudioContext webkitAudioContext mixinGetSet */
 // # BeatModel
 //
 // Represents the model of the current beat.
@@ -13,6 +13,7 @@ var bp = __window.bp = {
 }
 
 function BeatModel (o) {
+  o = o || {}
   this.model = {
     instruments: []
   }
@@ -62,7 +63,7 @@ BeatModel.prototype = {
     var o = this.subscriptions[evName]
     if (!o) throw new Error('Need model.subscriptions[' + evName + ']')
     o.disabled = false
-  },                                    
+  },
   disable: function (evName) {
     var o = this.subscriptions[evName]
     if (!o) throw new Error('Need model.subscriptions[' + evName + ']')
@@ -302,14 +303,6 @@ function parseNotePos (str) {
   return numbers.map(toInt)
 }
 
-function lcFirst (text) {
-  return text[0].toLowerCase() + text.slice(1)
-}
-
-function ucFirst (text) {
-  return text[0].toUpperCase() + text.slice(1)
-}
-
 function configLines (text) {
   return text.split(/\n|\r\n/gm).filter(function (line) {
     return !/^\s*$|^\s*#/.test(line)
@@ -352,9 +345,7 @@ mixinGetSet(BeatModel, 'bpm', 100)
 mixinGetSet(BeatModel, 'tpb', 4)
 mixinGetSet(BeatModel, 'beats', 4)
 
-var m = bp.model = new BeatModel({
-  beats: ['beat0', 'beat1', 'beat2']
-})
+var m = bp.model = new BeatModel()
 
 bp.test.beatModel = function () {
   var bm1 = new BeatModel()
