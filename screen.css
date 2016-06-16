@@ -117,65 +117,70 @@ html {
   float: left;
 }
 
-/* line 47, sass/screen.sass */
+/* line 36, sass/screen.sass */
+.topbar {
+  font-size: 120%;
+}
+
+/* line 48, sass/screen.sass */
 .settings dl, .settings dt, .settings dd {
   display: inline;
 }
-/* line 49, sass/screen.sass */
+/* line 50, sass/screen.sass */
 .settings dt {
   font-weight: bold;
 }
-/* line 51, sass/screen.sass */
+/* line 52, sass/screen.sass */
 .settings dd {
   margin: 0 0.3rem 0 0;
 }
 
-/* line 56, sass/screen.sass */
+/* line 57, sass/screen.sass */
 .controls span.pause {
   cursor: pointer;
   font-size: 80%;
   letter-spacing: -0.2rem;
 }
-/* line 60, sass/screen.sass */
+/* line 61, sass/screen.sass */
 .controls > span {
   cursor: pointer;
   padding-left: 1rem;
   width: 1rem;
 }
 
-/* line 65, sass/screen.sass */
+/* line 66, sass/screen.sass */
 .player {
   font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif;
   cursor: pointer;
 }
-/* line 69, sass/screen.sass */
+/* line 70, sass/screen.sass */
 .player div {
   float: left;
 }
-/* line 71, sass/screen.sass */
+/* line 72, sass/screen.sass */
 .player .instruments {
   margin: 0.8rem 0 1rem 0;
   padding-top: 0.4rem;
 }
-/* line 74, sass/screen.sass */
+/* line 75, sass/screen.sass */
 .player .instruments p {
   margin: 0;
   display: block;
   clear: left;
   height: 1rem;
 }
-/* line 79, sass/screen.sass */
+/* line 80, sass/screen.sass */
 .player .score {
   text-align: left;
   float: left;
 }
-/* line 82, sass/screen.sass */
+/* line 83, sass/screen.sass */
 .player .score p {
   margin: 0;
   float: left;
   display: block;
 }
-/* line 86, sass/screen.sass */
+/* line 87, sass/screen.sass */
 .player .score i {
   margin: 0;
   padding: 0;
@@ -184,16 +189,16 @@ html {
   display: block;
   float: left;
 }
-/* line 93, sass/screen.sass */
+/* line 94, sass/screen.sass */
 .player .score span {
   clear: left;
   display: block;
 }
-/* line 97, sass/screen.sass */
+/* line 98, sass/screen.sass */
 .player .score-columns {
   display: block;
 }
-/* line 99, sass/screen.sass */
+/* line 100, sass/screen.sass */
 .player .score-columns b {
   margin: 0;
   padding: 0;
@@ -202,65 +207,65 @@ html {
   height: 1rem;
   text-align: center;
 }
-/* line 106, sass/screen.sass */
+/* line 107, sass/screen.sass */
 .player .score-columns .active {
   background-color: lightblue;
 }
 
-/* line 109, sass/screen.sass */
+/* line 110, sass/screen.sass */
 .keyboard {
   font-size: 150%;
   margin-left: -1.5rem;
   cursor: pointer;
 }
-/* line 112, sass/screen.sass */
+/* line 113, sass/screen.sass */
 .keyboard pre {
   unicode-bidi: embed;
   font-family: monospace;
   white-space: pre;
 }
-/* line 119, sass/screen.sass */
+/* line 120, sass/screen.sass */
 .keyboard .color0 i {
   background-color: #9eecda;
 }
-/* line 122, sass/screen.sass */
+/* line 123, sass/screen.sass */
 .keyboard .color1 i {
   background-color: #ac78b5;
 }
-/* line 125, sass/screen.sass */
+/* line 126, sass/screen.sass */
 .keyboard .color2 i {
   background-color: #dab58f;
 }
-/* line 128, sass/screen.sass */
+/* line 129, sass/screen.sass */
 .keyboard .color3 i {
   background-color: #78f19a;
 }
-/* line 131, sass/screen.sass */
+/* line 132, sass/screen.sass */
 .keyboard .color4 i {
   background-color: #b72e75;
 }
-/* line 134, sass/screen.sass */
+/* line 135, sass/screen.sass */
 .keyboard .color5 i {
   background-color: #b56acf;
 }
-/* line 137, sass/screen.sass */
+/* line 138, sass/screen.sass */
 .keyboard .color6 i {
   background-color: #93a7fa;
 }
-/* line 140, sass/screen.sass */
+/* line 141, sass/screen.sass */
 .keyboard .color7 i {
   background-color: #f1e3d5;
 }
-/* line 143, sass/screen.sass */
+/* line 144, sass/screen.sass */
 .keyboard .color8 i {
   background-color: #8fafaf;
 }
-/* line 146, sass/screen.sass */
+/* line 147, sass/screen.sass */
 .keyboard .color9 i {
   background-color: #bd9bc9;
 }
 
-/* line 149, sass/screen.sass */
+/* line 150, sass/screen.sass */
 .active-instrument {
   background-color: lightgreen;
 }
@@ -290,7 +295,12 @@ html, body {
   height: 48px;
 }
 
-/* line 157, sass/screen.sass */
+/* line 158, sass/screen.sass */
 .footer-content {
   background-color: green;
+}
+
+/* line 171, sass/screen.sass */
+.focus {
+  border: 1px solid red;
 }

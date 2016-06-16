@@ -562,19 +562,13 @@
     }
   }
   
-  // TODO Remove this
   var lastFocusEl
   function mixinFocus (obj, elName) {
     obj.focus = function () {
-      console.warn('focus', obj, elName)
       if (!obj[elName]) throw new Error('Need obj[' + elName + ']')
-      css(obj[elName], {
-        border: '3px solid blue'
-      })
+      classAdd(obj[elName], 'focus')
       if (lastFocusEl) {
-        css(lastFocusEl, {
-          border: 'none'
-        })
+        classRemove(lastFocusEl, 'focus')
       }
       lastFocusEl = obj[elName]
     }
@@ -2124,7 +2118,14 @@
     var sliderInput1 = SliderInput.create({id: 'sliderInput1'})
     live.sliderInput1 = sliderInput1
   
-    live.stepFocus = stepIter([live.keyboardView1, live.playerView1, live.instrumentsView1, live.beatsView1, live.controlsView])
+    live.stepFocus = stepIter([
+      live.beatsView1,
+      live.settingsView1,
+      live.controlsView1,
+      live.playerView1,
+      live.keyboardView1,
+      live.instrumentsView1
+    ])
   
     // subscriptions
     m.subscribe('SelectInstrument', function () {

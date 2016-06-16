@@ -561,19 +561,13 @@ function mixinGetSet (AClass, prop, defaultValue) {
   }
 }
 
-// TODO Remove this
 var lastFocusEl
 function mixinFocus (obj, elName) {
   obj.focus = function () {
-    console.warn('focus', obj, elName)
     if (!obj[elName]) throw new Error('Need obj[' + elName + ']')
-    css(obj[elName], {
-      border: '3px solid blue'
-    })
+    classAdd(obj[elName], 'focus')
     if (lastFocusEl) {
-      css(lastFocusEl, {
-        border: 'none'
-      })
+      classRemove(lastFocusEl, 'focus')
     }
     lastFocusEl = obj[elName]
   }
