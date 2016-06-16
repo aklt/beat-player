@@ -173,8 +173,8 @@ function qa (expr, con) {
   return __slice.call((con || __document).querySelectorAll(expr))
 }
 
-function $id (name, con) {
-  return (con || __document).getElementById(name)
+function $id (name) {
+  return __document.getElementById(name)
 }
 
 var _pfx_style = __document.createElement('dummy').style
@@ -263,6 +263,10 @@ function attr (el, attrs) {
     if (at === 'text') return
     el.setAttribute(at, attrs[at])
   })
+}
+
+function html (el, text) {
+  el.innerHTML = text
 }
 
 // ### dom(html[, html, ...])
@@ -596,6 +600,10 @@ function createView (AClass, proto, handlers, args) {
     if (!proto.tpl) throw new Error('Need proto.tpl function for markup')
     if (!proto.renderModel) throw new Error('Need proto.renderModel')
     AClass.prototype = proto
+    // TODO move elsewhere
+    AClass.prototype.emit = function (ev, arg) {
+      this.model.dispatch(ev, arg)
+    }
     mixinDom(AClass)
     mixinHandlers(AClass, handlers)
     AClass.mixedIn = true

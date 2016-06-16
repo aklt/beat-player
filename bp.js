@@ -174,8 +174,8 @@
     return __slice.call((con || __document).querySelectorAll(expr))
   }
   
-  function $id (name, con) {
-    return (con || __document).getElementById(name)
+  function $id (name) {
+    return __document.getElementById(name)
   }
   
   var _pfx_style = __document.createElement('dummy').style
@@ -264,6 +264,10 @@
       if (at === 'text') return
       el.setAttribute(at, attrs[at])
     })
+  }
+  
+  function html (el, text) {
+    el.innerHTML = text
   }
   
   // ### dom(html[, html, ...])
@@ -597,6 +601,10 @@
       if (!proto.tpl) throw new Error('Need proto.tpl function for markup')
       if (!proto.renderModel) throw new Error('Need proto.renderModel')
       AClass.prototype = proto
+      // TODO move elsewhere
+      AClass.prototype.emit = function (ev, arg) {
+        this.model.dispatch(ev, arg)
+      }
       mixinDom(AClass)
       mixinHandlers(AClass, handlers)
       AClass.mixedIn = true
@@ -661,7 +669,12 @@
     ChangeNote: 1,
     SelectInstrument: 1,
     SelectInstrumentRange: 1,
-    LoadedSamples: 1
+    LoadedSamples: 1,
+    play: 1,
+    pause: 1,
+    stop: 1,
+    forward: 1,
+    back: 1
   }
   
   BeatModel.prototype = {
@@ -1128,7 +1141,7 @@
   /*global bp __document requestAnimationFrame htmlEl insertBefore
     appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
     rect attr nextSibling prevSibling $id mixinHideShow BeatModel
-    eachPush $t $ts extend createView
+    eachPush $t $ts extend createView html
   */
   
   // TODO Grid https://www.reddit.com/r/Frontend/comments/4lkww8/grid_system_research/
@@ -1455,7 +1468,7 @@
   })
   
   // 1}}}
-  //
+  
   // {{{1 PlayerView
   function scoreSpanTemplate (length, tpb) {
     console.warn('scoreSpan', length, tpb)
@@ -1710,38 +1723,62 @@
   
   // {{{1 ControlsView
   function ControlsView (o) {
+    this.isPlaying = false
+    this.isPaused = false
   }
   
-  const controlChars = {
-    play: { ch: '▷', css: 'font-size: 150%' },
-    play2: { ch: '►', css: 'font-size: 150%' },
-    stop: { ch: '▆', css: 'font-size: 150%' },
-    stop2: { ch: '▆', css: 'font-size: 150%' },
-    left: { ch: '⬅', css: 'font-size: 150%' },
-    right: { ch: '➡', css: 'font-size: 150%' },
-    // right: { ch: '→', css: 'font-size: 150%' },
-    pause: { ch: '▍▍', css: 'font-size: 116%; vertical-align: center; letter-spacing: -0.3rem' }
-  }
-  
-  function htmlControls () {
-    var result = []
-    ;['left', 'play', 'pause', 'right'].forEach(function (buttonName) {
-      result.push($t('button', {style: controlChars[buttonName].css}, controlChars[buttonName].ch))
-    })
-    return result.join('\n')
-  }
+  const btnPlay = '►'
+  const btnStop = '■'
+  const controlChars = [
+    '⏮', btnPlay, $t('span', {'class': 'pause'}, '▍▍'), '⏭' ]
   
   createView(ControlsView, {
     tpl: function (o) {
-      return htmlControls(o)
+      return eachPush(controlChars, function (i, ch) {
+        return $t('span', {id: 'ctrl-' + i}, ch)
+      }).join('')
     },
-    renderModel: function () {
+    renderModel: function (o) {
       // TODO Render model
-      this.render({})
+      this.render(o || {})
+    },
+    afterAttach: function () {
+      var el = this.parentEl
+      this.btnBack = qs('#ctrl-0', el)
+      this.btnPlay = qs('#ctrl-1', el)
+      this.btnPause = qs('#ctrl-2', el)
+      this.btnForward = qs('#ctrl-3', el)
     }
   }, {
     click: function (ev, el) {
-      console.warn('click', this)
+      var btn = attr(el, 'id')
+      switch (btn) {
+        case 'ctrl-0':
+          this.emit('back')
+          break
+        case 'ctrl-1':
+          if (this.isPlaying) {
+            html(this.btnPlay, btnPlay)
+            this.isPlaying = false
+            this.emit('stop')
+          } else {
+            html(this.btnPlay, btnStop)
+            this.isPlaying = true
+            this.emit('play')
+          }
+          break
+        case 'ctrl-2':
+          if (this.isPlaying) {
+            this.isPaused = true
+            this.emit('pause')
+          }
+          break
+        case 'ctrl-3':
+          this.emit('forward')
+          break
+        default:
+          console.warn('Badness?')
+      }
     }
   }, {
     id: 'controls'

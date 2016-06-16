@@ -19,8 +19,8 @@ $col-width: 1rem
 
 %view
   @include row()
-  @include pad(0.1rem 1rem 0.1rem 1rem)
-  @extend %border
+  @include pad(0.1rem 1rem 0.1rem 0.5rem)
+  // @extend %border
 
 %hidden
   display: none
@@ -28,10 +28,16 @@ $col-width: 1rem
 .row-container
   @extend %row-container
 
-.columns
+%columns
   @extend %view
   div
     float: left
+
+.topbar
+  @extend %columns
+
+.instrumentsbar
+  @extend %columns
 
 .beats
   @extend %view
@@ -47,6 +53,14 @@ $col-width: 1rem
 
 .controls
   @extend %view
+  & span.pause
+    cursor: pointer
+    font-size: 80%
+    letter-spacing: -0.2rem
+  & > span
+    cursor: pointer
+    padding-left: 1rem
+    width: 1rem
 
 .player
   @extend %view
@@ -62,7 +76,6 @@ $col-width: 1rem
       display: block
       clear: left
       height: $col-width
-      // border: 1px solid blue;
   .score
     text-align: left
     float: left
@@ -94,12 +107,14 @@ $col-width: 1rem
       background-color: lightblue
 
 .keyboard
+  font-size: 150%
+  margin-left: -1.5rem
+  pre
+    unicode-bidi: embed
+    font-family: monospace
+    white-space: pre
   @extend %view
   cursor: pointer
-  font-size: 140%
-  margin-left: -1rem
-  b
-    font-weight: normal
   .color0
     i
       background-color: #9eecda
@@ -137,7 +152,7 @@ $col-width: 1rem
 .instruments
   @extend %view
 
-@include sticky-footer(24px, '.bp', '.footer-layout', '.footer-content')
+@include sticky-footer(48px, '.bp', '.footer-layout', '.footer-content')
 
 .footer-content
   @extend %border

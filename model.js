@@ -37,7 +37,12 @@ var subscriptionEvents = {
   ChangeNote: 1,
   SelectInstrument: 1,
   SelectInstrumentRange: 1,
-  LoadedSamples: 1
+  LoadedSamples: 1,
+  play: 1,
+  pause: 1,
+  stop: 1,
+  forward: 1,
+  back: 1
 }
 
 BeatModel.prototype = {

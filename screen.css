@@ -91,17 +91,17 @@ html {
 }
 
 /* line 17, sass/screen.sass */
-.columns, .beats, .settings, .controls, .player, .keyboard, .instruments, .footer-content {
+.footer-content {
   border: 1px solid #999999;
 }
 
 /* line 20, sass/screen.sass */
-.columns, .beats, .settings, .controls, .player, .keyboard, .instruments {
+.topbar, .instrumentsbar, .beats, .settings, .controls, .player, .keyboard, .instruments {
   display: block;
-  padding: 0.1rem 1rem 0.1rem 1rem;
+  padding: 0.1rem 1rem 0.1rem 0.5rem;
 }
 /* line 20, sass/bourbon/addons/_clearfix.scss */
-.columns::after, .beats::after, .settings::after, .controls::after, .player::after, .keyboard::after, .instruments::after {
+.topbar::after, .instrumentsbar::after, .beats::after, .settings::after, .controls::after, .player::after, .keyboard::after, .instruments::after {
   clear: both;
   content: "";
   display: table;
@@ -113,56 +113,69 @@ html {
 }
 
 /* line 33, sass/screen.sass */
-.columns div {
+.topbar div, .instrumentsbar div {
   float: left;
 }
 
-/* line 41, sass/screen.sass */
+/* line 47, sass/screen.sass */
 .settings dl, .settings dt, .settings dd {
   display: inline;
 }
-/* line 43, sass/screen.sass */
+/* line 49, sass/screen.sass */
 .settings dt {
   font-weight: bold;
 }
-/* line 45, sass/screen.sass */
+/* line 51, sass/screen.sass */
 .settings dd {
   margin: 0 0.3rem 0 0;
 }
 
-/* line 51, sass/screen.sass */
+/* line 56, sass/screen.sass */
+.controls span.pause {
+  cursor: pointer;
+  font-size: 80%;
+  letter-spacing: -0.2rem;
+}
+/* line 60, sass/screen.sass */
+.controls > span {
+  cursor: pointer;
+  padding-left: 1rem;
+  width: 1rem;
+}
+
+/* line 65, sass/screen.sass */
 .player {
   font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif;
   cursor: pointer;
 }
-/* line 55, sass/screen.sass */
+/* line 69, sass/screen.sass */
 .player div {
   float: left;
 }
-/* line 57, sass/screen.sass */
+/* line 71, sass/screen.sass */
 .player .instruments {
   margin: 0.8rem 0 1rem 0;
   padding-top: 0.4rem;
 }
-/* line 60, sass/screen.sass */
+/* line 74, sass/screen.sass */
 .player .instruments p {
   margin: 0;
   display: block;
   clear: left;
   height: 1rem;
 }
-/* line 66, sass/screen.sass */
+/* line 79, sass/screen.sass */
 .player .score {
   text-align: left;
   float: left;
 }
-/* line 69, sass/screen.sass */
+/* line 82, sass/screen.sass */
 .player .score p {
   margin: 0;
   float: left;
   display: block;
 }
-/* line 73, sass/screen.sass */
+/* line 86, sass/screen.sass */
 .player .score i {
   margin: 0;
   padding: 0;
@@ -171,16 +184,16 @@ html {
   display: block;
   float: left;
 }
-/* line 80, sass/screen.sass */
+/* line 93, sass/screen.sass */
 .player .score span {
   clear: left;
   display: block;
 }
-/* line 84, sass/screen.sass */
+/* line 97, sass/screen.sass */
 .player .score-columns {
   display: block;
 }
-/* line 86, sass/screen.sass */
+/* line 99, sass/screen.sass */
 .player .score-columns b {
   margin: 0;
   padding: 0;
@@ -189,63 +202,65 @@ html {
   height: 1rem;
   text-align: center;
 }
-/* line 93, sass/screen.sass */
+/* line 106, sass/screen.sass */
 .player .score-columns .active {
   background-color: lightblue;
 }
 
-/* line 96, sass/screen.sass */
+/* line 109, sass/screen.sass */
 .keyboard {
+  font-size: 150%;
+  margin-left: -1.5rem;
   cursor: pointer;
-  font-size: 140%;
-  margin-left: -1rem;
 }
-/* line 101, sass/screen.sass */
-.keyboard b {
-  font-weight: normal;
+/* line 112, sass/screen.sass */
+.keyboard pre {
+  unicode-bidi: embed;
+  font-family: monospace;
+  white-space: pre;
 }
-/* line 104, sass/screen.sass */
+/* line 119, sass/screen.sass */
 .keyboard .color0 i {
   background-color: #9eecda;
 }
-/* line 107, sass/screen.sass */
+/* line 122, sass/screen.sass */
 .keyboard .color1 i {
   background-color: #ac78b5;
 }
-/* line 110, sass/screen.sass */
+/* line 125, sass/screen.sass */
 .keyboard .color2 i {
   background-color: #dab58f;
 }
-/* line 113, sass/screen.sass */
+/* line 128, sass/screen.sass */
 .keyboard .color3 i {
   background-color: #78f19a;
 }
-/* line 116, sass/screen.sass */
+/* line 131, sass/screen.sass */
 .keyboard .color4 i {
   background-color: #b72e75;
 }
-/* line 119, sass/screen.sass */
+/* line 134, sass/screen.sass */
 .keyboard .color5 i {
   background-color: #b56acf;
 }
-/* line 122, sass/screen.sass */
+/* line 137, sass/screen.sass */
 .keyboard .color6 i {
   background-color: #93a7fa;
 }
-/* line 125, sass/screen.sass */
+/* line 140, sass/screen.sass */
 .keyboard .color7 i {
   background-color: #f1e3d5;
 }
-/* line 128, sass/screen.sass */
+/* line 143, sass/screen.sass */
 .keyboard .color8 i {
   background-color: #8fafaf;
 }
-/* line 131, sass/screen.sass */
+/* line 146, sass/screen.sass */
 .keyboard .color9 i {
   background-color: #bd9bc9;
 }
 
-/* line 134, sass/screen.sass */
+/* line 149, sass/screen.sass */
 .active-instrument {
   background-color: lightgreen;
 }
@@ -261,21 +276,21 @@ html, body {
   min-height: 100%;
   height: auto !important;
   height: 100%;
-  margin-bottom: -24px;
+  margin-bottom: -48px;
 }
 /* line 18, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/layout/_sticky-footer.scss */
 .bp .footer-layout {
-  height: 24px;
+  height: 48px;
 }
 
 /* line 20, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/layout/_sticky-footer.scss */
 .footer-content {
   clear: both;
   position: relative;
-  height: 24px;
+  height: 48px;
 }
 
-/* line 142, sass/screen.sass */
+/* line 157, sass/screen.sass */
 .footer-content {
   background-color: green;
 }
