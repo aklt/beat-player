@@ -4,7 +4,10 @@ JS=lib.js model.js audio.js view.js templates.js ready.js test.js
 compassCompile=bundle exec compass compile --no-debug-info
 compassStats=bundle exec compass stats
 
-all: style.css screen.css print.css templates.js bp.js bp-uglify.js bp-closure.js
+.PHONY: install clean dev tags distclean min
+
+all: style.css screen.css print.css templates.js bp.js
+
 
 screen.css: sass/screen.sass
 	$(compassCompile)
@@ -18,12 +21,11 @@ ie.css: sass/ie.sass
 style.css: style.less
 	lessc $< > $@
 
-templates.js: $(TEMPLATES) makefile
-	timber builtin                > $@
-	timber templates bp.templates >> $@
-
 bp.js: bp.sh $(JS)
 	./bp.sh > $@
+
+
+min: bp-uglify.js bp-closure.js
 
 bp-uglify.js: bp.js
 	uglifyjs bp.js -c -m > $@
@@ -31,10 +33,10 @@ bp-uglify.js: bp.js
 bp-closure.js: bp.js
 	closure-compiler-min $< > $@
 
-.PHONY: install clean dev tags distclean
-
 install:
 	bundler install --path .install
+	# cd sass bourbon install
+	# cd sass neat install
 
 tags:
 	tagdir
@@ -45,7 +47,7 @@ dev:
 	freshen
 
 clean:
-	rm -fv templates.js style.css bp.js bp-uglify.js bp-closure.js print.css screen.css ie.css
+	rm -fv style.css bp.js bp-uglify.js bp-closure.js print.css screen.css ie.css
 
 distclean:
 	rm -frv .install .bundle .sass-cache
