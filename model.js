@@ -89,7 +89,9 @@ BeatModel.prototype = {
   },
   readGlobal: function (lines) {
     var conf = readConfig(lines)
-    this.model.global = extend({}, conf)
+    if (conf.bpm) this.bpm(conf.bpm)
+    if (conf.name) this.songName(conf.name)
+    if (conf.version) this.version(conf.version)
   },
   readBeats: function (lines) {
     var patternLpb
@@ -296,6 +298,14 @@ BeatModel.prototype = {
   },
   toString: function () {
     return JSON.stringify(this.model, 0, 2)
+  },
+  songName: function (name) {
+    if (name) this.model.songName = name
+    return this.model.songName
+  },
+  version: function (ver) {
+    if (ver) this.model.version = ver
+    return this.model.version
   }
 }
 
@@ -328,7 +338,7 @@ function readConfig (lines) {
     if (m) {
       config = m[1].trim()
       configs[config] = {}
-      if (m[2]) configs[config] = m[2]
+      if (m[2]) configs[config] = m[2].trim()
       continue
     }
 

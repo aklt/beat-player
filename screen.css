@@ -216,57 +216,56 @@ html {
 /* line 111, sass/screen.sass */
 .keyboard {
   font-size: 150%;
-  margin-left: -1.5rem;
   cursor: pointer;
 }
-/* line 114, sass/screen.sass */
+/* line 113, sass/screen.sass */
 .keyboard pre {
   unicode-bidi: embed;
   font-family: monospace;
   white-space: pre;
 }
-/* line 121, sass/screen.sass */
+/* line 120, sass/screen.sass */
 .keyboard .color0 i {
   background-color: #9eecda;
 }
-/* line 124, sass/screen.sass */
+/* line 123, sass/screen.sass */
 .keyboard .color1 i {
   background-color: #ac78b5;
 }
-/* line 127, sass/screen.sass */
+/* line 126, sass/screen.sass */
 .keyboard .color2 i {
   background-color: #dab58f;
 }
-/* line 130, sass/screen.sass */
+/* line 129, sass/screen.sass */
 .keyboard .color3 i {
   background-color: #78f19a;
 }
-/* line 133, sass/screen.sass */
+/* line 132, sass/screen.sass */
 .keyboard .color4 i {
   background-color: #b72e75;
 }
-/* line 136, sass/screen.sass */
+/* line 135, sass/screen.sass */
 .keyboard .color5 i {
   background-color: #b56acf;
 }
-/* line 139, sass/screen.sass */
+/* line 138, sass/screen.sass */
 .keyboard .color6 i {
   background-color: #93a7fa;
 }
-/* line 142, sass/screen.sass */
+/* line 141, sass/screen.sass */
 .keyboard .color7 i {
   background-color: #f1e3d5;
 }
-/* line 145, sass/screen.sass */
+/* line 144, sass/screen.sass */
 .keyboard .color8 i {
   background-color: #8fafaf;
 }
-/* line 148, sass/screen.sass */
+/* line 147, sass/screen.sass */
 .keyboard .color9 i {
   background-color: #bd9bc9;
 }
 
-/* line 151, sass/screen.sass */
+/* line 150, sass/screen.sass */
 .active-instrument {
   background-color: lightgreen;
 }
@@ -296,12 +295,12 @@ html, body {
   height: 48px;
 }
 
-/* line 159, sass/screen.sass */
+/* line 158, sass/screen.sass */
 .footer-content {
   background-color: green;
 }
 
-/* line 172, sass/screen.sass */
+/* line 171, sass/screen.sass */
 .focus {
   background-color: #DDD;
 }

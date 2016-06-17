@@ -44,6 +44,7 @@ ready(function () {
     live.keyboardView1,
     live.instrumentsView1
   ])
+  live.stepFocus.get().focus()
 
   // subscriptions
   m.subscribe('SelectInstrument', function () {
@@ -55,7 +56,8 @@ ready(function () {
   })
 
   m.subscribe('NewText', function () {
-    live.playerView1.reAttach()
+    live.playerView1.update()
+	live.settingsView1.update()
   })
 
   m.subscribe('play', function () {

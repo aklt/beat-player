@@ -70,6 +70,9 @@
       this.index -= 1
       if (this.index === -1) this.index = this.elems.length - 1
       return this.elems[this.index]
+    },
+    get: function () {
+  	return this.elems[this.index]
     }
   }
   
@@ -523,7 +526,7 @@
     AClass.prototype[prop] = function (value) {
       var change
       if (typeof value !== 'undefined') {
-        this.model[prop] = value
+        this.model[prop] = parseInt(value, 10)
         change = true
       }
       if (typeof this.model[prop] === 'undefined') {
@@ -691,7 +694,9 @@
     },
     readGlobal: function (lines) {
       var conf = readConfig(lines)
-      this.model.global = extend({}, conf)
+      if (conf.bpm) this.bpm(conf.bpm)
+      if (conf.name) this.songName(conf.name)
+      if (conf.version) this.version(conf.version)
     },
     readBeats: function (lines) {
       var patternLpb
@@ -898,6 +903,14 @@
     },
     toString: function () {
       return JSON.stringify(this.model, 0, 2)
+    },
+    songName: function (name) {
+      if (name) this.model.songName = name
+      return this.model.songName
+    },
+    version: function (ver) {
+      if (ver) this.model.version = ver
+      return this.model.version
     }
   }
   
@@ -930,7 +943,7 @@
       if (m) {
         config = m[1].trim()
         configs[config] = {}
-        if (m[2]) configs[config] = m[2]
+        if (m[2]) configs[config] = m[2].trim()
         continue
       }
   
@@ -1461,7 +1474,7 @@
   }
   // 1}}} ScoreColumns
   
-  // {{{1 Settings
+  // {{{1 SettingsView
   
   function SettingsView () {
   }
@@ -1476,8 +1489,13 @@
               $t('abbr', {title: val.title}, val.abbr),
               $t('dd', o[val.name])) }))
     },
-    renderModel: function (o) {
-      this.render(o)
+    renderModel: function () {
+      var m = this.model
+      this.render({
+        bpm: m.bpm(),
+        tpb: m.tpb(),
+        beats: m.beats()
+      })
     }
   }, {
   }, {
@@ -1504,7 +1522,7 @@
   createView(PlayerView, {
     tpl: function (o) {
       var m = this.model
-      var t = extend({tracks: this.model.tracks,
+      var t = extend({tracks: o.tracks,
                       length: m.patternLength(),
                       tpb: m.tpb()}, o)
       return [
@@ -1552,24 +1570,14 @@
         m.tracks = transpose(tracks)
       }
   
-      var o = {
-        settings: {
-          bpm: m.bpm(),
-          tpb: m.tpb(),
-          beats: m.beats()
-        },
-        instruments: m.instruments()
-      }
-      this.render(o)
+      this.render({
+        instruments: instruments,
+        tracks: m.tracks
+      })
     },
     afterAttach: function () {
       if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
       this.scoreColumns = new ScoreColumns(this.parentEl)
-    },
-    reAttach: function () {
-      this.detach()
-      this.renderModel()
-      this.attach()
     },
     gotoPos: function (pos) {
       this.scoreColumns.selectedIndex = -1
@@ -2108,6 +2116,7 @@
       live.keyboardView1,
       live.instrumentsView1
     ])
+    live.stepFocus.get().focus()
   
     // subscriptions
     m.subscribe('SelectInstrument', function () {
@@ -2119,7 +2128,8 @@
     })
   
     m.subscribe('NewText', function () {
-      live.playerView1.reAttach()
+      live.playerView1.update()
+  	live.settingsView1.update()
     })
   
     m.subscribe('play', function () {

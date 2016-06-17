@@ -346,7 +346,7 @@ ScoreColumns.prototype = {
 }
 // 1}}} ScoreColumns
 
-// {{{1 Settings
+// {{{1 SettingsView
 
 function SettingsView () {
 }
@@ -361,8 +361,13 @@ createView(SettingsView, {
             $t('abbr', {title: val.title}, val.abbr),
             $t('dd', o[val.name])) }))
   },
-  renderModel: function (o) {
-    this.render(o)
+  renderModel: function () {
+    var m = this.model
+    this.render({
+      bpm: m.bpm(),
+      tpb: m.tpb(),
+      beats: m.beats()
+    })
   }
 }, {
 }, {
@@ -389,7 +394,7 @@ function PlayerView (o) {
 createView(PlayerView, {
   tpl: function (o) {
     var m = this.model
-    var t = extend({tracks: this.model.tracks,
+    var t = extend({tracks: o.tracks,
                     length: m.patternLength(),
                     tpb: m.tpb()}, o)
     return [
@@ -437,24 +442,14 @@ createView(PlayerView, {
       m.tracks = transpose(tracks)
     }
 
-    var o = {
-      settings: {
-        bpm: m.bpm(),
-        tpb: m.tpb(),
-        beats: m.beats()
-      },
-      instruments: m.instruments()
-    }
-    this.render(o)
+    this.render({
+      instruments: instruments,
+      tracks: m.tracks
+    })
   },
   afterAttach: function () {
     if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
     this.scoreColumns = new ScoreColumns(this.parentEl)
-  },
-  reAttach: function () {
-    this.detach()
-    this.renderModel()
-    this.attach()
   },
   gotoPos: function (pos) {
     this.scoreColumns.selectedIndex = -1

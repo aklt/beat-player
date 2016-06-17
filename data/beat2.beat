@@ -1,6 +1,7 @@
 # global
 name: The second beat
 version: 0.0.1
+bpm: 123
 --
 # beat
 Bass Drum: b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b..

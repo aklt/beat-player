@@ -69,6 +69,9 @@ StepIterElems.prototype = {
     this.index -= 1
     if (this.index === -1) this.index = this.elems.length - 1
     return this.elems[this.index]
+  },
+  get: function () {
+	return this.elems[this.index]
   }
 }
 
@@ -522,7 +525,7 @@ function mixinGetSet (AClass, prop, defaultValue) {
   AClass.prototype[prop] = function (value) {
     var change
     if (typeof value !== 'undefined') {
-      this.model[prop] = value
+      this.model[prop] = parseInt(value, 10)
       change = true
     }
     if (typeof this.model[prop] === 'undefined') {
