@@ -326,6 +326,7 @@ createView(KeyboardView, {
 function ScoreColumns (el) {
   // console.warn(type(el));
   this.els = qa('* p', el).filter(function (el1) {
+    // TODO fails if only one instrument
     return el1.childNodes.length > 1
   })
   this.selectedIndex = -1
@@ -376,7 +377,6 @@ createView(SettingsView, {
 
 // {{{1 PlayerView
 function scoreSpanTemplate (length, tpb) {
-  console.warn('scoreSpan', length, tpb)
   var result = []
   for (var i = 0; i < length; i += 1) {
     if (i % tpb === 0) result.push('&nbsp;')
@@ -469,15 +469,15 @@ createView(PlayerView, {
     var self = this
     this.interval = setInterval(function () {
       requestAnimationFrame(function () {
+        console.warn('step')
         self.step()
       })
-    }, (this.bpm / 60) * this.bar * this.tpb * 100)
+    }, 1000 * (60 / this.model.bpm()) / this.model.tpb() )
   },
   stop: function () {
-    if (this.interval) {
-      clearInterval(this.interval)
-      this.interval = null
-    }
+    console.warn('asdsadsadsadsadsadads')
+    clearInterval(this.interval)
+    this.interval = null
   },
   step: function (amount) {
     amount = amount || 1

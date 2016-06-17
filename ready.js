@@ -7,7 +7,6 @@ var defaultOptions = {
     options: ['beat0', 'beat1', 'beat2', 'beat3']
   },
   settingsView1: {
-    bpm: 100,
     tpb: 4,
     beats: 12
   }
@@ -62,11 +61,13 @@ ready(function () {
   m.subscribe('play', function () {
     live.controlsView1.play()
     live.beatAudio1.play()
+	// live.playerView1.start()
   })
 
   m.subscribe('stop', function () {
     live.controlsView1.stop()
     live.beatAudio1.stop()
+	// live.playerView1.stop()
   })
 
   m.loadBeat('data/beat1.beat', function (err, model) {

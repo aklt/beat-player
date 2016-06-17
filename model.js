@@ -42,7 +42,8 @@ var subscriptionEvents = {
   pause: 1,
   stop: 1,
   forward: 1,
-  back: 1
+  back: 1,
+  step: 1
 }
 
 BeatModel.prototype = {

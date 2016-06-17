@@ -65,7 +65,8 @@ BeatAudio.prototype = {
         this.orderedNotes.push({
           time: this.secondsPerTick * parseInt(offset, 10),
           instrument: instrumentNumber,
-          key: key
+		  key: key,
+		  pos: offset
         })
       }
     }
@@ -92,7 +93,7 @@ BeatAudio.prototype = {
           var note = bucket[i]
           var xTime = self.lookaheadTime + note.time - bucketTime + deltaTime
           self.playSample(note.instrument, xTime)
-          // console.warn('playSample', bucketIndex, xTime)
+		  // self.model.dispatch('step', note.pos)
         }
         bucketIndex += 1
         if (bucketIndex === length) {

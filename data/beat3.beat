@@ -1,11 +1,12 @@
 # global
 name: The third beat
 version: 0.0.1
+bpm: 200
 --
 # beat
-Bass Drum: b.. ... ... ..b b.. ... ... ..b b.. ... ... ..b b.. ... ... ..b  
-Snare:     ... ... s.. ... ... ... s.. ... ... ... s.. ... ... ... s.. ...  
-HiHat:     x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x  
+Bass Drum: b.. ... ... ..b b.. ... ... b.. b.. ... ... b.. b.. ... ... ..b ... b.. 
+Snare:     ... ... s.. ... ... ... s.. ... ... ... s.. ... ... ... s.. ... s.. ... 
+HiHat:     x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x x.x 
 --
 # instruments
 Bass Drum:

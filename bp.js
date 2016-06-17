@@ -672,7 +672,8 @@
     pause: 1,
     stop: 1,
     forward: 1,
-    back: 1
+    back: 1,
+    step: 1
   }
   
   BeatModel.prototype = {
@@ -1057,7 +1058,8 @@
           this.orderedNotes.push({
             time: this.secondsPerTick * parseInt(offset, 10),
             instrument: instrumentNumber,
-            key: key
+  		  key: key,
+  		  pos: offset
           })
         }
       }
@@ -1084,7 +1086,7 @@
             var note = bucket[i]
             var xTime = self.lookaheadTime + note.time - bucketTime + deltaTime
             self.playSample(note.instrument, xTime)
-            // console.warn('playSample', bucketIndex, xTime)
+  		  // self.model.dispatch('step', note.pos)
           }
           bucketIndex += 1
           if (bucketIndex === length) {
@@ -1467,6 +1469,7 @@
   function ScoreColumns (el) {
     // console.warn(type(el));
     this.els = qa('* p', el).filter(function (el1) {
+      // TODO fails if only one instrument
       return el1.childNodes.length > 1
     })
     this.selectedIndex = -1
@@ -1517,7 +1520,6 @@
   
   // {{{1 PlayerView
   function scoreSpanTemplate (length, tpb) {
-    console.warn('scoreSpan', length, tpb)
     var result = []
     for (var i = 0; i < length; i += 1) {
       if (i % tpb === 0) result.push('&nbsp;')
@@ -1610,15 +1612,15 @@
       var self = this
       this.interval = setInterval(function () {
         requestAnimationFrame(function () {
+          console.warn('step')
           self.step()
         })
-      }, (this.bpm / 60) * this.bar * this.tpb * 100)
+      }, 1000 * (60 / this.model.bpm()) / this.model.tpb() )
     },
     stop: function () {
-      if (this.interval) {
-        clearInterval(this.interval)
-        this.interval = null
-      }
+      console.warn('asdsadsadsadsadsadads')
+      clearInterval(this.interval)
+      this.interval = null
     },
     step: function (amount) {
       amount = amount || 1
@@ -2149,7 +2151,6 @@
       options: ['beat0', 'beat1', 'beat2', 'beat3']
     },
     settingsView1: {
-      bpm: 100,
       tpb: 4,
       beats: 12
     }
@@ -2204,11 +2205,13 @@
     m.subscribe('play', function () {
       live.controlsView1.play()
       live.beatAudio1.play()
+  	// live.playerView1.start()
     })
   
     m.subscribe('stop', function () {
       live.controlsView1.stop()
       live.beatAudio1.stop()
+  	// live.playerView1.stop()
     })
   
     m.loadBeat('data/beat1.beat', function (err, model) {

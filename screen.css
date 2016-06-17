@@ -303,5 +303,5 @@ html, body {
 
 /* line 172, sass/screen.sass */
 .focus {
-  border: 1px solid red;
+  background-color: #DDD;
 }
