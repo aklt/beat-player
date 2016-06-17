@@ -1,12 +1,11 @@
 
-TEMPLATES=$(wildcard templates/*.html)
-JS=lib.js model.js audio.js view.js templates.js ready.js test.js
+JS=lib.js model.js audio.js view.js ready.js test.js
 compassCompile=bundle exec compass compile --no-debug-info
 compassStats=bundle exec compass stats
 
 .PHONY: install clean dev tags distclean min
 
-all: style.css screen.css print.css templates.js bp.js
+all: style.css screen.css print.css bp.js
 
 
 screen.css: sass/screen.sass

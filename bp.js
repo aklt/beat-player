@@ -1330,16 +1330,12 @@
   createView(KeyboardView, {
     tpl: function (o) {
       o = o || {}
-      return bp.templates.keyboard(keyboardKeys.map(function (row, j) {
+      return $t('pre', keyboardKeys.map(function (row, j) {
         var keys = ''
         var chars = row.split('')
-        if (j === 0) return bp.templates.keyboardRow(chars)
-        for (var i = 0; i < chars.length; i += 1) {
-          var ch = chars[i]
-          keys += '<i>' + ch + '</i>'
-        }
-        return (j > 1 ? ' ' : '') + keys
-      }))
+        if (j === 0) return $ts('b', chars).join('')
+        return (j > 1 ? ' ' : '') + $ts('i', chars).join('')
+      }).join('\n'))
     },
     afterAttach: function (el) {
       // Select the active sample
@@ -1951,6 +1947,7 @@
   
   SliderInput.prototype = {
     tpl: function (o) {
+      // TODO Remove this
       return bp.templates.sliderInput(o)
     },
     setRange: function (start, stop, value) {
