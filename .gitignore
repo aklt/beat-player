@@ -1,2 +1,7 @@
 node_modules/
 old/
+.bundle
+sass/bourbon
+sass/neat
+.sass-cache
+.install
