@@ -21,13 +21,23 @@ keyboardKeys.join('').split('').forEach(function (k, i) {
 })
 
 // {{{1 InputHandler
-
-// TODO CTRL + 1-9:  Select instrument, focus instruments
-//      1-9 a-z A-Z: go to position, focus player
 //
+// ## Global keys
+//
+// space         play, stop
+// 1-9           select instrument
+// qwerty        play sound
+// Left, Right   select view
+//
+// ## Player View keys
+// 1-9, a-z, A-Z  select column
+//
+// ## Mouse
 //
 var key0 = '0'.charCodeAt(0)
 var key9 = '9'.charCodeAt(0)
+var keyA = 'A'.charCodeAt(0)
+var keyZ = 'Z'.charCodeAt(0)
 var keyUp = 38
 var keyDown = 40
 var keyLeft = 37
@@ -54,11 +64,24 @@ var IH_INIT = 1
 var IH_END = 4
 var ih_state = IH_INIT
 
+// hack
+var isPlay = false
 mixinHandlers(InputHandler, {
   keydown: function (ev, el) {
+    var k = translateKey(ev)
+    console.warn('key', k)
+    // hack
+    if (k === 'space') {
+      if (!isPlay) {
+        bp.model.dispatch('play')
+        isPlay = true
+      } else {
+        bp.model.dispatch('stop')
+        isPlay = false
+      }
+    }
     var code = ev.which
     var obj
-    console.warn('Key', code, ev.charCode, String.fromCharCode(code))
     switch (ih_state) {
       case IH_INIT:
         if (code <= key9 && code >= key0) {
@@ -122,8 +145,28 @@ mixinHandlers(InputHandler, {
   wheel: function () {
     console.warn('scroll', arguments)
   }
-
 })
+
+function translateKey (ev) {
+  // TODO browser compat
+  var code = ev.which
+  if (code <= key9 && code >= key0) return (code - key0) + ''
+  if (code <= keyZ && code >= keyA) {
+    code = String.fromCharCode(code)
+    if (!ev.shiftKey) code = code.toLowerCase()
+    return code
+  }
+  if (code === keyEnter) return 'enter'
+  if (code === keySpace) return 'space'
+  if (code === keyEsc) return 'esc'
+  if (code === keyUp) return 'up'
+  if (code === keyDown) return 'down'
+  if (code === keyLeft) return 'left'
+  if (code === keyRight) return 'right'
+  if (code === keyTab) return 'tab'
+  // TODO Handle , and . keys
+  return null
+}
 
 // 1}}} InputHandler
 
@@ -238,8 +281,11 @@ createView(KeyboardView, {
 
 }, {
   // Handlers
-  click: function (event, el) {
+  defaultHandler: function (ev, el) {
+    console.warn('defaulth')
     this.focus()
+  },
+  click: function (event, el) {
     // Instrument
     if (el.nodeName === 'B') {
       this.selectInstrument(el.innerText, el)
@@ -267,7 +313,6 @@ createView(KeyboardView, {
         this.model.selectedInstrumentRange()
       }
     }
-    this.focus()
   }
 }, {
   // Args
@@ -608,6 +653,20 @@ createView(ControlsView, {
     this.btnPlay = qs('#ctrl-1', el)
     this.btnPause = qs('#ctrl-2', el)
     this.btnForward = qs('#ctrl-3', el)
+  },
+  stop: function () {
+    if (this.isPlaying) {
+      html(this.btnPlay, btnPlay)
+      this.isPlaying = false
+      this.emit('stop')
+    }
+  },
+  play: function () {
+    if (!this.isPlaying) {
+      html(this.btnPlay, btnStop)
+      this.isPlaying = true
+      this.emit('play')
+    }
   }
 }, {
   click: function (ev, el) {
@@ -618,13 +677,9 @@ createView(ControlsView, {
         break
       case 'ctrl-1':
         if (this.isPlaying) {
-          html(this.btnPlay, btnPlay)
-          this.isPlaying = false
-          this.emit('stop')
+          this.stop()
         } else {
-          html(this.btnPlay, btnStop)
-          this.isPlaying = true
-          this.emit('play')
+          this.play()
         }
         break
       case 'ctrl-2':

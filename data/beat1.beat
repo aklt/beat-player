@@ -1,9 +1,10 @@
 name: The 1st beat
 version: 0.0.1
+bpm: 108
 --
-Bass Drum: ..b ... ..b ... ..b ... ..b ...
+Bass Drum: ... .bb ... .bb ... .bb ... ...
 Snare:     s.. s.. s.. s.. s.. s.. s.. s..
-HiHat:     x.. x.. x.. x.. x.. x.. x.. x..
+HiHat:     ..x ..x ..x ..x ..x ..x ..x ..x
 --
 Bass Drum:
   url: data/bd.wav

@@ -8,7 +8,6 @@
 //
 function BeatAudio (model) {
   this.model = model
-  this.instruments = model.instruments()
   // TODO There is a max. limit on the number of AudioContexts
   this.context = new (AudioContext || webkitAudioContext)()
   this.volume = this.context.createGain()
@@ -76,33 +75,37 @@ BeatAudio.prototype = {
   },
   // Start playback at pattern position
   play: function () {
-    var self = this
-    var ctx = this.context
-    var time0 = ctx.currentTime
-    var bucketIndex = this.noteBucketsIndex
-    var length = this.noteBuckets.length
-    var deltaTime = 0
-    this.timeout = setInterval(function () {
-      var timePassed = ctx.currentTime - time0
-      var bucketTime = bucketIndex * self.lookaheadTime
-      deltaTime = bucketTime - timePassed
-      var bucket = self.noteBuckets[bucketIndex]
-      for (var i = 0; i < bucket.length; i += 1) {
-        var note = bucket[i]
-        var xTime = self.lookaheadTime + note.time - bucketTime + deltaTime
-        self.playSample(note.instrument, xTime)
-        // console.warn('playSample', bucketIndex, xTime)
-      }
-      bucketIndex += 1
-      if (bucketIndex === length) {
-        bucketIndex = 0
-        time0 += timePassed
-      }
-    }, this.lookaheadTime * 1000)
+	if (!this.timeout) {
+      this.calculateNoteBuckets()
+      var self = this
+      var ctx = this.context
+      var time0 = ctx.currentTime
+      var bucketIndex = this.noteBucketsIndex
+      var length = this.noteBuckets.length
+      var deltaTime = 0
+      this.timeout = setInterval(function () {
+        var timePassed = ctx.currentTime - time0
+        var bucketTime = bucketIndex * self.lookaheadTime
+        deltaTime = bucketTime - timePassed
+        var bucket = self.noteBuckets[bucketIndex]
+        for (var i = 0; i < bucket.length; i += 1) {
+          var note = bucket[i]
+          var xTime = self.lookaheadTime + note.time - bucketTime + deltaTime
+          self.playSample(note.instrument, xTime)
+          // console.warn('playSample', bucketIndex, xTime)
+        }
+        bucketIndex += 1
+        if (bucketIndex === length) {
+          bucketIndex = 0
+          time0 += timePassed
+        }
+      }, this.lookaheadTime * 1000)
+	}
   },
   // Stop all playing samples
   stop: function () {
     clearTimeout(this.timeout)
+	this.timeout = null
   },
   // Play a sample in `when` seconds
   playSample: function (i, when) {

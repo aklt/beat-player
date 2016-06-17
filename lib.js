@@ -418,8 +418,12 @@ function removeEvents (el, events, handlerContext, capture) {
 function mixinHandlers (AClass, events, capture) {
   AClass[__proto].handleEvent = function (ev) {
     console.warn('handleEvent', this)
+    var target = eventTarget(ev)
+    if (this.ondefaultHandler) {
+      this.ondefaultHandler(ev, target)
+    }
     var fn = this['on' + ev.type]
-    if (fn) return fn.call(this, ev, eventTarget(ev))
+    if (fn) return fn.call(this, ev, target)
   }
   var evs = Object.keys(events)
   for (var i = 0; i < evs.length; i += 1) {

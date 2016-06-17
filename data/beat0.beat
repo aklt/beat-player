@@ -1,5 +1,6 @@
 name: The 0th beat
 version: 0.0.1
+bpm: 88
 --
 Bass Drum: b... b... b... b... 
 Snare:     ..s. ..s. ..s. ..s. 

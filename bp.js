@@ -419,8 +419,12 @@
   function mixinHandlers (AClass, events, capture) {
     AClass[__proto].handleEvent = function (ev) {
       console.warn('handleEvent', this)
+      var target = eventTarget(ev)
+      if (this.ondefaultHandler) {
+        this.ondefaultHandler(ev, target)
+      }
       var fn = this['on' + ev.type]
-      if (fn) return fn.call(this, ev, eventTarget(ev))
+      if (fn) return fn.call(this, ev, target)
     }
     var evs = Object.keys(events)
     for (var i = 0; i < evs.length; i += 1) {
@@ -996,7 +1000,6 @@
   //
   function BeatAudio (model) {
     this.model = model
-    this.instruments = model.instruments()
     // TODO There is a max. limit on the number of AudioContexts
     this.context = new (AudioContext || webkitAudioContext)()
     this.volume = this.context.createGain()
@@ -1064,33 +1067,37 @@
     },
     // Start playback at pattern position
     play: function () {
-      var self = this
-      var ctx = this.context
-      var time0 = ctx.currentTime
-      var bucketIndex = this.noteBucketsIndex
-      var length = this.noteBuckets.length
-      var deltaTime = 0
-      this.timeout = setInterval(function () {
-        var timePassed = ctx.currentTime - time0
-        var bucketTime = bucketIndex * self.lookaheadTime
-        deltaTime = bucketTime - timePassed
-        var bucket = self.noteBuckets[bucketIndex]
-        for (var i = 0; i < bucket.length; i += 1) {
-          var note = bucket[i]
-          var xTime = self.lookaheadTime + note.time - bucketTime + deltaTime
-          self.playSample(note.instrument, xTime)
-          // console.warn('playSample', bucketIndex, xTime)
-        }
-        bucketIndex += 1
-        if (bucketIndex === length) {
-          bucketIndex = 0
-          time0 += timePassed
-        }
-      }, this.lookaheadTime * 1000)
+  	if (!this.timeout) {
+        this.calculateNoteBuckets()
+        var self = this
+        var ctx = this.context
+        var time0 = ctx.currentTime
+        var bucketIndex = this.noteBucketsIndex
+        var length = this.noteBuckets.length
+        var deltaTime = 0
+        this.timeout = setInterval(function () {
+          var timePassed = ctx.currentTime - time0
+          var bucketTime = bucketIndex * self.lookaheadTime
+          deltaTime = bucketTime - timePassed
+          var bucket = self.noteBuckets[bucketIndex]
+          for (var i = 0; i < bucket.length; i += 1) {
+            var note = bucket[i]
+            var xTime = self.lookaheadTime + note.time - bucketTime + deltaTime
+            self.playSample(note.instrument, xTime)
+            // console.warn('playSample', bucketIndex, xTime)
+          }
+          bucketIndex += 1
+          if (bucketIndex === length) {
+            bucketIndex = 0
+            time0 += timePassed
+          }
+        }, this.lookaheadTime * 1000)
+  	}
     },
     // Stop all playing samples
     stop: function () {
       clearTimeout(this.timeout)
+  	this.timeout = null
     },
     // Play a sample in `when` seconds
     playSample: function (i, when) {
@@ -1155,13 +1162,23 @@
   })
   
   // {{{1 InputHandler
-  
-  // TODO CTRL + 1-9:  Select instrument, focus instruments
-  //      1-9 a-z A-Z: go to position, focus player
   //
+  // ## Global keys
+  //
+  // space         play, stop
+  // 1-9           select instrument
+  // qwerty        play sound
+  // Left, Right   select view
+  //
+  // ## Player View keys
+  // 1-9, a-z, A-Z  select column
+  //
+  // ## Mouse
   //
   var key0 = '0'.charCodeAt(0)
   var key9 = '9'.charCodeAt(0)
+  var keyA = 'A'.charCodeAt(0)
+  var keyZ = 'Z'.charCodeAt(0)
   var keyUp = 38
   var keyDown = 40
   var keyLeft = 37
@@ -1188,11 +1205,24 @@
   var IH_END = 4
   var ih_state = IH_INIT
   
+  // hack
+  var isPlay = false
   mixinHandlers(InputHandler, {
     keydown: function (ev, el) {
+      var k = translateKey(ev)
+      console.warn('key', k)
+      // hack
+      if (k === 'space') {
+        if (!isPlay) {
+          bp.model.dispatch('play')
+          isPlay = true
+        } else {
+          bp.model.dispatch('stop')
+          isPlay = false
+        }
+      }
       var code = ev.which
       var obj
-      console.warn('Key', code, ev.charCode, String.fromCharCode(code))
       switch (ih_state) {
         case IH_INIT:
           if (code <= key9 && code >= key0) {
@@ -1256,8 +1286,28 @@
     wheel: function () {
       console.warn('scroll', arguments)
     }
-  
   })
+  
+  function translateKey (ev) {
+    // TODO browser compat
+    var code = ev.which
+    if (code <= key9 && code >= key0) return (code - key0) + ''
+    if (code <= keyZ && code >= keyA) {
+      code = String.fromCharCode(code)
+      if (!ev.shiftKey) code = code.toLowerCase()
+      return code
+    }
+    if (code === keyEnter) return 'enter'
+    if (code === keySpace) return 'space'
+    if (code === keyEsc) return 'esc'
+    if (code === keyUp) return 'up'
+    if (code === keyDown) return 'down'
+    if (code === keyLeft) return 'left'
+    if (code === keyRight) return 'right'
+    if (code === keyTab) return 'tab'
+    // TODO Handle , and . keys
+    return null
+  }
   
   // 1}}} InputHandler
   
@@ -1372,8 +1422,11 @@
   
   }, {
     // Handlers
-    click: function (event, el) {
+    defaultHandler: function (ev, el) {
+      console.warn('defaulth')
       this.focus()
+    },
+    click: function (event, el) {
       // Instrument
       if (el.nodeName === 'B') {
         this.selectInstrument(el.innerText, el)
@@ -1401,7 +1454,6 @@
           this.model.selectedInstrumentRange()
         }
       }
-      this.focus()
     }
   }, {
     // Args
@@ -1742,6 +1794,20 @@
       this.btnPlay = qs('#ctrl-1', el)
       this.btnPause = qs('#ctrl-2', el)
       this.btnForward = qs('#ctrl-3', el)
+    },
+    stop: function () {
+      if (this.isPlaying) {
+        html(this.btnPlay, btnPlay)
+        this.isPlaying = false
+        this.emit('stop')
+      }
+    },
+    play: function () {
+      if (!this.isPlaying) {
+        html(this.btnPlay, btnStop)
+        this.isPlaying = true
+        this.emit('play')
+      }
     }
   }, {
     click: function (ev, el) {
@@ -1752,13 +1818,9 @@
           break
         case 'ctrl-1':
           if (this.isPlaying) {
-            html(this.btnPlay, btnPlay)
-            this.isPlaying = false
-            this.emit('stop')
+            this.stop()
           } else {
-            html(this.btnPlay, btnStop)
-            this.isPlaying = true
-            this.emit('play')
+            this.play()
           }
           break
         case 'ctrl-2':
@@ -2080,10 +2142,11 @@
   };
   /*global ready bp TextInput SliderInput InputHandler stepIter m*/
   
+  // TODO use model for defaults
   var defaultOptions = {
     beatsView1: {
       id: 'beatView1',
-      options: ['beat0', 'beat1', 'beat2']
+      options: ['beat0', 'beat1', 'beat2', 'beat3']
     },
     settingsView1: {
       bpm: 100,
@@ -2103,21 +2166,19 @@
       l1.attach()
     })
   
-    var ih1 = new InputHandler({
+    live.inputHandler1 = new InputHandler({
       model: bp.model,
       keyboardView: live.keyboardView1,
       player: live.playerView1
     })
-    ih1.eventsAttach()
-    live.ih1 = ih1
+    live.inputHandler1.eventsAttach()
   
-    // TextInput pops up to get input
-    var textInput1 = TextInput.create({id: 'textInput1'})
-    live.textInput1 = textInput1
+    live.textInput1 = TextInput.create({id: 'textInput1'})
+    live.sliderInput1 = SliderInput.create({id: 'sliderInput1'})
   
-    var sliderInput1 = SliderInput.create({id: 'sliderInput1'})
-    live.sliderInput1 = sliderInput1
+    live.beatAudio1 = new BeatAudio(bp.model)
   
+    // TODO handle focus with mouse
     live.stepFocus = stepIter([
       live.beatsView1,
       live.settingsView1,
@@ -2138,6 +2199,16 @@
   
     m.subscribe('NewText', function () {
       live.playerView1.reAttach()
+    })
+  
+    m.subscribe('play', function () {
+      live.controlsView1.play()
+      live.beatAudio1.play()
+    })
+  
+    m.subscribe('stop', function () {
+      live.controlsView1.stop()
+      live.beatAudio1.stop()
     })
   
     m.loadBeat('data/beat1.beat', function (err, model) {

@@ -1,9 +1,10 @@
 /*global ready bp TextInput SliderInput InputHandler stepIter m*/
 
+// TODO use model for defaults
 var defaultOptions = {
   beatsView1: {
     id: 'beatView1',
-    options: ['beat0', 'beat1', 'beat2']
+    options: ['beat0', 'beat1', 'beat2', 'beat3']
   },
   settingsView1: {
     bpm: 100,
@@ -23,21 +24,19 @@ ready(function () {
     l1.attach()
   })
 
-  var ih1 = new InputHandler({
+  live.inputHandler1 = new InputHandler({
     model: bp.model,
     keyboardView: live.keyboardView1,
     player: live.playerView1
   })
-  ih1.eventsAttach()
-  live.ih1 = ih1
+  live.inputHandler1.eventsAttach()
 
-  // TextInput pops up to get input
-  var textInput1 = TextInput.create({id: 'textInput1'})
-  live.textInput1 = textInput1
+  live.textInput1 = TextInput.create({id: 'textInput1'})
+  live.sliderInput1 = SliderInput.create({id: 'sliderInput1'})
 
-  var sliderInput1 = SliderInput.create({id: 'sliderInput1'})
-  live.sliderInput1 = sliderInput1
+  live.beatAudio1 = new BeatAudio(bp.model)
 
+  // TODO handle focus with mouse
   live.stepFocus = stepIter([
     live.beatsView1,
     live.settingsView1,
@@ -58,6 +57,16 @@ ready(function () {
 
   m.subscribe('NewText', function () {
     live.playerView1.reAttach()
+  })
+
+  m.subscribe('play', function () {
+    live.controlsView1.play()
+    live.beatAudio1.play()
+  })
+
+  m.subscribe('stop', function () {
+    live.controlsView1.stop()
+    live.beatAudio1.stop()
   })
 
   m.loadBeat('data/beat1.beat', function (err, model) {
