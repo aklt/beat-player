@@ -278,33 +278,6 @@
     return __slice.call(h.childNodes)
   }
   
-  function readTemplates (id) {
-    var el = id
-    if (typeof id === 'string') el = qs(id)
-    if (!el.innerText) throw new Error('No innerText')
-  
-    var templates = {}
-    var templateName
-    el.innerText.split(/\n/).concat(['']).forEach(function (line) {
-      if (/^(?: |\t)+/.test(line)) {
-        if (typeof templateName === 'string') {
-          if (!templates[templateName]) templates[templateName] = []
-          templates[templateName].push(line.replace(/^\s+/, ''))
-        }
-      } else {
-        var keyEndIndex = line.indexOf(':')
-        if (keyEndIndex > -1) {
-          if (templates[templateName]) {
-            templates[templateName] = templates[templateName].join('\n')
-          }
-          templateName = line.slice(0, keyEndIndex)
-          templates[templateName] = [line.slice(keyEndIndex + 1).replace(/^\s+/, '')]
-        }
-      }
-    })
-    return templates
-  }
-  
   function dom (/* htmlText0, htmlText1, ..., options{css} */) {
     var args = __slice.call(arguments)
     var options = args[args.length - 1]
@@ -467,8 +440,6 @@
       else a1 = new AClass(o)
       o = o || {}
       a1 = extend(a1, o)
-      if (typeof o.el === 'string') a1.el = $id(o.id)
-      else a1.el = o.el
       return a1
     }
     AClass[__proto].render = function (o) {
@@ -510,6 +481,7 @@
         this.domCount -= 1
       }
     }
+    // TODO
     AClass[__proto].update = function (o) {
       this.detach()
       this.renderModel()
@@ -1464,7 +1436,7 @@
   // TODO Get rid of this
   function ScoreColumns (el) {
     // console.warn(type(el));
-    this.els = qa('* p', el).filter(function (el1) {
+    this.els = qa('p', el).filter(function (el1) {
       // TODO fails if only one instrument
       return el1.childNodes.length > 1
     })
@@ -2090,55 +2062,6 @@
       pl1.attach('#test1')
     })
   }
-  // Include definitions for timber v0.1.1
-  var escapeMap = {
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#x27;',
-          '`': '&#x60;'
-      },
-      regex = new RegExp(Object.keys(escapeMap).join('|'), 'g');
-  
-  function escapeHtml(aString) {
-      return (aString + '').replace(regex, function (ch) {
-          return escapeMap[ch];
-      });
-  }
-  
-  function escapeText(t) {
-     return (t + '').replace(/(")/g, '\\"');
-  }
-  
-  function escapeJson(o) {
-    return JSON.stringify(o, 0, 2);
-  }
-  
-  function escapeNone(o) { return o + ''; }
-  
-  
-  // Timber templates v0.1.1 compiled 2016-06-15T20:22:35.310Z
-  bp.templates = {
-    keyboard: function (o) {
-    var result =   "<pre>\n";
-    for (var v0 = 0; v0 < o.length; v0 += 1) {
-      var v1 = o[v0];
-      result +=     "  " + (v1) + "\n";
-    }
-    result += "</pre>\n";
-  return result; }
-  ,
-    keyboardRow: function (o) {
-    var result =   "";
-    for (var v0 = 0; v0 < o.length; v0 += 1) {
-      var v1 = o[v0];
-      result +=     "<b>" + escapeHtml(v1) + "</b>";
-    }
-    result += "";
-  return result; }
-  
-  };
   /*global ready bp TextInput SliderInput InputHandler stepIter m*/
   
   // TODO use model for defaults

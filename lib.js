@@ -277,33 +277,6 @@ function createDomArray (o) {
   return __slice.call(h.childNodes)
 }
 
-function readTemplates (id) {
-  var el = id
-  if (typeof id === 'string') el = qs(id)
-  if (!el.innerText) throw new Error('No innerText')
-
-  var templates = {}
-  var templateName
-  el.innerText.split(/\n/).concat(['']).forEach(function (line) {
-    if (/^(?: |\t)+/.test(line)) {
-      if (typeof templateName === 'string') {
-        if (!templates[templateName]) templates[templateName] = []
-        templates[templateName].push(line.replace(/^\s+/, ''))
-      }
-    } else {
-      var keyEndIndex = line.indexOf(':')
-      if (keyEndIndex > -1) {
-        if (templates[templateName]) {
-          templates[templateName] = templates[templateName].join('\n')
-        }
-        templateName = line.slice(0, keyEndIndex)
-        templates[templateName] = [line.slice(keyEndIndex + 1).replace(/^\s+/, '')]
-      }
-    }
-  })
-  return templates
-}
-
 function dom (/* htmlText0, htmlText1, ..., options{css} */) {
   var args = __slice.call(arguments)
   var options = args[args.length - 1]
@@ -466,8 +439,6 @@ function mixinDom (AClass) {
     else a1 = new AClass(o)
     o = o || {}
     a1 = extend(a1, o)
-    if (typeof o.el === 'string') a1.el = $id(o.id)
-    else a1.el = o.el
     return a1
   }
   AClass[__proto].render = function (o) {
@@ -509,6 +480,7 @@ function mixinDom (AClass) {
       this.domCount -= 1
     }
   }
+  // TODO
   AClass[__proto].update = function (o) {
     this.detach()
     this.renderModel()

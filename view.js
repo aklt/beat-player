@@ -321,7 +321,7 @@ createView(KeyboardView, {
 // TODO Get rid of this
 function ScoreColumns (el) {
   // console.warn(type(el));
-  this.els = qa('* p', el).filter(function (el1) {
+  this.els = qa('p', el).filter(function (el1) {
     // TODO fails if only one instrument
     return el1.childNodes.length > 1
   })
