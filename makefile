@@ -34,8 +34,8 @@ bp-closure.js: bp.js
 
 install:
 	bundler install --path .install
-	# cd sass bourbon install
-	# cd sass neat install
+	(cd sass && bourbon install)
+	(cd sass && neat install)
 
 tags:
 	tagdir
