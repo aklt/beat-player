@@ -1,10 +1,9 @@
 ;(function () {
-  // this is a test
   /*global bp XMLHttpRequest*/
   var __slice = [].slice
   var __hasProp = {}.hasOwnProperty
   var __proto = 'prototype'
-
+  
   // ## type(elem[, isType])
   //
   // Return the type of an element
@@ -24,7 +23,7 @@
     if (typeof isType === 'string') return t === isType
     return t
   }
-
+  
   // ## Object extend(target, parents...)
   function extend (/* target, parents... */) {
     var args = __slice.call(arguments)
@@ -39,7 +38,7 @@
     }
     return target
   }
-
+  
   function each (objOrArray, fn) {
     if (Array.isArray(objOrArray)) {
       objOrArray.forEach(function (elem, i) {
@@ -55,12 +54,12 @@
       }
     }
   }
-
+  
   function StepIterElems (o) {
     this.elems = o.elems
     this.index = o.index || 0
   }
-
+  
   StepIterElems.prototype = {
     next: function () {
       this.index += 1
@@ -76,14 +75,14 @@
   	return this.elems[this.index]
     }
   }
-
+  
   function stepIter (elems, index) {
     return new StepIterElems({
       elems: elems,
       index: index || 0
     })
   }
-
+  
   function eachPush (objOrArray, fn) {
     var result = []
     each(objOrArray, function (k, v) {
@@ -91,7 +90,7 @@
     })
     return result
   }
-
+  
   // ## delay(time, fun, scope, args...)
   function delay (/* time, fun, ... */) {
     var a = __slice.call(arguments)
@@ -99,7 +98,7 @@
       a[1].apply(a[2], a.slice(3))
     }, a[0])
   }
-
+  
   function _flatten (result, args) {
     for (var i = 0; i < args.length; i += 1) {
       var el = args[i]
@@ -111,11 +110,11 @@
     }
     return result
   }
-
+  
   function flatten (args) {
     return _flatten([], args)
   }
-
+  
   // HTtml Tags
   // $t('div', {id: foo})
   // $t('div', {id: foo}, 'text')
@@ -129,7 +128,7 @@
               flatten(args).join('\n') +
            '</' + tag + '>'
   }
-
+  
   function $ts (/* tag, opts, text... */) {
     var args = [].slice.call(arguments)
     var tag = args.shift()
@@ -140,7 +139,7 @@
       return $t(tag, opts, text)
     })
   }
-
+  
   function $t_attr (opts) {
     var result = []
     each(opts, function (k, v) {
@@ -152,40 +151,40 @@
   //
   // b.js
   //
-
+  
   var __window = window
   var __document = __window.document
-
+  
   function classAdd (el, cls) {
     if (typeof el.className === 'undefined') el.className = cls
     else el.className = el.className + ' ' + cls
     return el.className
   }
-
+  
   function classRemove (el, cls) {
     var c = el.className
     if (!c) return
     else el.className = c.replace(new RegExp('\\s?' + cls, 'g'), '')
     return el.className
   }
-
+  
   // From http://dpi.lv/utopia.js
   function qs (expr, con) {
     return (con || __document).querySelector(expr)
   }
-
+  
   function qa (expr, con) {
     return __slice.call((con || __document).querySelectorAll(expr))
   }
-
+  
   function $id (name) {
     return __document.getElementById(name)
   }
-
+  
   var _pfx_style = __document.createElement('dummy').style
   var _pfx_prefixes = 'Webkit Moz O ms Khtml'.split(' ')
   var _pfx_memory = {}
-
+  
   // Return b prefixed version of b browser style
   //
   // From http://bartaz.github.io/impress.js/js/impress.js
@@ -194,7 +193,7 @@
       var ucProp = prop.charAt(0).toUpperCase() + prop.substr(1)
       var props = (prop + ' ' + _pfx_prefixes.join(ucProp + ' ') +
                   ucProp).split(' ')
-
+  
       _pfx_memory[ prop ] = null
       for (var i in props) {
         if (_pfx_style[props[i]] !== undefined) {
@@ -205,7 +204,7 @@
     }
     return _pfx_memory[ prop ]
   }
-
+  
   // Set the css specified in 'props' on element 'el'
   //
   // From http://bartaz.github.io/impress.js/js/impress.js
@@ -224,7 +223,7 @@
     }
     return el
   }
-
+  
   // ## browser.rect(node)
   //
   // Get position rect of an element or text node
@@ -239,7 +238,7 @@
       return node.getBoundingClientRect()
     }
   }
-
+  
   var _readyFuncs = []
   var _loaded
   function ready (fn) {
@@ -254,7 +253,7 @@
       })
     }
   }
-
+  
   // ## attr(el, Object|String)
   //
   // Get or set attributes on a node
@@ -269,11 +268,11 @@
       el.setAttribute(at, attrs[at])
     })
   }
-
+  
   function html (el, text) {
     el.innerHTML = text
   }
-
+  
   // ### dom(html[, html, ...])
   // Create dom elements from html strings
   function createDomArray (o) {
@@ -281,7 +280,7 @@
     h.innerHTML = o.html
     return __slice.call(h.childNodes)
   }
-
+  
   function dom (/* htmlText0, htmlText1, ..., options{css} */) {
     var args = __slice.call(arguments)
     var options = args[args.length - 1]
@@ -300,31 +299,31 @@
     })
     return result.length === 1 ? result[0] : result
   }
-
+  
   function removeChild (root, child) {
     return root.removeChild(child)
   }
-
+  
   function appendChild (root, child) {
     root.appendChild(child)
   }
-
+  
   function insertBefore(parent, newElement, beforeThis) {
     return parent.insertBefore(newElement, beforeThis)
   }
-
+  
   function prevSibling (el) {
     return el.previousSibling
   }
-
+  
   function nextSibling (el) {
     return el.nextSibling
   }
-
+  
   function textEl (text) {
     return __document.createTextNode(text)
   }
-
+  
   // ### append(root[, child || body])
   // Append dom elements
   function append (root, child) {
@@ -344,7 +343,7 @@
       }
     }
   }
-
+  
   function htmlEl (name, attrs) {
     var el = __document.createElement(name)
     if (attrs) {
@@ -355,7 +354,7 @@
     }
     return el
   }
-
+  
   // Adapted from http://www.quirksmode.org/js/events_properties.html
   function eventTarget (e) {
     e = e || __window.event
@@ -365,20 +364,20 @@
     }
     return targ
   }
-
+  
   function addEvents (el, events, handlerContext, capture) {
     // console.warn('addEvents', el, events, handlerContext)
     for (var i = 0; i < events.length; i += 1) {
       el.addEventListener(events[i], handlerContext, capture)
     }
   }
-
+  
   function removeEvents (el, events, handlerContext, capture) {
     for (var i = 0; i < events.length; i += 1) {
       el.removeEventListener(events[i], handlerContext, capture)
     }
   }
-
+  
   // ## mixinHandlers(AClass, events, capture)
   //
   // Implement the eventhandler interface on an object
@@ -416,7 +415,7 @@
       removeEvents(this.parentEl, evs, this, capture)
     }
   }
-
+  
   // ## mixinDom(DefinedClassName)
   //
   // Mixin function
@@ -492,7 +491,7 @@
       this.attach()
     }
   }
-
+  
   function mixinHideShow (AClass) {
     AClass[__proto].hide = function () {
       classAdd(this.parentEl, 'hidden')
@@ -501,7 +500,7 @@
       classRemove(this.parentEl, 'hidden')
     }
   }
-
+  
   // TODO setRequestHeader
   function xhr (o, cb) {
     var xhr1 = new XMLHttpRequest()
@@ -522,7 +521,7 @@
     }
     xhr1.send(o.data)
   }
-
+  
   function mixinGetSet (AClass, prop, defaultValue) {
     AClass.prototype[prop] = function (value) {
       var change
@@ -541,7 +540,7 @@
       return this.model[prop]
     }
   }
-
+  
   var lastFocusEl
   function mixinFocus (obj, elName) {
     obj.focus = function () {
@@ -553,7 +552,7 @@
       lastFocusEl = obj[elName]
     }
   }
-
+  
   function mixinViewModel (obj, name) {
     if (!bp.model) throw new Error('Need bp.model')
     // if (!origSave) throw new Error('Need vmSave function for ' + name)
@@ -566,7 +565,7 @@
       return m.view(name)
     }
   }
-
+  
   function createView (AClass, proto, handlers, args) {
     if (typeof bp === 'undefined') throw new Error('Need bp')
     if (!bp.model) throw new Error('Need bp.model')
@@ -596,11 +595,11 @@
     console.warn('createView', name, AClass, obj)
     bp.live[name] = obj
   }
-
+  
   function lcFirst (text) {
     return text[0].toLowerCase() + text.slice(1)
   }
-
+  
   function ucFirst (text) {
     return text[0].toUpperCase() + text.slice(1)
   }
@@ -612,12 +611,12 @@
   // Holds all data of the current beat and is referenced from all Views.
   //
   // TODO Add subscriptions to events
-
+  
   var bp = __window.bp = {
     live: {},
     test: {}
   }
-
+  
   function BeatModel (o) {
     o = o || {}
     this.model = {
@@ -628,13 +627,13 @@
     this.model = extend({}, this.model, o)
     if (typeof o.text === 'string') this.readBeatText(o.text)
   }
-
+  
   BeatModel.defaultInstrument = {
     name: 'Unknown Instrument',
     url: 'Unknown URL',
     range: null
   }
-
+  
   var subscriptionEvents = {
     NewText: 1,
     ChangeBpm: 1,
@@ -651,7 +650,7 @@
     back: 1,
     step: 1
   }
-
+  
   BeatModel.prototype = {
     subscribe: function (ev, cb, context) {
       if (!subscriptionEvents[ev]) throw new Error('Illegal event name ' + ev)
@@ -754,9 +753,9 @@
     },
     readInstruments: function (lines) {
       var instruments = readConfig(lines)
-
+  
       console.warn('instruments', instruments)
-
+  
       var ins = this.model.instruments = {}
       Object.keys(this.patternInstruments).forEach(function (name, i) {
         var obj = {
@@ -832,7 +831,7 @@
     },
     // TODO Return a text string representing the pattern
     getPattern: function () {
-
+  
     },
     // ## Modifying the model with getters and setters
     position: function (pos) {
@@ -914,23 +913,23 @@
       return this.model.version
     }
   }
-
+  
   function toInt (n) {
     return parseInt(n, 10)
   }
-
+  
   function parseNotePos (str) {
     var numbers = str.split(/[,;:]/)
     if (numbers.length !== 2) throw new Error('NOt a legal note pos ' + str)
     return numbers.map(toInt)
   }
-
+  
   function configLines (text) {
     return text.split(/\n|\r\n/gm).filter(function (line) {
       return !/^\s*$|^\s*#/.test(line)
     })
   }
-
+  
   function readConfig (lines) {
     if (typeof lines === 'string') lines = configLines(lines)
     var configs = {}
@@ -938,7 +937,7 @@
     var m
     for (var i = 0; i < lines.length; i += 1) {
       var line = lines[i]
-
+  
       // config name
       m = /^(\w+[\w\s]+):(.*)$/.exec(line)
       if (m) {
@@ -947,7 +946,7 @@
         if (m[2]) configs[config] = m[2].trim()
         continue
       }
-
+  
       // config properties
       m = /^\s+([\w]+):(.*)/.exec(line)
       if (m) {
@@ -962,13 +961,13 @@
     }
     return configs
   }
-
+  
   mixinGetSet(BeatModel, 'bpm', 100)
   mixinGetSet(BeatModel, 'tpb', 4)
   mixinGetSet(BeatModel, 'beats', 4)
-
+  
   var m = bp.model = new BeatModel()
-
+  
   bp.test.beatModel = function () {
     var bm1 = new BeatModel()
     bm1.loadBeat('data/beat0.beat', function (err, model) {
@@ -978,7 +977,7 @@
     })
   }
   /*global bp, AudioContext, webkitAudioContext, BeatModel*/
-
+  
   // # BeatAudio
   //
   // Load and play patterns and instruments
@@ -997,7 +996,7 @@
     this.positionTime = 0
     this.lookaheadTime = 0.4
   }
-
+  
   // divide notes on property `note.time` into buckets of `intervalTime` size
   // TODO deprecate and use setTimeout with intervals
   function timeBuckets (notes, intervalTime) {
@@ -1020,7 +1019,7 @@
     }
     return buckets
   }
-
+  
   BeatAudio.prototype = {
     // load and reset variables
     load: function (url, cb) {
@@ -1111,12 +1110,12 @@
         return !s1.ended
       })
     }
-
+  
     // TODO Mixing https://developer.mozilla.org/en-US/docs/Web/API/OfflineAudioContext
   }
-
+  
   bp.BeatAudio = BeatAudio
-
+  
   bp.testBeatAudio = function () {
     var beat1Model = bp.model || new BeatModel(beat1)
     var beat1 = bp.beat1 = new BeatAudio(beat1Model)
@@ -1132,23 +1131,23 @@
     rect attr nextSibling prevSibling $id mixinHideShow BeatModel
     eachPush $t $ts extend createView html
   */
-
+  
   // TODO Grid https://www.reddit.com/r/Frontend/comments/4lkww8/grid_system_research/
-
+  
   const alphaNum = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-
+  
   const keyboardKeys = [
     '1234567890',
     'QWERTYUIOP',
     'ASDFGHJKL',
     'ZXCVBNM,.']
-
+  
   const keyboardKeyMap = {}
-
+  
   keyboardKeys.join('').split('').forEach(function (k, i) {
     keyboardKeyMap[k] = i
   })
-
+  
   // {{{1 InputHandler
   //
   // ## Global keys
@@ -1175,7 +1174,7 @@
   var keySpace = 32
   var keyEsc = 27
   var keyTab = 9
-
+  
   function InputHandler (o) {
     if (!o.keyboardView) throw new Error('Need o.keyboardView')
     if (!o.player) throw new Error('o.player')
@@ -1184,15 +1183,15 @@
     this.player = o.player
     this.parentEl = __document
   }
-
+  
   InputHandler.prototype = {
   }
-
+  
   var IH_INIT = 1
-
+  
   var IH_END = 4
   var ih_state = IH_INIT
-
+  
   // hack
   var isPlay = false
   mixinHandlers(InputHandler, {
@@ -1252,7 +1251,7 @@
             if (this.activeTab === this.keyboardView) this.activeTab = this.player
             else this.activeTab = this.keyboardView
             this.activeTab.focus()
-
+  
             return ev.preventDefault()
           } else {
             var k = String.fromCharCode(code)
@@ -1275,7 +1274,7 @@
       console.warn('scroll', arguments)
     }
   })
-
+  
   function translateKey (ev) {
     // TODO browser compat
     var code = ev.which
@@ -1296,9 +1295,9 @@
     // TODO Handle , and . keys
     return null
   }
-
+  
   // 1}}} InputHandler
-
+  
   // {{{1 KeyboardView
   function KeyboardView (o) {
     o = o || {}
@@ -1312,7 +1311,7 @@
     o.model.selectedInstrument(o.selectedInstrument || 1)
     // properties on o added
   }
-
+  
   createView(KeyboardView, {
     tpl: function (o) {
       o = o || {}
@@ -1350,7 +1349,7 @@
       this.render({})
     },
     vmSave: function () {
-
+  
     },
     vmLoad: function () {
     },
@@ -1389,7 +1388,7 @@
       this.lastInstrumentEl = el
       this.model.selectedInstrument(sample)
     },
-
+  
     // Keys
     keyLeft: function (ev, el) {
       console.warn('KeyboardView', ev, el)
@@ -1403,7 +1402,7 @@
     keyDown: function (ev, el) {
       console.warn('KeyboardView', ev, el)
     }
-
+  
   }, {
     // Handlers
     defaultHandler: function (ev, el) {
@@ -1443,9 +1442,9 @@
     // Args
     id: 'keyboard'
   })
-
+  
   // 1}}} KeyboardView
-
+  
   // {{{1 ScoreColumns
   // TODO Get rid of this
   function ScoreColumns (el) {
@@ -1459,7 +1458,7 @@
     this.lastSelectedEl = this.selectedEl
     console.warn('ScoreColumns', this)
   }
-
+  
   ScoreColumns.prototype = {
     step: function (units) {
       if (!units) units = 1
@@ -1467,19 +1466,19 @@
       if (this.selectedIndex >= this.els.length) this.selectedIndex = 0
       this.lastSelectedEl = this.selectedEl
       this.selectedEl = this.els[this.selectedIndex]
-
+  
       if (!this.selectedEl) throw new Error('BAd ' + this.selectedIndex)
       if (this.lastSelectedEl) classRemove(this.lastSelectedEl, 'active')
       classAdd(this.selectedEl, 'active')
     }
   }
   // 1}}} ScoreColumns
-
+  
   // {{{1 SettingsView
-
+  
   function SettingsView () {
   }
-
+  
   createView(SettingsView, {
     tpl: function (o) {
       return $t('dl',
@@ -1502,9 +1501,9 @@
   }, {
     id: 'settings'
   })
-
+  
   // 1}}}
-
+  
   // {{{1 PlayerView
   function scoreSpanTemplate (length, tpb) {
     var result = []
@@ -1514,12 +1513,12 @@
     }
     return $t('span', $ts('i', result))
   }
-
+  
   const emptyCol = $t('p', $t('b', '&nbsp;'))
-
+  
   function PlayerView (o) {
   }
-
+  
   createView(PlayerView, {
     tpl: function (o) {
       var m = this.model
@@ -1547,7 +1546,7 @@
       // Extract the parts needed for the playerview
       var m = this.model
       if (!m) throw new Error('Need model')
-
+  
       var instruments = m.instruments()
       var patternLength = m.patternLength()
       var tracks = []
@@ -1555,9 +1554,9 @@
         tracks.push(charArray(patternLength, '.'))
         // TODO Instrument lookup in pattern
       }
-
+  
       var patterns = m.patterns()
-
+  
       // FIXME This is an ugly hack to handle initial state of the PlayerView
       if (patterns) {
         var pats = Object.keys(patterns)
@@ -1570,7 +1569,7 @@
         }
         m.tracks = transpose(tracks)
       }
-
+  
       this.render({
         instruments: instruments,
         tracks: m.tracks
@@ -1604,7 +1603,7 @@
       this.currentPos += amount
       this.scoreColumns.step(amount)
     },
-
+  
     // Keys
     keyLeft: function (ev, el) {
       console.warn(ev, el)
@@ -1690,7 +1689,7 @@
     // Default instance args
     id: 'player1'
   })
-
+  
   // PlayerView.prototype.unfocus = function () {
     // css(this.parentEl.childNodes[0], {
       // border: 'none'
@@ -1706,7 +1705,7 @@
       // bp.lastPopUp.inputEl.select()
     // }
   // }
-
+  
   function decToalphanum (num) {
     if (num >= alphaNum.length) {
       console.warn('reset num from ', num)
@@ -1715,13 +1714,13 @@
     }
     return alphaNum[num]
   }
-
+  
   function alphanumToDec (anum) {
     var result = alphaNum.indexOf(anum + '')
     if (result < 0) throw new Error('TODO Beat is too long')
     return result
   }
-
+  
   function charArray (length, character) {
     character = character || '.'
     var result = []
@@ -1730,7 +1729,7 @@
     }
     return result
   }
-
+  
   function transpose (matrix) {
     var height = matrix.length
     var width = matrix[0].length
@@ -1743,20 +1742,20 @@
     }
     return result
   }
-
+  
   // 1}}} PlayerView
-
+  
   // {{{1 ControlsView
   function ControlsView (o) {
     this.isPlaying = false
     this.isPaused = false
   }
-
+  
   const btnPlay = '►'
   const btnStop = '■'
   const controlChars = [
     '⏮', btnPlay, $t('span', {'class': 'pause'}, '▍▍'), '⏭' ]
-
+  
   createView(ControlsView, {
     tpl: function (o) {
       return eachPush(controlChars, function (i, ch) {
@@ -1818,14 +1817,14 @@
   }, {
     id: 'controls'
   })
-
+  
   // 1}}} ControlsView
-
+  
   // {{{1 BeatsView
   function BeatsView (o) {
     this.collection = {}
   }
-
+  
   createView(BeatsView, {
     tpl: function (o) {
       return $t('span', 'Beat',
@@ -1853,13 +1852,13 @@
   }, {
     id: 'beatsView'
   })
-
+  
   // 1}}}
-
+  
   // {{{1 InstrumentsView
   function InstrumentsView (o) {
   }
-
+  
   createView(InstrumentsView, {
     tpl: function (o) {
       return [
@@ -1914,7 +1913,7 @@
     id: 'instruments'
   })
   // 1}}} InstrumentsView
-
+  
   // {{{1 SliderInput
   function SliderInput (o) {
     o = o || {}
@@ -1925,7 +1924,7 @@
     if (!this.sliderEl) throw new Error('Need o.sliderEl')
     if (!this.textEl) throw new Error('Need o.textEl')
   }
-
+  
   SliderInput.prototype = {
     tpl: function (o) {
       // TODO Remove this
@@ -1960,9 +1959,9 @@
       this.textEl.select()
     }
   }
-
+  
   mixinDom(SliderInput)
-
+  
   mixinHandlers(SliderInput, {
     input: function (ev, el) {
       var v1 = this.sliderEl.value = this.textEl.value = Math.round(el.value)
@@ -1980,7 +1979,7 @@
     }
   })
   // 1}}} Slider Input
-
+  
   // {{{1 TextInput
   function TextInput (o) {
     this.parentEl = $id(o.id)
@@ -1988,7 +1987,7 @@
     this.inputEl = qs('input', this.parentEl)
     this.eventsAttach()
   }
-
+  
   TextInput.prototype = {
     popup: function (o) {
       console.warn('TextInput popup', o)
@@ -2017,19 +2016,19 @@
       console.warn('setValue', val)
       this.value = val
     }
-
+  
   }
-
+  
   TextInput.create = function (o) {
     return new TextInput(o)
   }
-
+  
   TextInput.create = function (o) {
     return new TextInput(o)
   }
-
+  
   mixinHideShow(TextInput)
-
+  
   mixinHandlers(TextInput, {
     keyup: function (ev, el) {
       var key = String.fromCharCode(ev.keyCode).toLowerCase()
@@ -2044,22 +2043,22 @@
     }
   })
   // 1}}} TextInput
-
+  
   // {{{1 Samples
   function Samples () {
   }
-
+  
   mixinDom(Samples)
-
+  
   Samples.prototype = {
     draw: function (el) {
       bp.templates.keyboard({
       })
     }
   }
-
+  
   // 1}}} Samples
-
+  
   bp.test.player = function () {
     var bm1 = new BeatModel()
     bm1.loadBeat('data/beat1.beat', function (err, model) {
@@ -2072,7 +2071,7 @@
     })
   }
   /*global ready bp TextInput SliderInput InputHandler stepIter m*/
-
+  
   // TODO use model for defaults
   var defaultOptions = {
     beatsView1: {
@@ -2084,30 +2083,30 @@
       beats: 12
     }
   }
-
+  
   ready(function () {
     bp.started = Date.now()
     var live = bp.live
-
+  
     Object.keys(live).forEach(function (name) {
       console.warn('live', name)
       var l1 = live[name]
       l1.renderModel(defaultOptions[name])
       l1.attach()
     })
-
+  
     live.inputHandler1 = new InputHandler({
       model: bp.model,
       keyboardView: live.keyboardView1,
       player: live.playerView1
     })
     live.inputHandler1.eventsAttach()
-
+  
     live.textInput1 = TextInput.create({id: 'textInput1'})
     live.sliderInput1 = SliderInput.create({id: 'sliderInput1'})
-
+  
     live.beatAudio1 = new BeatAudio(bp.model)
-
+  
     // TODO handle focus with mouse
     live.stepFocus = stepIter([
       live.beatsView1,
@@ -2118,33 +2117,33 @@
       live.instrumentsView1
     ])
     live.stepFocus.get().focus()
-
+  
     // subscriptions
     m.subscribe('SelectInstrument', function () {
       live.instrumentsView1.selectInstrumentNumber()
     })
-
+  
     m.subscribe('SelectInstrumentRange', function () {
       live.instrumentsView1.selectInstrumentRange()
     })
-
+  
     m.subscribe('NewText', function () {
       live.playerView1.update()
   	live.settingsView1.update()
     })
-
+  
     m.subscribe('play', function () {
       live.controlsView1.play()
       live.beatAudio1.play()
   	// live.playerView1.start()
     })
-
+  
     m.subscribe('stop', function () {
       live.controlsView1.stop()
       live.beatAudio1.stop()
   	// live.playerView1.stop()
     })
-
+  
     m.loadBeat('data/beat1.beat', function (err, model) {
       if (err) throw err
       console.warn('Loaded beat1')
@@ -2154,8 +2153,8 @@
       live.playerView1.gotoPos(1)
     })
   })
-
-
+  
+  
   ready(function () {
     console.warn('Test')
   })

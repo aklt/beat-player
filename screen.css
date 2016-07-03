@@ -83,11 +83,11 @@ html {
   margin-left: auto;
   margin-right: auto;
 }
-/* line 20, sass/bourbon/addons/_clearfix.scss */
+/* line 20, sass/neat/mixins/_clearfix.scss */
 .row-container::after {
   clear: both;
   content: "";
-  display: table;
+  display: block;
 }
 
 /* line 17, sass/screen.sass */
@@ -100,11 +100,11 @@ html {
   display: block;
   padding: 0.1rem 1rem 0.1rem 0.5rem;
 }
-/* line 20, sass/bourbon/addons/_clearfix.scss */
+/* line 20, sass/neat/mixins/_clearfix.scss */
 .topbar::after, .instrumentsbar::after, .beats::after, .settings::after, .controls::after, .player::after, .keyboard::after, .instruments::after {
   clear: both;
   content: "";
-  display: table;
+  display: block;
 }
 
 /* line 25, sass/screen.sass */
