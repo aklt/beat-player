@@ -1043,8 +1043,8 @@
           this.orderedNotes.push({
             time: this.secondsPerTick * parseInt(offset, 10),
             instrument: instrumentNumber,
-  		  key: key,
-  		  pos: offset
+            key: key,
+            pos: offset
           })
         }
       }
@@ -1054,7 +1054,7 @@
     },
     // Start playback at pattern position
     play: function () {
-  	if (!this.timeout) {
+      if (!this.timeout) {
         this.calculateNoteBuckets()
         var self = this
         var ctx = this.context
@@ -1071,7 +1071,7 @@
             var note = bucket[i]
             var xTime = self.lookaheadTime + note.time - bucketTime + deltaTime
             self.playSample(note.instrument, xTime)
-  		  // self.model.dispatch('step', note.pos)
+        // self.model.dispatch('step', note.pos)
           }
           bucketIndex += 1
           if (bucketIndex === length) {
@@ -1079,12 +1079,12 @@
             time0 += timePassed
           }
         }, this.lookaheadTime * 1000)
-  	}
+      }
     },
     // Stop all playing samples
     stop: function () {
       clearTimeout(this.timeout)
-  	this.timeout = null
+      this.timeout = null
     },
     // Play a sample in `when` seconds
     playSample: function (i, when) {
