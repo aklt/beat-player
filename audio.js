@@ -21,6 +21,8 @@ function BeatAudio (model) {
   this.lookaheadTime = 0.4
 }
 
+// Method of dividing the beat into the ideal bucket size
+
 // divide notes on property `note.time` into buckets of `intervalTime` size
 // TODO deprecate and use setTimeout with intervals
 function timeBuckets (notes, intervalTime) {
@@ -52,6 +54,25 @@ BeatAudio.prototype = {
       self.calculateNoteBuckets()
       if (typeof cb === 'function') cb(null, self)
     })
+  },
+  calcTickTimes: function () {
+    var patterns = this.model.patterns()
+    this.secondsPerTick = (60 / this.model.bpm()) / this.model.tpb()
+    console.warn('bpm, secondsPerTick', this.model.bpm(), this.secondsPerTick)
+    this.orderedNotes = []
+    for (var instrumentNumber in patterns) {
+      var notes = patterns[instrumentNumber]
+      for (var offset in notes) {
+        var key = notes[offset]
+        this.orderedNotes.push({
+          time: this.secondsPerTick * parseInt(offset, 10),
+          instrument: instrumentNumber,
+          key: key,
+          pos: offset
+        })
+      }
+    }
+    console.warn('XX', this.orderedNotes)
   },
   // Schedule offset times of samples according to pattern
   calculateNoteBuckets: function () {
@@ -123,7 +144,7 @@ BeatAudio.prototype = {
     // source.playbackRate.value = 2
     source.start(this.context.currentTime + when)
     source.onended = function () {
-      this.ended = true
+      console.warn('ended')
     }
     this.playing.push(source)
   },
@@ -138,3 +159,11 @@ BeatAudio.prototype = {
 }
 
 bp.BeatAudio = BeatAudio
+
+ready(function () {
+  setTimeout(function () {
+    console.warn('Test audio', bp)
+    var a1 = new BeatAudio(bp.model)
+    a1.calcTickTimes()
+  }, 500)
+})
