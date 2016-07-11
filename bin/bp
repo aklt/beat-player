@@ -1,0 +1,37 @@
+#!/usr/bin/env node
+
+var fs = require('fs')
+var AudioContext = require('web-audio-api').AudioContext
+var context = new AudioContext()
+var Speaker = require('speaker')
+
+context.outStream = new Speaker({
+  channels: context.format.numberOfChannels,
+  bitDepth: context.format.bitDepth,
+  sampleRate: context.sampleRate
+})
+
+function checkEvs (o, evs) {
+  for (var i = 0; i < evs.length; i += 1) {
+    var e = evs[i];
+    (function () {
+      o.addListener(e, function () {
+        console.warn('Got event', e)
+      })
+    }())
+  }
+}
+
+fs.readFile(process.argv[2], (err, data) => {
+  if (err) throw err
+  context.decodeAudioData(data, function (audioBuf) {
+    var source = context.createBufferSource()
+    checkEvs(source,
+      'statechange complete ended message loaded audioprocess nodecreate'
+      .split(/\s+/))
+    source.buffer = audioBuf
+    source.connect(context.destination)
+    console.warn('Started playing at', context.currentTime)
+    source.start(context.currentTime + 1)
+  })
+})
