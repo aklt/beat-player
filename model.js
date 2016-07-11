@@ -169,7 +169,7 @@ BeatModel.prototype = {
   readEffects: function () {
   },
   // Load a beat including samples
-  loadBeat: function (url, cb) {
+  loadBeatUrl: function (url, cb) {
     var self = this
     this.loadBeatText(url, function (err) {
       if (err) return cb(err)
@@ -365,7 +365,7 @@ var m = bp.model = new BeatModel()
 
 bp.test.beatModel = function () {
   var bm1 = new BeatModel()
-  bm1.loadBeat('data/beat0.beat', function (err, model) {
+  bm1.loadBeatUrl('data/beat0.beat', function (err, model) {
     if (err) throw err
     console.warn('Loaded', model)
     console.warn('instruments', model.instruments())

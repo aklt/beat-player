@@ -715,7 +715,7 @@ createView(BeatsView, {
   click: function (ev, el) {
     this.focus()
     if (el.value) {
-      this.model.loadBeat('data/' + el.value + '.beat', function (err, model) {
+      this.model.loadBeatUrl('data/' + el.value + '.beat', function (err, model) {
         if (err) throw err
         bp.live.playerView1.gotoPos(1)
       })
@@ -933,7 +933,7 @@ Samples.prototype = {
 
 bp.test.player = function () {
   var bm1 = new BeatModel()
-  bm1.loadBeat('data/beat1.beat', function (err, model) {
+  bm1.loadBeatUrl('data/beat1.beat', function (err, model) {
     if (err) throw err
     var pl1 = PlayerView.create({
       model: model

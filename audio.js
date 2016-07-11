@@ -1,5 +1,7 @@
 /*global bp, AudioContext, webkitAudioContext, BeatModel*/
 
+// TODO Define AudioContext
+
 // # BeatAudio
 //
 // Load and play patterns and instruments
@@ -9,7 +11,7 @@
 function BeatAudio (model) {
   this.model = model
   // TODO There is a max. limit on the number of AudioContexts
-  this.context = new (AudioContext || webkitAudioContext)()
+  this.context = new AudioContext()
   this.volume = this.context.createGain()
   this.volume.gain.value = 1
   this.volume.connect(this.context.destination)
@@ -43,10 +45,9 @@ function timeBuckets (notes, intervalTime) {
 }
 
 BeatAudio.prototype = {
-  // load and reset variables
-  load: function (url, cb) {
+  loadUrl: function (url, cb) {
     var self = this
-    this.model.load(url, function (err, model) {
+    this.model.loadBeatUrl(url, function (err, model) {
       if (err) return cb(err)
       self.calculateNoteBuckets()
       if (typeof cb === 'function') cb(null, self)
@@ -137,14 +138,3 @@ BeatAudio.prototype = {
 }
 
 bp.BeatAudio = BeatAudio
-
-bp.testBeatAudio = function () {
-  var beat1Model = bp.model || new BeatModel(beat1)
-  var beat1 = bp.beat1 = new BeatAudio(beat1Model)
-  beat1.model.bpm(110)
-  beat1.calculateNoteBuckets()
-  beat1.play()
-  setTimeout(function (o) {
-    beat1.stop()
-  }, 3000)
-}

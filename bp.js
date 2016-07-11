@@ -774,7 +774,7 @@
     readEffects: function () {
     },
     // Load a beat including samples
-    loadBeat: function (url, cb) {
+    loadBeatUrl: function (url, cb) {
       var self = this
       this.loadBeatText(url, function (err) {
         if (err) return cb(err)
@@ -970,13 +970,15 @@
   
   bp.test.beatModel = function () {
     var bm1 = new BeatModel()
-    bm1.loadBeat('data/beat0.beat', function (err, model) {
+    bm1.loadBeatUrl('data/beat0.beat', function (err, model) {
       if (err) throw err
       console.warn('Loaded', model)
       console.warn('instruments', model.instruments())
     })
   }
   /*global bp, AudioContext, webkitAudioContext, BeatModel*/
+  
+  // TODO Define AudioContext
   
   // # BeatAudio
   //
@@ -987,7 +989,7 @@
   function BeatAudio (model) {
     this.model = model
     // TODO There is a max. limit on the number of AudioContexts
-    this.context = new (AudioContext || webkitAudioContext)()
+    this.context = new AudioContext()
     this.volume = this.context.createGain()
     this.volume.gain.value = 1
     this.volume.connect(this.context.destination)
@@ -1021,10 +1023,9 @@
   }
   
   BeatAudio.prototype = {
-    // load and reset variables
-    load: function (url, cb) {
+    loadUrl: function (url, cb) {
       var self = this
-      this.model.load(url, function (err, model) {
+      this.model.loadBeatUrl(url, function (err, model) {
         if (err) return cb(err)
         self.calculateNoteBuckets()
         if (typeof cb === 'function') cb(null, self)
@@ -1115,17 +1116,6 @@
   }
   
   bp.BeatAudio = BeatAudio
-  
-  bp.testBeatAudio = function () {
-    var beat1Model = bp.model || new BeatModel(beat1)
-    var beat1 = bp.beat1 = new BeatAudio(beat1Model)
-    beat1.model.bpm(110)
-    beat1.calculateNoteBuckets()
-    beat1.play()
-    setTimeout(function (o) {
-      beat1.stop()
-    }, 3000)
-  }
   /*global bp __document requestAnimationFrame htmlEl insertBefore
     appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
     rect attr nextSibling prevSibling $id mixinHideShow BeatModel
@@ -1843,7 +1833,7 @@
     click: function (ev, el) {
       this.focus()
       if (el.value) {
-        this.model.loadBeat('data/' + el.value + '.beat', function (err, model) {
+        this.model.loadBeatUrl('data/' + el.value + '.beat', function (err, model) {
           if (err) throw err
           bp.live.playerView1.gotoPos(1)
         })
@@ -2061,7 +2051,7 @@
   
   bp.test.player = function () {
     var bm1 = new BeatModel()
-    bm1.loadBeat('data/beat1.beat', function (err, model) {
+    bm1.loadBeatUrl('data/beat1.beat', function (err, model) {
       if (err) throw err
       var pl1 = PlayerView.create({
         model: model
@@ -2144,7 +2134,7 @@
   	// live.playerView1.stop()
     })
   
-    m.loadBeat('data/beat1.beat', function (err, model) {
+    m.loadBeatUrl('data/beat1.beat', function (err, model) {
       if (err) throw err
       console.warn('Loaded beat1')
       live.playerView1.detach()
