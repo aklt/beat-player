@@ -1,0 +1,60 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    addressable (2.4.0)
+    bourbon (4.2.7)
+      sass (~> 3.4)
+      thor (~> 0.19)
+    breakpoint (2.7.0)
+      sass (~> 3.3)
+      sassy-maps (< 1.0.0)
+    chunky_png (1.3.6)
+    compass (1.0.3)
+      chunky_png (~> 1.2)
+      compass-core (~> 1.0.2)
+      compass-import-once (~> 1.0.5)
+      rb-fsevent (>= 0.9.3)
+      rb-inotify (>= 0.9)
+      sass (>= 3.3.13, < 3.5)
+    compass-colors (0.9.0)
+      compass (>= 0.8.7)
+    compass-core (1.0.3)
+      multi_json (~> 1.0)
+      sass (>= 3.3.0, < 3.5)
+    compass-import-once (1.0.5)
+      sass (>= 3.2, < 3.5)
+    css_parser (1.4.5)
+      addressable
+    ffi (1.9.10)
+    multi_json (1.12.1)
+    neat (1.8.0)
+      sass (>= 3.3)
+      thor (~> 0.19)
+    rb-fsevent (0.9.7)
+    rb-inotify (0.9.7)
+      ffi (>= 0.5.0)
+    refills (0.1.0)
+    sass (3.4.22)
+    sassy-maps (0.4.0)
+      sass (~> 3.3)
+    singularitygs (1.7.0)
+      breakpoint (~> 2.4)
+      sass (~> 3.3)
+    thor (0.19.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bourbon (~> 4)
+  breakpoint (~> 2.7)
+  compass (~> 1.0)
+  compass-colors (~> 0.3)
+  css_parser (~> 1.4)
+  neat (~> 1.7)
+  refills
+  sass (~> 3.3)
+  singularitygs (~> 1.4)
+
+BUNDLED WITH
+   1.12.5
