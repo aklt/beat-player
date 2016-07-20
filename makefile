@@ -3,16 +3,16 @@ JS=lib.js model.js audio.js view.js ready.js test.js
 compassCompile=bundle exec compass compile --no-debug-info
 compassStats=bundle exec compass stats
 
-.PHONY: install clean dev tags distclean min
+.PHONY: install clean dev tags distclean
 
-all: style.css screen.css print.css bp.js
-
+all: style.css screen.css bp.js
 
 screen.css: sass/screen.sass
 	$(compassCompile)
+	$(compassStats)
 
-print.css: sass/print.sass
-	$(compassCompile)
+#print.css: sass/print.sass
+#	$(compassCompile)
 
 ie.css: sass/ie.sass
 	$(compassCompile)
@@ -21,16 +21,7 @@ style.css: style.less
 	lessc $< > $@
 
 bp.js: bp.sh $(JS)
-	./bp.sh > $@
-
-
-min: bp-uglify.js bp-closure.js
-
-bp-uglify.js: bp.js
-	uglifyjs bp.js -c -m > $@
-
-bp-closure.js: bp.js
-	closure-compiler-min $< > $@
+	./bp.sh $(JS) > $@
 
 install:
 	bundler install --path .install
@@ -40,7 +31,6 @@ install:
 tags:
 	tagdir
 	ls -l bp*.js
-	$(compassStats)
 
 dev:
 	freshen

@@ -295,11 +295,6 @@ html, body {
   height: 48px;
 }
 
-/* line 158, sass/screen.sass */
-.footer-content {
-  background-color: green;
-}
-
 /* line 171, sass/screen.sass */
 .focus {
   background-color: #DDD;
