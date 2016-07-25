@@ -1,7 +1,7 @@
 # global
 name: The second beat
 version: 0.0.1
-bpm: 123
+bpm: 50
 --
 # beat
 Bass Drum: b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b..
@@ -30,6 +30,6 @@ HiHat:
 pan: -10
 
 # var b1 = new BeatModel()
-# 
+#
 # b1.readBeatText(beat1)
 # console.warn(JSON.stringify(b1, 0, 2))

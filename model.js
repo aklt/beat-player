@@ -35,6 +35,7 @@ var subscriptionEvents = {
   ChangeTpb: 1,
   ChangeBeats: 1,
   ChangeNote: 1,
+  GotoPos: 1,
   SelectInstrument: 1,
   SelectInstrumentRange: 1,
   LoadedSamples: 1,

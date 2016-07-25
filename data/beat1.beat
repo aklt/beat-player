@@ -1,6 +1,6 @@
 name: The 1st beat
 version: 0.0.1
-bpm: 108
+bpm: 20
 --
 Bass Drum: ... .bb ... .bb ... .bb ... ...
 Snare:     s.. s.. s.. s.. s.. s.. s.. s..
@@ -16,6 +16,6 @@ HiHat:
   url: data/hat.wav
 
 # var b1 = new BeatModel()
-# 
+#
 # b1.readBeatText(beat1)
 # console.warn(JSON.stringify(b1, 0, 2))

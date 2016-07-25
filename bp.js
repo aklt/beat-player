@@ -641,6 +641,7 @@
     ChangeTpb: 1,
     ChangeBeats: 1,
     ChangeNote: 1,
+    GotoPos: 1,
     SelectInstrument: 1,
     SelectInstrumentRange: 1,
     LoadedSamples: 1,
@@ -1034,12 +1035,12 @@
       this.patternLength = length
       this.orderedNotes = ordered
       this.secondsPerTick = secondsPerTick
-      console.warn('XX', ordered, secondsPerTick)
     },
     play: function () {
       if (!this.timeout) {
         this.calcTickTimes()
-        this.nextTick = this.context.currentTime + this.secondsPerTick / 2
+        // TODO Trigger timeout just before event
+        this.nextTick = this.context.currentTime + Math.max(this.secondsPerTick / 10, 0.05)
         this._play()
       }
     },
@@ -1049,17 +1050,18 @@
       // TODO scale this according to drift
       // TODO live recording, changing bpm
       var timeoutTime = this.secondsPerTick * 1000
+      var self = this
   
+      this.model.dispatch('GotoPos', this.position)
       for (var i = 0; i < playThese.length; i += 1) {
         this.playSample(playThese[i].inst, this.context.currentTime + delta)
       }
-      this.position += 1
-      this.nextTick += this.secondsPerTick
-      if (this.position === this.patternLength) {
-        this.position = 0
-      }
-      var self = this
       this.timeout = setTimeout(function () {
+        self.position += 1
+        self.nextTick += self.secondsPerTick
+        if (self.position === self.patternLength) {
+          self.position = 0
+        }
         self._play()
       }, timeoutTime)
     },
@@ -1067,6 +1069,7 @@
     stop: function () {
       clearTimeout(this.timeout)
       this.timeout = null
+      this.model.dispatch('GotoPos', this.position)
     },
     // Play a sample in `when` seconds
     playSample: function (i, when) {
@@ -2104,6 +2107,10 @@
       live.controlsView1.stop()
       live.beatAudio1.stop()
   	// live.playerView1.stop()
+    })
+  
+    m.subscribe('GotoPos', function (pos) {
+      live.playerView1.gotoPos(pos + 1)
     })
   
     m.loadBeatUrl('data/beat1.beat', function (err, model) {

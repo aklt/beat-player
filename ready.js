@@ -72,6 +72,10 @@ ready(function () {
 	// live.playerView1.stop()
   })
 
+  m.subscribe('GotoPos', function (pos) {
+    live.playerView1.gotoPos(pos + 1)
+  })
+
   m.loadBeatUrl('data/beat1.beat', function (err, model) {
     if (err) throw err
     console.warn('Loaded beat1')
