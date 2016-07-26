@@ -307,6 +307,11 @@ BeatModel.prototype = {
   version: function (ver) {
     if (ver) this.model.version = ver
     return this.model.version
+  },
+  playing: function (val) {
+    if (typeof val !== 'boolean') return this.model.playing
+    else this.model.playing = val
+    return this.model.playing
   }
 }
 

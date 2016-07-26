@@ -59,18 +59,19 @@ ready(function () {
 
   m.subscribe('NewText', function () {
     live.playerView1.update()
-	live.settingsView1.update()
+    live.settingsView1.update()
   })
 
   m.subscribe('play', function () {
     live.controlsView1.play()
     live.beatAudio1.play()
-	// live.playerView1.start()
+    m.playing(true)
   })
 
   m.subscribe('stop', function () {
     live.controlsView1.stop()
     live.beatAudio1.stop()
+    m.playing(false)
 	// live.playerView1.stop()
   })
 

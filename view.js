@@ -64,20 +64,16 @@ var IH_INIT = 1
 var IH_END = 4
 var ih_state = IH_INIT
 
-// hack
-var isPlay = false
 mixinHandlers(InputHandler, {
   keydown: function (ev, el) {
     var k = translateKey(ev)
     console.warn('key', k)
     // hack
     if (k === 'space') {
-      if (!isPlay) {
+      if (!bp.model.playing()) {
         bp.model.dispatch('play')
-        isPlay = true
       } else {
         bp.model.dispatch('stop')
-        isPlay = false
       }
     }
     var code = ev.which
@@ -628,23 +624,21 @@ ControlsView.prototype = {
   play: function () {
     classAdd(this.btnPlay, 'hidden')
     classRemove(this.btnStop, 'hidden')
-    this.playing = true
+    bp.model.playing(true)
   },
   stop: function () {
     classAdd(this.btnStop, 'hidden')
     classRemove(this.btnPlay, 'hidden')
-    this.playing = false
+    bp.model.playing(false)
   }
 }
 
 mixinDom(ControlsView)
 mixinHandlers(ControlsView, {
   click: function () {
-    if (this.playing) {
-      this.stop()
+    if (bp.model.playing()) {
       bp.model.dispatch('stop')
     } else {
-      this.play()
       bp.model.dispatch('play')
     }
   }
