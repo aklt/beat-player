@@ -1180,11 +1180,8 @@
       console.warn('key', k)
       // hack
       if (k === 'space') {
-        if (!bp.model.playing()) {
-          bp.model.dispatch('play')
-        } else {
-          bp.model.dispatch('stop')
-        }
+        if (!bp.model.playing()) bp.model.dispatch('play')
+        else bp.model.dispatch('stop')
       }
       var code = ev.which
       var obj
@@ -1733,12 +1730,10 @@
     play: function () {
       classAdd(this.btnPlay, 'hidden')
       classRemove(this.btnStop, 'hidden')
-      bp.model.playing(true)
     },
     stop: function () {
       classAdd(this.btnStop, 'hidden')
       classRemove(this.btnPlay, 'hidden')
-      bp.model.playing(false)
     }
   }
   
