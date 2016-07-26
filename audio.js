@@ -16,7 +16,6 @@ function BeatAudio (model) {
   this.volume.gain.value = 1
   this.volume.connect(this.context.destination)
   this.playing = []
-  this.position = 0
   this.lookaheadTime = 0.4
 }
 
@@ -65,23 +64,25 @@ BeatAudio.prototype = {
     }
   },
   _play: function () {
-    var playThese = this.orderedNotes[this.position] || []
+    var pos = this.model.position()
+    var playThese = this.orderedNotes[pos] || []
     var delta = this.nextTick - this.context.currentTime
     // TODO scale this according to drift
     // TODO live recording, changing bpm
     var timeoutTime = this.secondsPerTick * 1000
     var self = this
 
-    this.model.dispatch('GotoPos', this.position)
+    this.model.dispatch('GotoPos', pos)
     for (var i = 0; i < playThese.length; i += 1) {
       this.playSample(playThese[i].inst, this.context.currentTime + delta)
     }
     this.timeout = setTimeout(function () {
-      self.position += 1
+      pos = self.model.position() + 1
       self.nextTick += self.secondsPerTick
-      if (self.position === self.patternLength) {
-        self.position = 0
+      if (pos === self.patternLength) {
+        pos = 0
       }
+      self.model.position(pos)
       self._play()
     }, timeoutTime)
   },
@@ -89,7 +90,6 @@ BeatAudio.prototype = {
   stop: function () {
     clearTimeout(this.timeout)
     this.timeout = null
-    this.model.dispatch('GotoPos', this.position)
   },
   // Play a sample in `when` seconds
   playSample: function (i, when) {

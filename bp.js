@@ -793,6 +793,7 @@
         if (err) return cb(err)
         self.loadBeatSamples(function (err, model) {
           if (err) return cb(err)
+          self.position(0)
           cb(null, model)
         })
       })
@@ -848,8 +849,8 @@
     },
     // ## Modifying the model with getters and setters
     position: function (pos) {
-      if (!pos) return this.model.position
-      this.model.position = pos
+      if (typeof pos === 'number') this.model.position = pos
+      return this.model.position
     },
     instrument: function (number) {
       number = number || this.model.selectedInstrument
@@ -1012,7 +1013,6 @@
     this.volume.gain.value = 1
     this.volume.connect(this.context.destination)
     this.playing = []
-    this.position = 0
     this.lookaheadTime = 0.4
   }
   
@@ -1061,23 +1061,25 @@
       }
     },
     _play: function () {
-      var playThese = this.orderedNotes[this.position] || []
+      var pos = this.model.position()
+      var playThese = this.orderedNotes[pos] || []
       var delta = this.nextTick - this.context.currentTime
       // TODO scale this according to drift
       // TODO live recording, changing bpm
       var timeoutTime = this.secondsPerTick * 1000
       var self = this
   
-      this.model.dispatch('GotoPos', this.position)
+      this.model.dispatch('GotoPos', pos)
       for (var i = 0; i < playThese.length; i += 1) {
         this.playSample(playThese[i].inst, this.context.currentTime + delta)
       }
       this.timeout = setTimeout(function () {
-        self.position += 1
+        pos = self.model.position() + 1
         self.nextTick += self.secondsPerTick
-        if (self.position === self.patternLength) {
-          self.position = 0
+        if (pos === self.patternLength) {
+          pos = 0
         }
+        self.model.position(pos)
         self._play()
       }, timeoutTime)
     },
@@ -1085,7 +1087,6 @@
     stop: function () {
       clearTimeout(this.timeout)
       this.timeout = null
-      this.model.dispatch('GotoPos', this.position)
     },
     // Play a sample in `when` seconds
     playSample: function (i, when) {
@@ -1559,7 +1560,6 @@
     gotoPos: function (pos) {
       this.scoreColumns.selectedIndex = -1
       this.scoreColumns.step(pos)
-      this.model.position(pos)
     },
     start: function (from) {
       var self = this
@@ -1636,7 +1636,7 @@
           break
         case 'I': // Click top row to go to position
           console.warn('I', alphanumToDec(el.innerText))
-          this.gotoPos(alphanumToDec(el.innerText))
+          this.model.dispatch('GotoPos', alphanumToDec(el.innerText) - 1)
           ev.preventDefault()
           ev.stopPropagation()
           break
@@ -2161,6 +2161,7 @@
   
     m.subscribe('GotoPos', function (pos) {
       live.playerView1.gotoPos(pos + 1)
+      m.position(pos)
     })
   
     m.loadBeatUrl('data/beat1.beat', function (err, model) {

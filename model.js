@@ -176,6 +176,7 @@ BeatModel.prototype = {
       if (err) return cb(err)
       self.loadBeatSamples(function (err, model) {
         if (err) return cb(err)
+        self.position(0)
         cb(null, model)
       })
     })
@@ -231,8 +232,8 @@ BeatModel.prototype = {
   },
   // ## Modifying the model with getters and setters
   position: function (pos) {
-    if (!pos) return this.model.position
-    this.model.position = pos
+    if (typeof pos === 'number') this.model.position = pos
+    return this.model.position
   },
   instrument: function (number) {
     number = number || this.model.selectedInstrument

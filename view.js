@@ -450,7 +450,6 @@ createView(PlayerView, {
   gotoPos: function (pos) {
     this.scoreColumns.selectedIndex = -1
     this.scoreColumns.step(pos)
-    this.model.position(pos)
   },
   start: function (from) {
     var self = this
@@ -527,7 +526,7 @@ createView(PlayerView, {
         break
       case 'I': // Click top row to go to position
         console.warn('I', alphanumToDec(el.innerText))
-        this.gotoPos(alphanumToDec(el.innerText))
+        this.model.dispatch('GotoPos', alphanumToDec(el.innerText) - 1)
         ev.preventDefault()
         ev.stopPropagation()
         break

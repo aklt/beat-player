@@ -77,6 +77,7 @@ ready(function () {
 
   m.subscribe('GotoPos', function (pos) {
     live.playerView1.gotoPos(pos + 1)
+    m.position(pos)
   })
 
   m.loadBeatUrl('data/beat1.beat', function (err, model) {
