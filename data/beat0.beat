@@ -2,17 +2,17 @@ name: The 0th beat
 version: 0.0.1
 bpm: 88
 --
-Bass Drum: b... b... b... b... 
-Snare:     ..s. ..s. ..s. ..s. 
-Hat:       hhhh hhhh hhhh hhhh 
+Bass Drum: b... b... b... b...
+Snare:     ..s. ..s. ..s. ..s.
+Hat:       hhhh hhhh hhhh hhhh
 --
 Bass Drum:
-  url: data/bd.wav
+  url: data/bd.mp3
 
 Snare:
-  url: data/sd.wav
+  url: data/sd.mp3
   vol: 0.3
 
 Hat:
-  url: data/hat.wav
+  url: data/hat.mp3
   vol: 0.2

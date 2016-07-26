@@ -7,13 +7,13 @@ Snare:     s.. s.. s.. s.. s.. s.. s.. s..
 HiHat:     ..x ..x ..x ..x ..x ..x ..x ..x
 --
 Bass Drum:
-  url: data/bd.wav
+  url: data/bd.mp3
 
 Snare:
-  url: data/sd.wav
+  url: data/sd.mp3
 
 HiHat:
-  url: data/hat.wav
+  url: data/hat.mp3
 
 # var b1 = new BeatModel()
 #
