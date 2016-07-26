@@ -225,20 +225,22 @@
     return el
   }
   
-  // ## browser.rect(node)
-  //
-  // Get position rect of an element or text node
-  function rect (node) {
-    if (node.nodeType === 3 && __document.createRange) {
-      var range = __document.createRange()
-      range.selectNodeContents(node)
-      if (range.getBoundingClientRect) {
-        return range.getBoundingClientRect()
-      }
-    } else if (node.getBoundingClientRect) {
-      return node.getBoundingClientRect()
+  function elPosAndWidth (el) {
+    if (!el.offsetParent) throw new Error('Need offsetParent')
+    var curleft = el.offsetLeft
+    var curtop = el.offsetTop
+    var width = el.offsetWidth
+    while ((el = el.offsetParent)) {
+      curleft += el.offsetLeft
+      curtop += el.offsetTop
+    }
+    return {
+      left: curleft,
+      top: curtop,
+      width: width
     }
   }
+  
   
   var _readyFuncs = []
   var _loaded
@@ -1007,6 +1009,7 @@
         if (typeof cb === 'function') cb(null, self)
       })
     },
+    // TODO Move this to model for live record to function
     calcTickTimes: function () {
       var patterns = this.model.patterns()
       var bpm = this.model.bpm()
@@ -1093,8 +1096,8 @@
   bp.BeatAudio = BeatAudio
   /*global bp __document requestAnimationFrame htmlEl insertBefore
     appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
-    rect attr nextSibling prevSibling $id mixinHideShow BeatModel
-    eachPush $t $ts extend createView
+    elPosAndWidth attr nextSibling prevSibling $id mixinHideShow eachPush $t $ts
+    extend createView
   */
   
   // TODO Grid https://www.reddit.com/r/Frontend/comments/4lkww8/grid_system_research/
@@ -1591,7 +1594,7 @@
           // var dom2 = ab.dom('<div class="instruments">${instruments}</div>')
           // falls through
         case 'B':
-          r1 = rect(el)
+          r1 = elPosAndWidth(el)
           var value = el.innerText
           var pos = attr(el, 'data-pos')
           if (!pos) return
@@ -1622,12 +1625,12 @@
           ev.stopPropagation()
           break
         case 'ABBR':
-          r1 = rect(qs('dd', el))
+          r1 = elPosAndWidth(qs('dd', el))
           // falls through
         case 'DT':
           // falls through
         case 'DD':
-          r1 = rect(el)
+          r1 = elPosAndWidth(el)
           // if (bp.lastPopUp) bp.lastPopUp.hide()
           bp.sliderInput1.popup({
             top: r1.top,
@@ -1814,7 +1817,7 @@
         ddEl = el
       }
       if (dtEl && ddEl) {
-        var r1 = rect(ddEl)
+        var r1 = elPosAndWidth(ddEl)
         bp.live.textInput1.popup({
           top: r1.top,
           left: r1.left,

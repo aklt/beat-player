@@ -25,6 +25,7 @@ BeatAudio.prototype = {
       if (typeof cb === 'function') cb(null, self)
     })
   },
+  // TODO Move this to model for live record to function
   calcTickTimes: function () {
     var patterns = this.model.patterns()
     var bpm = this.model.bpm()

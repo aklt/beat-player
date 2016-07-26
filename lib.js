@@ -223,20 +223,22 @@ function css (el, props) {
   return el
 }
 
-// ## browser.rect(node)
-//
-// Get position rect of an element or text node
-function rect (node) {
-  if (node.nodeType === 3 && __document.createRange) {
-    var range = __document.createRange()
-    range.selectNodeContents(node)
-    if (range.getBoundingClientRect) {
-      return range.getBoundingClientRect()
-    }
-  } else if (node.getBoundingClientRect) {
-    return node.getBoundingClientRect()
+function elPosAndWidth (el) {
+  if (!el.offsetParent) throw new Error('Need offsetParent')
+  var curleft = el.offsetLeft
+  var curtop = el.offsetTop
+  var width = el.offsetWidth
+  while ((el = el.offsetParent)) {
+    curleft += el.offsetLeft
+    curtop += el.offsetTop
+  }
+  return {
+    left: curleft,
+    top: curtop,
+    width: width
   }
 }
+
 
 var _readyFuncs = []
 var _loaded

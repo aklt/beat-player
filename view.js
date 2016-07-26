@@ -1,7 +1,7 @@
 /*global bp __document requestAnimationFrame htmlEl insertBefore
   appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
-  rect attr nextSibling prevSibling $id mixinHideShow BeatModel
-  eachPush $t $ts extend createView
+  elPosAndWidth attr nextSibling prevSibling $id mixinHideShow eachPush $t $ts
+  extend createView
 */
 
 // TODO Grid https://www.reddit.com/r/Frontend/comments/4lkww8/grid_system_research/
@@ -498,7 +498,7 @@ createView(PlayerView, {
         // var dom2 = ab.dom('<div class="instruments">${instruments}</div>')
         // falls through
       case 'B':
-        r1 = rect(el)
+        r1 = elPosAndWidth(el)
         var value = el.innerText
         var pos = attr(el, 'data-pos')
         if (!pos) return
@@ -529,12 +529,12 @@ createView(PlayerView, {
         ev.stopPropagation()
         break
       case 'ABBR':
-        r1 = rect(qs('dd', el))
+        r1 = elPosAndWidth(qs('dd', el))
         // falls through
       case 'DT':
         // falls through
       case 'DD':
-        r1 = rect(el)
+        r1 = elPosAndWidth(el)
         // if (bp.lastPopUp) bp.lastPopUp.hide()
         bp.sliderInput1.popup({
           top: r1.top,
@@ -721,7 +721,7 @@ createView(InstrumentsView, {
       ddEl = el
     }
     if (dtEl && ddEl) {
-      var r1 = rect(ddEl)
+      var r1 = elPosAndWidth(ddEl)
       bp.live.textInput1.popup({
         top: r1.top,
         left: r1.left,
