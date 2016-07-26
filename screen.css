@@ -108,7 +108,7 @@ html {
 }
 
 /* line 25, sass/screen.sass */
-.hidden, .input-slider {
+.hidden {
   display: none;
 }
 
