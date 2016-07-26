@@ -10,11 +10,16 @@
     "type": "git",
     "url": "git://github.com/aklt/beat-player.git"
   },
+  "scripts": {
+    "build-test": "coffee --compile",
+    "build-tests": "coffee --compile test/*.coffee"
+  },
   "dependencies": {
     "speaker": "^0.3.0",
     "web-audio-api": "^0.2.2"
   },
   "devDependencies": {
+    "coffee-script": "^1.10.0",
     "mocha": "^2.5.3",
     "unexpected": "^10.15.0"
   }
