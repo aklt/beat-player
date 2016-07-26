@@ -19,7 +19,9 @@ ready(function () {
   Object.keys(live).forEach(function (name) {
     console.warn('live', name)
     var l1 = live[name]
-    l1.renderModel(defaultOptions[name])
+    if (type(l1.renderModel) === 'function') {
+      l1.renderModel(defaultOptions[name])
+    }
     l1.attach()
   })
 

@@ -73,7 +73,7 @@
       return this.elems[this.index]
     },
     get: function () {
-  	return this.elems[this.index]
+    return this.elems[this.index]
     }
   }
   
@@ -307,6 +307,7 @@
   
   function appendChild (root, child) {
     root.appendChild(child)
+    return root
   }
   
   function insertBefore(parent, newElement, beforeThis) {
@@ -351,6 +352,16 @@
       if (attrs.text) {
         append(el, textEl(attrs.text))
       }
+      attr(el, attrs)
+    }
+    return el
+  }
+  
+  const xmlns = 'http://www.w3.org/2000/svg'
+  function svgEl (name, attrs) {
+    var el = __document.createElementNS(xmlns, name)
+    if (attrs) {
+      if (attrs.text) append(el, textEl(attrs.text))
       attr(el, attrs)
     }
     return el
@@ -470,8 +481,9 @@
       parent = (typeof parent === 'string') ? qs(parent) : parent
       if (!parent) throw new Error('No such parent el: ' + parent)
       if (this.domCount === 0) this.render()
-      if (!this.dom) throw new Error('Need to render before')
-      parent.appendChild(this.dom)
+  	if (this.dom) {
+  	  parent.appendChild(this.dom)
+  	}
       this.parentEl = parent
       if (typeof this.eventsAttach === 'function') this.eventsAttach()
       if (typeof this.afterAttach === 'function') this.afterAttach()
@@ -592,8 +604,7 @@
     mixinFocus(obj, 'parentEl')
     AClass.instanceCount += 1
     var name = lcFirst(AClass.name) + AClass.instanceCount
-    mixinViewModel(obj, name)
-    console.warn('createView', name, AClass, obj)
+    // console.warn('createView', name, AClass, obj)
     bp.live[name] = obj
   }
   
@@ -1710,78 +1721,115 @@
   
   // 1}}} PlayerView
   
-  // {{{1 ControlsView
+  // {{{1 Svg Controls
   function ControlsView (o) {
-    this.isPlaying = false
-    this.isPaused = false
+    this.parentEl = $id('controls')
+    this.btnPlay = qs('#btn-play', this.parentEl)
+    this.btnStop = qs('#btn-stop', this.parentEl)
   }
   
-  const btnPlay = '►'
-  const btnStop = '■'
-  const controlChars = [
-    '⏮', btnPlay, $t('span', {'class': 'pause'}, '▍▍'), '⏭' ]
-  
-  createView(ControlsView, {
-    tpl: function (o) {
-      return eachPush(controlChars, function (i, ch) {
-        return $t('span', {id: 'ctrl-' + i}, ch)
-      }).join('')
-    },
-    renderModel: function (o) {
-      // TODO Render model
-      this.render(o || {})
-    },
-    afterAttach: function () {
-      var el = this.parentEl
-      this.btnBack = qs('#ctrl-0', el)
-      this.btnPlay = qs('#ctrl-1', el)
-      this.btnPause = qs('#ctrl-2', el)
-      this.btnForward = qs('#ctrl-3', el)
+  ControlsView.prototype = {
+    play: function () {
+      classAdd(this.btnPlay, 'hidden')
+      classRemove(this.btnStop, 'hidden')
+      this.playing = true
     },
     stop: function () {
-      if (this.isPlaying) {
-        html(this.btnPlay, btnPlay)
-        this.isPlaying = false
-        this.emit('stop')
-      }
-    },
-    play: function () {
-      if (!this.isPlaying) {
-        html(this.btnPlay, btnStop)
-        this.isPlaying = true
-        this.emit('play')
+      classAdd(this.btnStop, 'hidden')
+      classRemove(this.btnPlay, 'hidden')
+      this.playing = false
+    }
+  }
+  
+  mixinDom(ControlsView)
+  mixinHandlers(ControlsView, {
+    click: function () {
+      if (this.playing) {
+        this.stop()
+        bp.model.dispatch('stop')
+      } else {
+        this.play()
+        bp.model.dispatch('play')
       }
     }
-  }, {
-    click: function (ev, el) {
-      var btn = attr(el, 'id')
-      switch (btn) {
-        case 'ctrl-0':
-          this.emit('back')
-          break
-        case 'ctrl-1':
-          if (this.isPlaying) {
-            this.stop()
-          } else {
-            this.play()
-          }
-          break
-        case 'ctrl-2':
-          if (this.isPlaying) {
-            this.isPaused = true
-            this.emit('pause')
-          }
-          break
-        case 'ctrl-3':
-          this.emit('forward')
-          break
-        default:
-          console.warn('Badness?')
-      }
-    }
-  }, {
-    id: 'controls'
   })
+  
+  bp.live.controlsView1 = new ControlsView()
+  
+  // 1}}} Svg
+  
+  // {{{1 ControlsView
+  // function ControlsView1 (o) {
+  //   this.isPlaying = false
+  //   this.isPaused = false
+  // }
+  //
+  // const btnPlay = '►'
+  // const btnStop = '■'
+  // const controlChars = [
+  //   '⏮', btnPlay, $t('span', {'class': 'pause'}, '▍▍'), '⏭' ]
+  //
+  // createView(ControlsView1, {
+  //   tpl: function (o) {
+  //     return eachPush(controlChars, function (i, ch) {
+  //       return $t('span', {id: 'ctrl-' + i}, ch)
+  //     }).join('')
+  //   },
+  //   renderModel: function (o) {
+  //     // TODO Render model
+  //     this.render(o || {})
+  //   },
+  //   afterAttach: function () {
+  //     var el = this.parentEl
+  //     this.btnBack = qs('#ctrl-0', el)
+  //     this.btnPlay = qs('#ctrl-1', el)
+  //     this.btnPause = qs('#ctrl-2', el)
+  //     this.btnForward = qs('#ctrl-3', el)
+  //   },
+  //   stop: function () {
+  //     if (this.isPlaying) {
+  //       html(this.btnPlay, btnPlay)
+  //       this.isPlaying = false
+  //       this.emit('stop')
+  //     }
+  //   },
+  //   play: function () {
+  //     if (!this.isPlaying) {
+  //       html(this.btnPlay, btnStop)
+  //       this.isPlaying = true
+  //       this.emit('play')
+  //     }
+  //   }
+  // }, {
+  //   click: function (ev, el) {
+  //     var btn = attr(el, 'id')
+  //     switch (btn) {
+  //       case 'ctrl-0':
+  //         this.emit('back')
+  //         break
+  //       case 'ctrl-1':
+  //         if (this.isPlaying) {
+  //           this.stop()
+  //         } else {
+  //           this.play()
+  //         }
+  //         break
+  //       case 'ctrl-2':
+  //         if (this.isPlaying) {
+  //           this.isPaused = true
+  //           this.emit('pause')
+  //         }
+  //         break
+  //       case 'ctrl-3':
+  //         this.emit('forward')
+  //         break
+  //       default:
+  //         console.warn('Badness?')
+  //     }
+  //   }
+  // }, {
+  //   id: 'controls'
+  // })
   
   // 1}}} ControlsView
   
@@ -2056,7 +2104,9 @@
     Object.keys(live).forEach(function (name) {
       console.warn('live', name)
       var l1 = live[name]
-      l1.renderModel(defaultOptions[name])
+      if (type(l1.renderModel) === 'function') {
+        l1.renderModel(defaultOptions[name])
+      }
       l1.attach()
     })
   

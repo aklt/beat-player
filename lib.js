@@ -71,7 +71,7 @@ StepIterElems.prototype = {
     return this.elems[this.index]
   },
   get: function () {
-	return this.elems[this.index]
+  return this.elems[this.index]
   }
 }
 
@@ -305,6 +305,7 @@ function removeChild (root, child) {
 
 function appendChild (root, child) {
   root.appendChild(child)
+  return root
 }
 
 function insertBefore(parent, newElement, beforeThis) {
@@ -349,6 +350,16 @@ function htmlEl (name, attrs) {
     if (attrs.text) {
       append(el, textEl(attrs.text))
     }
+    attr(el, attrs)
+  }
+  return el
+}
+
+const xmlns = 'http://www.w3.org/2000/svg'
+function svgEl (name, attrs) {
+  var el = __document.createElementNS(xmlns, name)
+  if (attrs) {
+    if (attrs.text) append(el, textEl(attrs.text))
     attr(el, attrs)
   }
   return el
@@ -468,8 +479,9 @@ function mixinDom (AClass) {
     parent = (typeof parent === 'string') ? qs(parent) : parent
     if (!parent) throw new Error('No such parent el: ' + parent)
     if (this.domCount === 0) this.render()
-    if (!this.dom) throw new Error('Need to render before')
-    parent.appendChild(this.dom)
+	if (this.dom) {
+	  parent.appendChild(this.dom)
+	}
     this.parentEl = parent
     if (typeof this.eventsAttach === 'function') this.eventsAttach()
     if (typeof this.afterAttach === 'function') this.afterAttach()
@@ -590,8 +602,7 @@ function createView (AClass, proto, handlers, args) {
   mixinFocus(obj, 'parentEl')
   AClass.instanceCount += 1
   var name = lcFirst(AClass.name) + AClass.instanceCount
-  mixinViewModel(obj, name)
-  console.warn('createView', name, AClass, obj)
+  // console.warn('createView', name, AClass, obj)
   bp.live[name] = obj
 }
 
