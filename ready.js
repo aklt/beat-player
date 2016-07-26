@@ -1,4 +1,4 @@
-/*global ready bp TextInput SliderInput InputHandler stepIter m*/
+/*global ready bp TextInput SliderInput InputHandler stepIter BeatAudio */
 
 // TODO use model for defaults
 var defaultOptions = {
@@ -19,7 +19,7 @@ ready(function () {
   Object.keys(live).forEach(function (name) {
     console.warn('live', name)
     var l1 = live[name]
-    if (type(l1.renderModel) === 'function') {
+    if (typeof l1.renderModel === 'function') {
       l1.renderModel(defaultOptions[name])
     }
     l1.attach()
@@ -49,6 +49,7 @@ ready(function () {
   live.stepFocus.get().focus()
 
   // subscriptions
+  var m = bp.model
   m.subscribe('SelectInstrument', function () {
     live.instrumentsView1.selectInstrumentNumber()
   })

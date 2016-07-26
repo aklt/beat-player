@@ -1,4 +1,4 @@
-/*global __window extend xhr AudioContext webkitAudioContext mixinGetSet */
+/*global __window extend xhr AudioContext webkitAudioContext mixinGetSet type*/
 // # BeatModel
 //
 // Represents the model of the current beat.
@@ -371,13 +371,5 @@ mixinGetSet(BeatModel, 'bpm', 100)
 mixinGetSet(BeatModel, 'tpb', 4)
 mixinGetSet(BeatModel, 'beats', 4)
 
-var m = bp.model = new BeatModel()
-
-bp.test.beatModel = function () {
-  var bm1 = new BeatModel()
-  bm1.loadBeatUrl('data/beat0.beat', function (err, model) {
-    if (err) throw err
-    console.warn('Loaded', model)
-    console.warn('instruments', model.instruments())
-  })
-}
+// TODO create bp.model elsewhere
+bp.model = new BeatModel()

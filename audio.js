@@ -1,7 +1,5 @@
 /*global bp, AudioContext */
 
-// TODO Define AudioContext
-
 // # BeatAudio
 //
 // Load and play patterns and instruments

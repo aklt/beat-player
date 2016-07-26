@@ -1,4 +1,4 @@
-/*global bp XMLHttpRequest*/
+/*global bp XMLHttpRequest Node*/
 var __slice = [].slice
 var __hasProp = {}.hasOwnProperty
 var __proto = 'prototype'
@@ -71,7 +71,7 @@ StepIterElems.prototype = {
     return this.elems[this.index]
   },
   get: function () {
-  return this.elems[this.index]
+    return this.elems[this.index]
   }
 }
 
@@ -355,16 +355,6 @@ function htmlEl (name, attrs) {
   return el
 }
 
-const xmlns = 'http://www.w3.org/2000/svg'
-function svgEl (name, attrs) {
-  var el = __document.createElementNS(xmlns, name)
-  if (attrs) {
-    if (attrs.text) append(el, textEl(attrs.text))
-    attr(el, attrs)
-  }
-  return el
-}
-
 // Adapted from http://www.quirksmode.org/js/events_properties.html
 function eventTarget (e) {
   e = e || __window.event
@@ -479,9 +469,9 @@ function mixinDom (AClass) {
     parent = (typeof parent === 'string') ? qs(parent) : parent
     if (!parent) throw new Error('No such parent el: ' + parent)
     if (this.domCount === 0) this.render()
-	if (this.dom) {
-	  parent.appendChild(this.dom)
-	}
+    if (this.dom) {
+      parent.appendChild(this.dom)
+    }
     this.parentEl = parent
     if (typeof this.eventsAttach === 'function') this.eventsAttach()
     if (typeof this.afterAttach === 'function') this.afterAttach()
