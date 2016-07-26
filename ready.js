@@ -72,7 +72,6 @@ ready(function () {
     live.controlsView1.stop()
     live.beatAudio1.stop()
     m.playing(false)
-	// live.playerView1.stop()
   })
 
   m.subscribe('GotoPos', function (pos) {

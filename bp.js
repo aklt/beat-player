@@ -885,8 +885,11 @@
     },
     note: function (pos, value) {
       if (typeof pos === 'string') pos = parseNotePos(pos)
-      if (!value) return this.tracks[pos[0]][pos[1]]
-      this.tracks[pos[0]][pos[1]] = value
+      var ps = this.model.patterns
+      if (type(value) === 'undefined') return ps[pos[1]][pos[0]]
+      if (!value || value === '.') delete ps[pos[1]][pos[0]]
+      else ps[pos[1]][pos[0]] = value
+      return ps[pos[1]][pos[0]]
     },
     selectedInstrument: function (number) {
       if (!number) return this.model.selectedInstrument
@@ -1525,6 +1528,7 @@
       var instruments = m.instruments()
       var patternLength = m.patternLength()
       var tracks = []
+      var tracksTransposed
       for (var i = 0; i < instruments.length; i += 1) {
         tracks.push(charArray(patternLength, '.'))
         // TODO Instrument lookup in pattern
@@ -1542,12 +1546,12 @@
             tracks[pats[i]][cols[j]] = p[cols[j]]
           }
         }
-        m.tracks = transpose(tracks)
+        tracksTransposed = transpose(tracks)
       }
   
       this.render({
         instruments: instruments,
-        tracks: m.tracks
+        tracks: tracksTransposed
       })
     },
     afterAttach: function () {
@@ -1555,6 +1559,7 @@
       this.scoreColumns = new ScoreColumns(this.parentEl)
     },
     gotoPos: function (pos) {
+      // TODO get rid of scoreColumns
       this.scoreColumns.selectedIndex = -1
       this.scoreColumns.step(pos)
     },
@@ -1597,6 +1602,7 @@
       // console.warn('You clicked', ev, el, el.parentNode)
       // var rowIndex = [].slice.call(el.parentNode.childNodes).indexOf(el)
       // var columnIndex
+      // TODO make this idempotent
       this.focus()
       var r1
       var live = bp.live
@@ -2002,7 +2008,9 @@
       css(this.parentEl, {
         position: 'absolute',
         top: o.top + 'px',
-        left: o.left + 'px',
+        left: o.left + 'px'
+      })
+      css(this.inputEl, {
         width: o.width + 'px'
       })
       this.setValue = o.set
@@ -2024,10 +2032,6 @@
       this.value = val
     }
   
-  }
-  
-  TextInput.create = function (o) {
-    return new TextInput(o)
   }
   
   TextInput.create = function (o) {
@@ -2151,7 +2155,6 @@
       live.controlsView1.stop()
       live.beatAudio1.stop()
       m.playing(false)
-  	// live.playerView1.stop()
     })
   
     m.subscribe('GotoPos', function (pos) {

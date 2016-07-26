@@ -415,6 +415,7 @@ createView(PlayerView, {
     var instruments = m.instruments()
     var patternLength = m.patternLength()
     var tracks = []
+    var tracksTransposed
     for (var i = 0; i < instruments.length; i += 1) {
       tracks.push(charArray(patternLength, '.'))
       // TODO Instrument lookup in pattern
@@ -432,12 +433,12 @@ createView(PlayerView, {
           tracks[pats[i]][cols[j]] = p[cols[j]]
         }
       }
-      m.tracks = transpose(tracks)
+      tracksTransposed = transpose(tracks)
     }
 
     this.render({
       instruments: instruments,
-      tracks: m.tracks
+      tracks: tracksTransposed
     })
   },
   afterAttach: function () {
@@ -445,6 +446,7 @@ createView(PlayerView, {
     this.scoreColumns = new ScoreColumns(this.parentEl)
   },
   gotoPos: function (pos) {
+    // TODO get rid of scoreColumns
     this.scoreColumns.selectedIndex = -1
     this.scoreColumns.step(pos)
   },
@@ -487,6 +489,7 @@ createView(PlayerView, {
     // console.warn('You clicked', ev, el, el.parentNode)
     // var rowIndex = [].slice.call(el.parentNode.childNodes).indexOf(el)
     // var columnIndex
+    // TODO make this idempotent
     this.focus()
     var r1
     var live = bp.live
@@ -892,7 +895,9 @@ TextInput.prototype = {
     css(this.parentEl, {
       position: 'absolute',
       top: o.top + 'px',
-      left: o.left + 'px',
+      left: o.left + 'px'
+    })
+    css(this.inputEl, {
       width: o.width + 'px'
     })
     this.setValue = o.set
@@ -914,10 +919,6 @@ TextInput.prototype = {
     this.value = val
   }
 
-}
-
-TextInput.create = function (o) {
-  return new TextInput(o)
 }
 
 TextInput.create = function (o) {

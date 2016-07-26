@@ -268,8 +268,11 @@ BeatModel.prototype = {
   },
   note: function (pos, value) {
     if (typeof pos === 'string') pos = parseNotePos(pos)
-    if (!value) return this.tracks[pos[0]][pos[1]]
-    this.tracks[pos[0]][pos[1]] = value
+    var ps = this.model.patterns
+    if (type(value) === 'undefined') return ps[pos[1]][pos[0]]
+    if (!value || value === '.') delete ps[pos[1]][pos[0]]
+    else ps[pos[1]][pos[0]] = value
+    return ps[pos[1]][pos[0]]
   },
   selectedInstrument: function (number) {
     if (!number) return this.model.selectedInstrument
