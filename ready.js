@@ -48,7 +48,7 @@ ready(function () {
   ])
   live.stepFocus.get().focus()
 
-  // subscriptions
+  // TODO move subscriptions elsewhere
   var m = bp.model
   m.subscribe('SelectInstrument', function () {
     live.instrumentsView1.selectInstrumentNumber()

@@ -239,7 +239,6 @@ function elPosAndWidth (el) {
   }
 }
 
-
 var _readyFuncs = []
 var _loaded
 function ready (fn) {
@@ -247,10 +246,10 @@ function ready (fn) {
   _readyFuncs.push(fn)
   if (_readyFuncs.length === 1) {
     __document.addEventListener('DOMContentLoaded', function (ev) {
-      _loaded = 1
       for (var i = 0; i < _readyFuncs.length; i += 1) {
         _readyFuncs[i]()
       }
+      _loaded = 1
     })
   }
 }

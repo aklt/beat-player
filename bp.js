@@ -241,7 +241,6 @@
     }
   }
   
-  
   var _readyFuncs = []
   var _loaded
   function ready (fn) {
@@ -249,10 +248,10 @@
     _readyFuncs.push(fn)
     if (_readyFuncs.length === 1) {
       __document.addEventListener('DOMContentLoaded', function (ev) {
-        _loaded = 1
         for (var i = 0; i < _readyFuncs.length; i += 1) {
           _readyFuncs[i]()
         }
+        _loaded = 1
       })
     }
   }
@@ -733,6 +732,7 @@
               lastLpb = k
             } else {
               if (k - lastLpb - 1 !== tpb) {
+                // TODO Better check here
                 console.warn(new Error('Bad tpb ' + lastLpb + ' ' + k))
               }
             }
@@ -876,6 +876,7 @@
       throw new Error('TODO: set patternLength')
     },
     note: function (pos, value) {
+      // TODO Also change tracks here so live record is emabled
       if (typeof pos === 'string') pos = parseNotePos(pos)
       var ps = this.model.patterns
       if (type(value) === 'undefined') return ps[pos[1]][pos[0]]
@@ -2026,7 +2027,7 @@
     ])
     live.stepFocus.get().focus()
   
-    // subscriptions
+    // TODO move subscriptions elsewhere
     var m = bp.model
     m.subscribe('SelectInstrument', function () {
       live.instrumentsView1.selectInstrumentNumber()

@@ -124,6 +124,7 @@ BeatModel.prototype = {
             lastLpb = k
           } else {
             if (k - lastLpb - 1 !== tpb) {
+              // TODO Better check here
               console.warn(new Error('Bad tpb ' + lastLpb + ' ' + k))
             }
           }
@@ -267,6 +268,7 @@ BeatModel.prototype = {
     throw new Error('TODO: set patternLength')
   },
   note: function (pos, value) {
+    // TODO Also change tracks here so live record is emabled
     if (typeof pos === 'string') pos = parseNotePos(pos)
     var ps = this.model.patterns
     if (type(value) === 'undefined') return ps[pos[1]][pos[0]]
