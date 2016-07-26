@@ -1,7 +1,7 @@
 # global
 name: The second beat
 version: 0.0.1
-bpm: 123
+bpm: 50
 --
 # beat
 Bass Drum: b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b.. b..
@@ -10,18 +10,18 @@ HiHat:     ... .xx ... .xx ... .xx ... .xx ... .xx ... .xx ... .xx ... .xx
 --
 # instruments
 Bass Drum:
-  url: data/bd.wav
+  url: data/bd.mp3
   pan: 10
   range: b
   display: B
 
 Snare:
-  url: data/sd.wav
+  url: data/sd.mp3
   range: s
   pan: 10
 
 HiHat:
-  url: data/hat.wav
+  url: data/hat.mp3
   range: x
   volume: 80%
   pan: 20
@@ -30,6 +30,6 @@ HiHat:
 pan: -10
 
 # var b1 = new BeatModel()
-# 
+#
 # b1.readBeatText(beat1)
 # console.warn(JSON.stringify(b1, 0, 2))

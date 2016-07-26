@@ -35,6 +35,7 @@ var subscriptionEvents = {
   ChangeTpb: 1,
   ChangeBeats: 1,
   ChangeNote: 1,
+  GotoPos: 1,
   SelectInstrument: 1,
   SelectInstrumentRange: 1,
   LoadedSamples: 1,
@@ -169,12 +170,13 @@ BeatModel.prototype = {
   readEffects: function () {
   },
   // Load a beat including samples
-  loadBeat: function (url, cb) {
+  loadBeatUrl: function (url, cb) {
     var self = this
     this.loadBeatText(url, function (err) {
       if (err) return cb(err)
       self.loadBeatSamples(function (err, model) {
         if (err) return cb(err)
+        self.position(0)
         cb(null, model)
       })
     })
@@ -230,8 +232,8 @@ BeatModel.prototype = {
   },
   // ## Modifying the model with getters and setters
   position: function (pos) {
-    if (!pos) return this.model.position
-    this.model.position = pos
+    if (typeof pos === 'number') this.model.position = pos
+    return this.model.position
   },
   instrument: function (number) {
     number = number || this.model.selectedInstrument
@@ -306,6 +308,11 @@ BeatModel.prototype = {
   version: function (ver) {
     if (ver) this.model.version = ver
     return this.model.version
+  },
+  playing: function (val) {
+    if (typeof val !== 'boolean') return this.model.playing
+    else this.model.playing = val
+    return this.model.playing
   }
 }
 
@@ -365,7 +372,7 @@ var m = bp.model = new BeatModel()
 
 bp.test.beatModel = function () {
   var bm1 = new BeatModel()
-  bm1.loadBeat('data/beat0.beat', function (err, model) {
+  bm1.loadBeatUrl('data/beat0.beat', function (err, model) {
     if (err) throw err
     console.warn('Loaded', model)
     console.warn('instruments', model.instruments())

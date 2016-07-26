@@ -19,7 +19,9 @@ ready(function () {
   Object.keys(live).forEach(function (name) {
     console.warn('live', name)
     var l1 = live[name]
-    l1.renderModel(defaultOptions[name])
+    if (type(l1.renderModel) === 'function') {
+      l1.renderModel(defaultOptions[name])
+    }
     l1.attach()
   })
 
@@ -57,22 +59,28 @@ ready(function () {
 
   m.subscribe('NewText', function () {
     live.playerView1.update()
-	live.settingsView1.update()
+    live.settingsView1.update()
   })
 
   m.subscribe('play', function () {
     live.controlsView1.play()
     live.beatAudio1.play()
-	// live.playerView1.start()
+    m.playing(true)
   })
 
   m.subscribe('stop', function () {
     live.controlsView1.stop()
     live.beatAudio1.stop()
+    m.playing(false)
 	// live.playerView1.stop()
   })
 
-  m.loadBeat('data/beat1.beat', function (err, model) {
+  m.subscribe('GotoPos', function (pos) {
+    live.playerView1.gotoPos(pos + 1)
+    m.position(pos)
+  })
+
+  m.loadBeatUrl('data/beat1.beat', function (err, model) {
     if (err) throw err
     console.warn('Loaded beat1')
     live.playerView1.detach()

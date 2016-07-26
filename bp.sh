@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
 cat << "EOHEADER";
+/* Beat player v0.0.1*/
 ;(function () {
 EOHEADER
-cat lib.js model.js audio.js view.js ready.js test.js | \
+cat $@ | \
     sed -e 's/^/  /g'
 cat << "EOFOOTER";
 }())

@@ -1,3 +1,4 @@
+/* Beat player v0.0.1*/
 ;(function () {
   /*global bp XMLHttpRequest*/
   var __slice = [].slice
@@ -72,7 +73,7 @@
       return this.elems[this.index]
     },
     get: function () {
-  	return this.elems[this.index]
+    return this.elems[this.index]
     }
   }
   
@@ -306,6 +307,7 @@
   
   function appendChild (root, child) {
     root.appendChild(child)
+    return root
   }
   
   function insertBefore(parent, newElement, beforeThis) {
@@ -350,6 +352,16 @@
       if (attrs.text) {
         append(el, textEl(attrs.text))
       }
+      attr(el, attrs)
+    }
+    return el
+  }
+  
+  const xmlns = 'http://www.w3.org/2000/svg'
+  function svgEl (name, attrs) {
+    var el = __document.createElementNS(xmlns, name)
+    if (attrs) {
+      if (attrs.text) append(el, textEl(attrs.text))
       attr(el, attrs)
     }
     return el
@@ -469,8 +481,9 @@
       parent = (typeof parent === 'string') ? qs(parent) : parent
       if (!parent) throw new Error('No such parent el: ' + parent)
       if (this.domCount === 0) this.render()
-      if (!this.dom) throw new Error('Need to render before')
-      parent.appendChild(this.dom)
+  	if (this.dom) {
+  	  parent.appendChild(this.dom)
+  	}
       this.parentEl = parent
       if (typeof this.eventsAttach === 'function') this.eventsAttach()
       if (typeof this.afterAttach === 'function') this.afterAttach()
@@ -591,8 +604,7 @@
     mixinFocus(obj, 'parentEl')
     AClass.instanceCount += 1
     var name = lcFirst(AClass.name) + AClass.instanceCount
-    mixinViewModel(obj, name)
-    console.warn('createView', name, AClass, obj)
+    // console.warn('createView', name, AClass, obj)
     bp.live[name] = obj
   }
   
@@ -640,6 +652,7 @@
     ChangeTpb: 1,
     ChangeBeats: 1,
     ChangeNote: 1,
+    GotoPos: 1,
     SelectInstrument: 1,
     SelectInstrumentRange: 1,
     LoadedSamples: 1,
@@ -774,12 +787,13 @@
     readEffects: function () {
     },
     // Load a beat including samples
-    loadBeat: function (url, cb) {
+    loadBeatUrl: function (url, cb) {
       var self = this
       this.loadBeatText(url, function (err) {
         if (err) return cb(err)
         self.loadBeatSamples(function (err, model) {
           if (err) return cb(err)
+          self.position(0)
           cb(null, model)
         })
       })
@@ -835,8 +849,8 @@
     },
     // ## Modifying the model with getters and setters
     position: function (pos) {
-      if (!pos) return this.model.position
-      this.model.position = pos
+      if (typeof pos === 'number') this.model.position = pos
+      return this.model.position
     },
     instrument: function (number) {
       number = number || this.model.selectedInstrument
@@ -911,6 +925,11 @@
     version: function (ver) {
       if (ver) this.model.version = ver
       return this.model.version
+    },
+    playing: function (val) {
+      if (typeof val !== 'boolean') return this.model.playing
+      else this.model.playing = val
+      return this.model.playing
     }
   }
   
@@ -970,13 +989,15 @@
   
   bp.test.beatModel = function () {
     var bm1 = new BeatModel()
-    bm1.loadBeat('data/beat0.beat', function (err, model) {
+    bm1.loadBeatUrl('data/beat0.beat', function (err, model) {
       if (err) throw err
       console.warn('Loaded', model)
       console.warn('instruments', model.instruments())
     })
   }
-  /*global bp, AudioContext, webkitAudioContext, BeatModel*/
+  /*global bp, AudioContext */
+  
+  // TODO Define AudioContext
   
   // # BeatAudio
   //
@@ -987,99 +1008,80 @@
   function BeatAudio (model) {
     this.model = model
     // TODO There is a max. limit on the number of AudioContexts
-    this.context = new (AudioContext || webkitAudioContext)()
+    this.context = new AudioContext()
     this.volume = this.context.createGain()
     this.volume.gain.value = 1
     this.volume.connect(this.context.destination)
     this.playing = []
-    this.position = 0
-    this.positionTime = 0
     this.lookaheadTime = 0.4
   }
   
-  // divide notes on property `note.time` into buckets of `intervalTime` size
-  // TODO deprecate and use setTimeout with intervals
-  function timeBuckets (notes, intervalTime) {
-    var time = intervalTime
-    var buckets = [[]]
-    var ibucket = 0
-    var i = 0
-    var note = notes[i]
-    while (note && i < notes.length) {
-      if (note.time < time) {
-        buckets[ibucket].push(note)
-      } else {
-        ibucket += 1
-        buckets[ibucket] = []
-        time += intervalTime
-        i -= 1
-      }
-      i += 1
-      note = notes[i]
-    }
-    return buckets
-  }
-  
   BeatAudio.prototype = {
-    // load and reset variables
-    load: function (url, cb) {
+    loadUrl: function (url, cb) {
       var self = this
-      this.model.load(url, function (err, model) {
+      this.model.loadBeatUrl(url, function (err, model) {
         if (err) return cb(err)
-        self.calculateNoteBuckets()
         if (typeof cb === 'function') cb(null, self)
       })
     },
-    // Schedule offset times of samples according to pattern
-    calculateNoteBuckets: function () {
+    calcTickTimes: function () {
       var patterns = this.model.patterns()
-      this.secondsPerTick = (60 / this.model.bpm()) / this.model.tpb()
-      console.warn('bpm, secondsPerTick', this.model.bpm(), this.secondsPerTick)
-      this.orderedNotes = []
-      for (var instrumentNumber in patterns) {
-        var notes = patterns[instrumentNumber]
-        for (var offset in notes) {
-          var key = notes[offset]
-          this.orderedNotes.push({
-            time: this.secondsPerTick * parseInt(offset, 10),
-            instrument: instrumentNumber,
-            key: key,
-            pos: offset
-          })
+      var bpm = this.model.bpm()
+      var tpb = this.model.tpb()
+      var secondsPerTick = 60 / (bpm * tpb)
+      var length = this.model.patternLength()
+      var ordered = new Array(length)
+  
+      for (var tick = 0; tick < length; tick += 1) {
+        var notes = []
+        for (var instrumentIndex in patterns) {
+          var instrumentLine = patterns[instrumentIndex]
+          if (instrumentLine[tick]) {
+            notes.push({
+              inst: instrumentIndex,
+              note: instrumentLine[tick]
+            })
+          }
+        }
+        if (notes.length > 0) {
+          ordered[tick] = notes
         }
       }
-      this.orderedNotes.sort(function (a, b) { return a.time - b.time })
-      this.noteBuckets = timeBuckets(this.orderedNotes, this.lookaheadTime)
-      this.noteBucketsIndex = 0
+  
+      this.patternLength = length
+      this.orderedNotes = ordered
+      this.secondsPerTick = secondsPerTick
     },
-    // Start playback at pattern position
     play: function () {
       if (!this.timeout) {
-        this.calculateNoteBuckets()
-        var self = this
-        var ctx = this.context
-        var time0 = ctx.currentTime
-        var bucketIndex = this.noteBucketsIndex
-        var length = this.noteBuckets.length
-        var deltaTime = 0
-        this.timeout = setInterval(function () {
-          var timePassed = ctx.currentTime - time0
-          var bucketTime = bucketIndex * self.lookaheadTime
-          deltaTime = bucketTime - timePassed
-          var bucket = self.noteBuckets[bucketIndex]
-          for (var i = 0; i < bucket.length; i += 1) {
-            var note = bucket[i]
-            var xTime = self.lookaheadTime + note.time - bucketTime + deltaTime
-            self.playSample(note.instrument, xTime)
-        // self.model.dispatch('step', note.pos)
-          }
-          bucketIndex += 1
-          if (bucketIndex === length) {
-            bucketIndex = 0
-            time0 += timePassed
-          }
-        }, this.lookaheadTime * 1000)
+        this.calcTickTimes()
+        // TODO Trigger timeout just before event
+        this.nextTick = this.context.currentTime + Math.max(this.secondsPerTick / 10, 0.05)
+        this._play()
       }
+    },
+    _play: function () {
+      var pos = this.model.position()
+      var playThese = this.orderedNotes[pos] || []
+      var delta = this.nextTick - this.context.currentTime
+      // TODO scale this according to drift
+      // TODO live recording, changing bpm
+      var timeoutTime = this.secondsPerTick * 1000
+      var self = this
+  
+      this.model.dispatch('GotoPos', pos)
+      for (var i = 0; i < playThese.length; i += 1) {
+        this.playSample(playThese[i].inst, this.context.currentTime + delta)
+      }
+      this.timeout = setTimeout(function () {
+        pos = self.model.position() + 1
+        self.nextTick += self.secondsPerTick
+        if (pos === self.patternLength) {
+          pos = 0
+        }
+        self.model.position(pos)
+        self._play()
+      }, timeoutTime)
     },
     // Stop all playing samples
     stop: function () {
@@ -1098,34 +1100,14 @@
       // TODO Make ranges of notes
       // source.detune.value = detune
       // source.playbackRate.value = 2
-      source.start(this.context.currentTime + when)
-      source.onended = function () {
-        this.ended = true
-      }
-      this.playing.push(source)
-    },
-    // Remove sounds that have been played drom this.playing
-    removeEnded: function () {
-      this.playing = this.playing.filter(function (s1) {
-        return !s1.ended
-      })
+      source.start(when)
+      // source.onended = function () {
+      //   console.warn('ended')
+      // }
     }
-  
     // TODO Mixing https://developer.mozilla.org/en-US/docs/Web/API/OfflineAudioContext
   }
-  
   bp.BeatAudio = BeatAudio
-  
-  bp.testBeatAudio = function () {
-    var beat1Model = bp.model || new BeatModel(beat1)
-    var beat1 = bp.beat1 = new BeatAudio(beat1Model)
-    beat1.model.bpm(110)
-    beat1.calculateNoteBuckets()
-    beat1.play()
-    setTimeout(function (o) {
-      beat1.stop()
-    }, 3000)
-  }
   /*global bp __document requestAnimationFrame htmlEl insertBefore
     appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
     rect attr nextSibling prevSibling $id mixinHideShow BeatModel
@@ -1192,21 +1174,14 @@
   var IH_END = 4
   var ih_state = IH_INIT
   
-  // hack
-  var isPlay = false
   mixinHandlers(InputHandler, {
     keydown: function (ev, el) {
       var k = translateKey(ev)
       console.warn('key', k)
       // hack
       if (k === 'space') {
-        if (!isPlay) {
-          bp.model.dispatch('play')
-          isPlay = true
-        } else {
-          bp.model.dispatch('stop')
-          isPlay = false
-        }
+        if (!bp.model.playing()) bp.model.dispatch('play')
+        else bp.model.dispatch('stop')
       }
       var code = ev.which
       var obj
@@ -1582,7 +1557,6 @@
     gotoPos: function (pos) {
       this.scoreColumns.selectedIndex = -1
       this.scoreColumns.step(pos)
-      this.model.position(pos)
     },
     start: function (from) {
       var self = this
@@ -1659,7 +1633,7 @@
           break
         case 'I': // Click top row to go to position
           console.warn('I', alphanumToDec(el.innerText))
-          this.gotoPos(alphanumToDec(el.innerText))
+          this.model.dispatch('GotoPos', alphanumToDec(el.innerText) - 1)
           ev.preventDefault()
           ev.stopPropagation()
           break
@@ -1745,78 +1719,111 @@
   
   // 1}}} PlayerView
   
-  // {{{1 ControlsView
+  // {{{1 Svg Controls
   function ControlsView (o) {
-    this.isPlaying = false
-    this.isPaused = false
+    this.parentEl = $id('controls')
+    this.btnPlay = qs('#btn-play', this.parentEl)
+    this.btnStop = qs('#btn-stop', this.parentEl)
   }
   
-  const btnPlay = '►'
-  const btnStop = '■'
-  const controlChars = [
-    '⏮', btnPlay, $t('span', {'class': 'pause'}, '▍▍'), '⏭' ]
-  
-  createView(ControlsView, {
-    tpl: function (o) {
-      return eachPush(controlChars, function (i, ch) {
-        return $t('span', {id: 'ctrl-' + i}, ch)
-      }).join('')
-    },
-    renderModel: function (o) {
-      // TODO Render model
-      this.render(o || {})
-    },
-    afterAttach: function () {
-      var el = this.parentEl
-      this.btnBack = qs('#ctrl-0', el)
-      this.btnPlay = qs('#ctrl-1', el)
-      this.btnPause = qs('#ctrl-2', el)
-      this.btnForward = qs('#ctrl-3', el)
+  ControlsView.prototype = {
+    play: function () {
+      classAdd(this.btnPlay, 'hidden')
+      classRemove(this.btnStop, 'hidden')
     },
     stop: function () {
-      if (this.isPlaying) {
-        html(this.btnPlay, btnPlay)
-        this.isPlaying = false
-        this.emit('stop')
-      }
-    },
-    play: function () {
-      if (!this.isPlaying) {
-        html(this.btnPlay, btnStop)
-        this.isPlaying = true
-        this.emit('play')
+      classAdd(this.btnStop, 'hidden')
+      classRemove(this.btnPlay, 'hidden')
+    }
+  }
+  
+  mixinDom(ControlsView)
+  mixinHandlers(ControlsView, {
+    click: function () {
+      if (bp.model.playing()) {
+        bp.model.dispatch('stop')
+      } else {
+        bp.model.dispatch('play')
       }
     }
-  }, {
-    click: function (ev, el) {
-      var btn = attr(el, 'id')
-      switch (btn) {
-        case 'ctrl-0':
-          this.emit('back')
-          break
-        case 'ctrl-1':
-          if (this.isPlaying) {
-            this.stop()
-          } else {
-            this.play()
-          }
-          break
-        case 'ctrl-2':
-          if (this.isPlaying) {
-            this.isPaused = true
-            this.emit('pause')
-          }
-          break
-        case 'ctrl-3':
-          this.emit('forward')
-          break
-        default:
-          console.warn('Badness?')
-      }
-    }
-  }, {
-    id: 'controls'
   })
+  
+  bp.live.controlsView1 = new ControlsView()
+  
+  // 1}}} Svg
+  
+  // {{{1 ControlsView
+  // function ControlsView1 (o) {
+  //   this.isPlaying = false
+  //   this.isPaused = false
+  // }
+  //
+  // const btnPlay = '►'
+  // const btnStop = '■'
+  // const controlChars = [
+  //   '⏮', btnPlay, $t('span', {'class': 'pause'}, '▍▍'), '⏭' ]
+  //
+  // createView(ControlsView1, {
+  //   tpl: function (o) {
+  //     return eachPush(controlChars, function (i, ch) {
+  //       return $t('span', {id: 'ctrl-' + i}, ch)
+  //     }).join('')
+  //   },
+  //   renderModel: function (o) {
+  //     // TODO Render model
+  //     this.render(o || {})
+  //   },
+  //   afterAttach: function () {
+  //     var el = this.parentEl
+  //     this.btnBack = qs('#ctrl-0', el)
+  //     this.btnPlay = qs('#ctrl-1', el)
+  //     this.btnPause = qs('#ctrl-2', el)
+  //     this.btnForward = qs('#ctrl-3', el)
+  //   },
+  //   stop: function () {
+  //     if (this.isPlaying) {
+  //       html(this.btnPlay, btnPlay)
+  //       this.isPlaying = false
+  //       this.emit('stop')
+  //     }
+  //   },
+  //   play: function () {
+  //     if (!this.isPlaying) {
+  //       html(this.btnPlay, btnStop)
+  //       this.isPlaying = true
+  //       this.emit('play')
+  //     }
+  //   }
+  // }, {
+  //   click: function (ev, el) {
+  //     var btn = attr(el, 'id')
+  //     switch (btn) {
+  //       case 'ctrl-0':
+  //         this.emit('back')
+  //         break
+  //       case 'ctrl-1':
+  //         if (this.isPlaying) {
+  //           this.stop()
+  //         } else {
+  //           this.play()
+  //         }
+  //         break
+  //       case 'ctrl-2':
+  //         if (this.isPlaying) {
+  //           this.isPaused = true
+  //           this.emit('pause')
+  //         }
+  //         break
+  //       case 'ctrl-3':
+  //         this.emit('forward')
+  //         break
+  //       default:
+  //         console.warn('Badness?')
+  //     }
+  //   }
+  // }, {
+  //   id: 'controls'
+  // })
   
   // 1}}} ControlsView
   
@@ -1843,7 +1850,7 @@
     click: function (ev, el) {
       this.focus()
       if (el.value) {
-        this.model.loadBeat('data/' + el.value + '.beat', function (err, model) {
+        this.model.loadBeatUrl('data/' + el.value + '.beat', function (err, model) {
           if (err) throw err
           bp.live.playerView1.gotoPos(1)
         })
@@ -2061,7 +2068,7 @@
   
   bp.test.player = function () {
     var bm1 = new BeatModel()
-    bm1.loadBeat('data/beat1.beat', function (err, model) {
+    bm1.loadBeatUrl('data/beat1.beat', function (err, model) {
       if (err) throw err
       var pl1 = PlayerView.create({
         model: model
@@ -2091,7 +2098,9 @@
     Object.keys(live).forEach(function (name) {
       console.warn('live', name)
       var l1 = live[name]
-      l1.renderModel(defaultOptions[name])
+      if (type(l1.renderModel) === 'function') {
+        l1.renderModel(defaultOptions[name])
+      }
       l1.attach()
     })
   
@@ -2129,22 +2138,28 @@
   
     m.subscribe('NewText', function () {
       live.playerView1.update()
-  	live.settingsView1.update()
+      live.settingsView1.update()
     })
   
     m.subscribe('play', function () {
       live.controlsView1.play()
       live.beatAudio1.play()
-  	// live.playerView1.start()
+      m.playing(true)
     })
   
     m.subscribe('stop', function () {
       live.controlsView1.stop()
       live.beatAudio1.stop()
+      m.playing(false)
   	// live.playerView1.stop()
     })
   
-    m.loadBeat('data/beat1.beat', function (err, model) {
+    m.subscribe('GotoPos', function (pos) {
+      live.playerView1.gotoPos(pos + 1)
+      m.position(pos)
+    })
+  
+    m.loadBeatUrl('data/beat1.beat', function (err, model) {
       if (err) throw err
       console.warn('Loaded beat1')
       live.playerView1.detach()
@@ -2153,6 +2168,17 @@
       live.playerView1.gotoPos(1)
     })
   })
+  
+  
+  var count = 1000
+  
+  function timeOuter() {
+    if (count > 0) {
+      count -= 1
+      setTimeout(timeOuter, 10)
+      console.warn('time')
+    }
+  }
   
   
   ready(function () {

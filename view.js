@@ -64,21 +64,14 @@ var IH_INIT = 1
 var IH_END = 4
 var ih_state = IH_INIT
 
-// hack
-var isPlay = false
 mixinHandlers(InputHandler, {
   keydown: function (ev, el) {
     var k = translateKey(ev)
     console.warn('key', k)
     // hack
     if (k === 'space') {
-      if (!isPlay) {
-        bp.model.dispatch('play')
-        isPlay = true
-      } else {
-        bp.model.dispatch('stop')
-        isPlay = false
-      }
+      if (!bp.model.playing()) bp.model.dispatch('play')
+      else bp.model.dispatch('stop')
     }
     var code = ev.which
     var obj
@@ -454,7 +447,6 @@ createView(PlayerView, {
   gotoPos: function (pos) {
     this.scoreColumns.selectedIndex = -1
     this.scoreColumns.step(pos)
-    this.model.position(pos)
   },
   start: function (from) {
     var self = this
@@ -531,7 +523,7 @@ createView(PlayerView, {
         break
       case 'I': // Click top row to go to position
         console.warn('I', alphanumToDec(el.innerText))
-        this.gotoPos(alphanumToDec(el.innerText))
+        this.model.dispatch('GotoPos', alphanumToDec(el.innerText) - 1)
         ev.preventDefault()
         ev.stopPropagation()
         break
@@ -617,78 +609,111 @@ function transpose (matrix) {
 
 // 1}}} PlayerView
 
-// {{{1 ControlsView
+// {{{1 Svg Controls
 function ControlsView (o) {
-  this.isPlaying = false
-  this.isPaused = false
+  this.parentEl = $id('controls')
+  this.btnPlay = qs('#btn-play', this.parentEl)
+  this.btnStop = qs('#btn-stop', this.parentEl)
 }
 
-const btnPlay = '►'
-const btnStop = '■'
-const controlChars = [
-  '⏮', btnPlay, $t('span', {'class': 'pause'}, '▍▍'), '⏭' ]
-
-createView(ControlsView, {
-  tpl: function (o) {
-    return eachPush(controlChars, function (i, ch) {
-      return $t('span', {id: 'ctrl-' + i}, ch)
-    }).join('')
-  },
-  renderModel: function (o) {
-    // TODO Render model
-    this.render(o || {})
-  },
-  afterAttach: function () {
-    var el = this.parentEl
-    this.btnBack = qs('#ctrl-0', el)
-    this.btnPlay = qs('#ctrl-1', el)
-    this.btnPause = qs('#ctrl-2', el)
-    this.btnForward = qs('#ctrl-3', el)
+ControlsView.prototype = {
+  play: function () {
+    classAdd(this.btnPlay, 'hidden')
+    classRemove(this.btnStop, 'hidden')
   },
   stop: function () {
-    if (this.isPlaying) {
-      html(this.btnPlay, btnPlay)
-      this.isPlaying = false
-      this.emit('stop')
-    }
-  },
-  play: function () {
-    if (!this.isPlaying) {
-      html(this.btnPlay, btnStop)
-      this.isPlaying = true
-      this.emit('play')
+    classAdd(this.btnStop, 'hidden')
+    classRemove(this.btnPlay, 'hidden')
+  }
+}
+
+mixinDom(ControlsView)
+mixinHandlers(ControlsView, {
+  click: function () {
+    if (bp.model.playing()) {
+      bp.model.dispatch('stop')
+    } else {
+      bp.model.dispatch('play')
     }
   }
-}, {
-  click: function (ev, el) {
-    var btn = attr(el, 'id')
-    switch (btn) {
-      case 'ctrl-0':
-        this.emit('back')
-        break
-      case 'ctrl-1':
-        if (this.isPlaying) {
-          this.stop()
-        } else {
-          this.play()
-        }
-        break
-      case 'ctrl-2':
-        if (this.isPlaying) {
-          this.isPaused = true
-          this.emit('pause')
-        }
-        break
-      case 'ctrl-3':
-        this.emit('forward')
-        break
-      default:
-        console.warn('Badness?')
-    }
-  }
-}, {
-  id: 'controls'
 })
+
+bp.live.controlsView1 = new ControlsView()
+
+// 1}}} Svg
+
+// {{{1 ControlsView
+// function ControlsView1 (o) {
+//   this.isPlaying = false
+//   this.isPaused = false
+// }
+//
+// const btnPlay = '►'
+// const btnStop = '■'
+// const controlChars = [
+//   '⏮', btnPlay, $t('span', {'class': 'pause'}, '▍▍'), '⏭' ]
+//
+// createView(ControlsView1, {
+//   tpl: function (o) {
+//     return eachPush(controlChars, function (i, ch) {
+//       return $t('span', {id: 'ctrl-' + i}, ch)
+//     }).join('')
+//   },
+//   renderModel: function (o) {
+//     // TODO Render model
+//     this.render(o || {})
+//   },
+//   afterAttach: function () {
+//     var el = this.parentEl
+//     this.btnBack = qs('#ctrl-0', el)
+//     this.btnPlay = qs('#ctrl-1', el)
+//     this.btnPause = qs('#ctrl-2', el)
+//     this.btnForward = qs('#ctrl-3', el)
+//   },
+//   stop: function () {
+//     if (this.isPlaying) {
+//       html(this.btnPlay, btnPlay)
+//       this.isPlaying = false
+//       this.emit('stop')
+//     }
+//   },
+//   play: function () {
+//     if (!this.isPlaying) {
+//       html(this.btnPlay, btnStop)
+//       this.isPlaying = true
+//       this.emit('play')
+//     }
+//   }
+// }, {
+//   click: function (ev, el) {
+//     var btn = attr(el, 'id')
+//     switch (btn) {
+//       case 'ctrl-0':
+//         this.emit('back')
+//         break
+//       case 'ctrl-1':
+//         if (this.isPlaying) {
+//           this.stop()
+//         } else {
+//           this.play()
+//         }
+//         break
+//       case 'ctrl-2':
+//         if (this.isPlaying) {
+//           this.isPaused = true
+//           this.emit('pause')
+//         }
+//         break
+//       case 'ctrl-3':
+//         this.emit('forward')
+//         break
+//       default:
+//         console.warn('Badness?')
+//     }
+//   }
+// }, {
+//   id: 'controls'
+// })
 
 // 1}}} ControlsView
 
@@ -715,7 +740,7 @@ createView(BeatsView, {
   click: function (ev, el) {
     this.focus()
     if (el.value) {
-      this.model.loadBeat('data/' + el.value + '.beat', function (err, model) {
+      this.model.loadBeatUrl('data/' + el.value + '.beat', function (err, model) {
         if (err) throw err
         bp.live.playerView1.gotoPos(1)
       })
@@ -933,7 +958,7 @@ Samples.prototype = {
 
 bp.test.player = function () {
   var bm1 = new BeatModel()
-  bm1.loadBeat('data/beat1.beat', function (err, model) {
+  bm1.loadBeatUrl('data/beat1.beat', function (err, model) {
     if (err) throw err
     var pl1 = PlayerView.create({
       model: model
