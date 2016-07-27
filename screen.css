@@ -295,7 +295,14 @@ html, body {
   height: 48px;
 }
 
-/* line 174, sass/screen.sass */
+/* line 166, sass/screen.sass */
+.input-text input[type=text] {
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+/* line 178, sass/screen.sass */
 .focus {
   background-color: #DDD;
 }

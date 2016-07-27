@@ -223,11 +223,12 @@ function css (el, props) {
   return el
 }
 
-function elPosAndWidth (el) {
+function elRect (el) {
   if (!el.offsetParent) throw new Error('Need offsetParent')
   var curleft = el.offsetLeft
   var curtop = el.offsetTop
   var width = el.offsetWidth
+  var height = el.offsetHeight
   while ((el = el.offsetParent)) {
     curleft += el.offsetLeft
     curtop += el.offsetTop
@@ -235,7 +236,8 @@ function elPosAndWidth (el) {
   return {
     left: curleft,
     top: curtop,
-    width: width
+    width: width,
+    height: height
   }
 }
 

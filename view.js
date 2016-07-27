@@ -1,6 +1,6 @@
 /*global bp __document requestAnimationFrame htmlEl insertBefore
   appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
-  elPosAndWidth attr nextSibling prevSibling $id mixinHideShow eachPush $t $ts
+  elRect attr nextSibling prevSibling $id mixinHideShow eachPush $t $ts
   extend createView
 */
 
@@ -25,6 +25,7 @@ keyboardKeys.join('').split('').forEach(function (k, i) {
 // ## Global keys
 //
 // space         play, stop
+// esc           move focus out, record
 // 1-9           select instrument
 // qwerty        play sound
 // Left, Right   select view
@@ -368,6 +369,7 @@ createView(SettingsView, {
 // 1}}}
 
 // {{{1 PlayerView
+// TODO Make scoreSpanTemplate a separate control
 function scoreSpanTemplate (length, tpb) {
   var result = []
   for (var i = 0; i < length; i += 1) {
@@ -498,7 +500,7 @@ createView(PlayerView, {
         // var dom2 = ab.dom('<div class="instruments">${instruments}</div>')
         // falls through
       case 'B':
-        r1 = elPosAndWidth(el)
+        r1 = elRect(el)
         var value = el.innerText
         var pos = attr(el, 'data-pos')
         if (!pos) return
@@ -509,17 +511,15 @@ createView(PlayerView, {
           left: r1.left,
           width: r1.width,
           value: value,
-          getInput: function (ev) {
-            // return string typed
-            console.warn('getInput', ev)
-          },
+          // TODO use dispatch on all events
           set: function (value) {
             var pos = attr(el, 'data-pos')
-            console.warn('textInput1 set', pos, value)
-            self.model.note(pos, value)
             el.innerText = value
+            self.model.note(pos, value)
           }
         })
+        // see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus
+        ev.preventDefault()
         bp.lastPopUp = bp.live.textInput1
         break
       case 'I': // Click top row to go to position
@@ -529,12 +529,12 @@ createView(PlayerView, {
         ev.stopPropagation()
         break
       case 'ABBR':
-        r1 = elPosAndWidth(qs('dd', el))
+        r1 = elRect(qs('dd', el))
         // falls through
       case 'DT':
         // falls through
       case 'DD':
-        r1 = elPosAndWidth(el)
+        r1 = elRect(el)
         // if (bp.lastPopUp) bp.lastPopUp.hide()
         bp.sliderInput1.popup({
           top: r1.top,
@@ -721,7 +721,7 @@ createView(InstrumentsView, {
       ddEl = el
     }
     if (dtEl && ddEl) {
-      var r1 = elPosAndWidth(ddEl)
+      var r1 = elRect(ddEl)
       bp.live.textInput1.popup({
         top: r1.top,
         left: r1.left,
@@ -809,40 +809,38 @@ function TextInput (o) {
   this.parentEl = $id(o.id)
   if (!this.parentEl) throw new Error('Need parentEl')
   this.inputEl = qs('input', this.parentEl)
+  if (!this.inputEl) throw new Error('Need inputEl')
   this.eventsAttach()
 }
 
 TextInput.prototype = {
   popup: function (o) {
-    console.warn('TextInput popup', o)
-    var value = o.value || this.inputEl.value
+    var value = o.value
     css(this.parentEl, {
       position: 'absolute',
       top: o.top + 'px',
       left: o.left + 'px'
     })
     css(this.inputEl, {
-      width: o.width + 'px'
+      width: o.width + 'px',
+      height: o.height + 'px'
     })
-    this.setValue = o.set
-    this.lastValue = this.inputEl.value = value
-    // this.inputEl.focus()
-    this.inputEl.select()
-    this.value = ''
+    this.setModelValue = o.set
+    // TODO Use dispatch instead
     this.show()
+    this.inputEl.value = value
+    this.parentEl.focus()
+    this.inputEl.select()
   },
   popdown: function () {
-    // this.inputEl.blur()
+    this.parentEl.blur()
     this.hide()
   },
-  isDone: function () {
-    return this.value.length === 1
-  },
   setValue: function (val) {
-    console.warn('setValue', val)
-    this.value = val
+    this.inputEl.value = val
+    if (this.setModelValue) this.setModelValue(val)
+    console.warn('VAL', val)
   }
-
 }
 
 TextInput.create = function (o) {
@@ -852,16 +850,12 @@ TextInput.create = function (o) {
 mixinHideShow(TextInput)
 
 mixinHandlers(TextInput, {
-  keyup: function (ev, el) {
+  keypress: function (ev, el) {
+    // TODO get the key from the global input handler to handle when focus lost
     var key = String.fromCharCode(ev.keyCode).toLowerCase()
     if (/^[\s\b]*$/.test(key)) key = '.'
-    if (this.setValue) this.setValue(key)
-    this.popdown()
-    console.warn('TextInput keyup', key)
-  },
-  keydown: function (ev) {
-    // Prevent InputHandler from changing instrument
-    return ev.stopPropagation()
+    this.setValue(key)
+    ev.preventDefault()
   }
 })
 // 1}}} TextInput
