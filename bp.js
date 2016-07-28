@@ -516,12 +516,12 @@
     }
   }
   
-  function StepIterElems (els, i) {
+  function IterElems (els, i) {
     this.elems = els
     this.index = i || 0
   }
   
-  StepIterElems.prototype = {
+  IterElems.prototype = {
     next: function () {
       this.index += 1
       if (this.index === this.elems.length) this.index = 0
@@ -578,16 +578,11 @@
     }
     args = args || {}
     if (!args.id) throw new Error('Need args.id')
-    if (!AClass.instanceCount) AClass.instanceCount = 0
     args.model = bp.model
     args.parentEl = $id(args.id)
     var obj = AClass.create(args)
     mixinFocus(bp.focus, obj, 'parentEl', 'focus')
-    AClass.instanceCount += 1
-    var name = lcFirst(AClass.name) + AClass.instanceCount
-    // console.warn('createView', name, AClass, obj)
-    // TODO place live elems elsewhere
-    bp.live[name] = obj
+    bp.live[args.id] = obj
   }
   
   function lcFirst (text) {
@@ -603,6 +598,9 @@
   // Represents the model of the current beat.
   //
   // Holds all data of the current beat and is referenced from all Views.
+  //
+  // TODO Principle: modify tghe model first and then the view on basis of model
+  // values. In
   
   // TODO Don't expose bp.live
   var bp = __window.bp = {
@@ -643,7 +641,8 @@
     stop: 1,
     forward: 1,
     back: 1,
-    step: 1
+    step: 1,
+    playerStep: 1
   }
   
   BeatModel.prototype = {
@@ -972,7 +971,42 @@
   mixinGetSet(BeatModel, 'bpm', 100)
   mixinGetSet(BeatModel, 'tpb', 4)
   mixinGetSet(BeatModel, 'beats', 4)
-  bp.model = new BeatModel()
+  
+   var m = bp.model = new BeatModel()
+   var live = bp.live
+   m.subscribe('SelectInstrument', function () {
+     live.instrumentsView1.selectInstrumentNumber()
+   })
+  
+   m.subscribe('SelectInstrumentRange', function () {
+     live.instrumentsView1.selectInstrumentRange()
+   })
+  
+   m.subscribe('NewText', function () {
+     live.player1.update()
+     live.settings.update()
+   })
+  
+   m.subscribe('play', function () {
+     live.controlsView1.play()
+     live.beatAudio1.play()
+     m.playing(true)
+   })
+  
+   m.subscribe('stop', function () {
+     live.controlsView1.stop()
+     live.beatAudio1.stop()
+     m.playing(false)
+   })
+  
+   m.subscribe('playerStep', function (direction) {
+     live.player1.step(direction)
+   })
+  
+   m.subscribe('GotoPos', function (pos) {
+     live.player1.gotoPos(pos)
+     m.position(pos)
+   })
   /*global bp, AudioContext */
   
   // # BeatAudio
@@ -1295,7 +1329,7 @@
       // [2, 'Q', 'R'],
       // [3, 'B', 'M']
     ]
-    o.model.selectedInstrument(o.selectedInstrument || 1)
+    // TODO o.model.selectedInstrument(o.selectedInstrument || 1)
     // properties on o added
   }
   
@@ -1431,34 +1465,6 @@
   
   // 1}}} KeyboardView
   
-  // {{{1 ScoreColumns
-  // TODO Get rid of this
-  function ScoreColumns (el) {
-    // console.warn(type(el));
-    var els = qa('p', el).filter(function (el1) {
-      // TODO fails if only one instrument
-      return el1.childNodes.length > 1
-    })
-    this.iter = new StepIterElems(els)
-    this.last = els[0]
-  }
-  
-  ScoreColumns.prototype = {
-    step: function (direction) {
-      var selected = this.iter.step(direction)
-      classRemove(this.last, 'active')
-      classAdd(selected, 'active')
-      this.last = selected
-    },
-    gotoPos: function (pos) {
-      var selected = this.iter.set(pos)
-      classRemove(this.last, 'active')
-      classAdd(selected, 'active')
-      this.last = selected
-    }
-  }
-  // 1}}} ScoreColumns
-  
   // {{{1 SettingsView
   
   function SettingsView () {
@@ -1491,6 +1497,46 @@
   
   // {{{1 PlayerView
   // TODO Make scoreSpanTemplate a separate control
+  // {{{2 ScoreColumns
+  // TODO Merge with focus?
+  function ScoreColumns (el) {
+    // console.warn(type(el));
+    var els = qa('.score-columns p', el).filter(function (el1) {
+      // TODO fails if only one instrument
+      return el1.childNodes.length > 1
+    })
+    this.iter = new IterElems(els)
+    this.last = els[0]
+  }
+  
+  ScoreColumns.prototype = {
+    step: function (direction) {
+      var selected = this.iter.step(direction)
+      classRemove(this.last, 'active')
+      classAdd(selected, 'active')
+      this.last = selected
+    },
+    gotoPos: function (pos) {
+      var selected = this.iter.set(pos)
+      classRemove(this.last, 'active')
+      classAdd(selected, 'active')
+      this.last = selected
+    }
+  }
+  // 2}}} ScoreColumns
+  
+  // {{{2 Instruments
+  function Instruments (el) {
+    var els = qa('.instruments p', el)
+    this.iter = new IterElems(els)
+    this.last = els[0]
+  }
+  
+  Instruments.prototype = {
+  
+  }
+  // 2}}} Instruments
+  
   function scoreSpanTemplate (length, tpb) {
     var result = []
     for (var i = 0; i < length; i += 1) {
@@ -1565,29 +1611,16 @@
     afterAttach: function () {
       if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
       this.scoreColumns = new ScoreColumns(this.parentEl)
+      // this.instruments = new Instruments(this.parentEl)
     },
     gotoPos: function (pos) {
-      // TODO get rid of scoreColumns
       this.scoreColumns.gotoPos(pos)
     },
-    start: function (from) {
-      var self = this
-      this.interval = setInterval(function () {
-        requestAnimationFrame(function () {
-          console.warn('step')
-          self.step()
-        })
-      }, 1000 * (60 / this.model.bpm()) / this.model.tpb())
+    step: function (direction) {
+      this.scoreColumns.step(direction)
     },
-    stop: function () {
-      console.warn('asdsadsadsadsadsadads')
-      clearInterval(this.interval)
-      this.interval = null
-    },
-    step: function (amount) {
-      amount = amount || 1
-      this.currentPos += amount
-      this.scoreColumns.step(amount)
+    stepInstrument: function (direction) {
+  
     },
     handleKey: function (key, el) {
       switch (key) {
@@ -1596,6 +1629,10 @@
           break
         case 'left':
           this.step(-1)
+          break
+        case 'up':
+          break
+        case 'down':
           break
         default:
           return false
@@ -1637,7 +1674,6 @@
               self.model.note(pos, value)
             }
           })
-          // see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus
           ev.preventDefault()
           bp.lastPopUp = bp.live.textInput1
           break
@@ -1673,22 +1709,6 @@
     // Default instance args
     id: 'player1'
   })
-  
-  // PlayerView.prototype.unfocus = function () {
-    // css(this.parentEl.childNodes[0], {
-      // border: 'none'
-    // })
-    // if (bp.lastPopUp) bp.lastPopUp.hide()
-  // }
-  // PlayerView.prototype.focus = function () {
-    // css(this.parentEl.childNodes[0], {
-      // border: '1px solid blue'
-    // })
-    // if (bp.lastPopUp) {
-      // bp.lastPopUp.show()
-      // bp.lastPopUp.inputEl.select()
-    // }
-  // }
   
   function decToalphanum (num) {
     if (num >= alphaNum.length) {
@@ -1789,7 +1809,7 @@
       if (el.value) {
         this.model.loadBeatUrl('data/' + el.value + '.beat', function (err, model) {
           if (err) throw err
-          bp.live.playerView1.gotoPos(1)
+          bp.live.player1.gotoPos(1)
         })
       }
     }
@@ -1998,8 +2018,8 @@
   
   // TODO use model for defaults
   var defaultOptions = {
-    beatsView1: {
-      id: 'beatView1',
+    beatsView: {
+      id: 'beatView',
       options: ['beat0', 'beat1', 'beat2', 'beat3']
     },
     settingsView1: {
@@ -2007,39 +2027,6 @@
       beats: 12
     }
   }
-  
-   // TODO move subscriptions elsewhere
-   var m = bp.model
-   var live = bp.live
-   m.subscribe('SelectInstrument', function () {
-     live.instrumentsView1.selectInstrumentNumber()
-   })
-  
-   m.subscribe('SelectInstrumentRange', function () {
-     live.instrumentsView1.selectInstrumentRange()
-   })
-  
-   m.subscribe('NewText', function () {
-     live.playerView1.update()
-     live.settingsView1.update()
-   })
-  
-   m.subscribe('play', function () {
-     live.controlsView1.play()
-     live.beatAudio1.play()
-     m.playing(true)
-   })
-  
-   m.subscribe('stop', function () {
-     live.controlsView1.stop()
-     live.beatAudio1.stop()
-     m.playing(false)
-   })
-  
-   m.subscribe('GotoPos', function (pos) {
-     live.playerView1.gotoPos(pos)
-     m.position(pos)
-   })
   
   ready(function () {
     bp.started = Date.now()
@@ -2056,8 +2043,8 @@
   
     live.inputHandler1 = new InputHandler({
       model: bp.model,
-      keyboardView: live.keyboardView1,
-      player: live.playerView1
+      keyboardView: live.keyboard,
+      player: live.player1
     })
     live.inputHandler1.eventsAttach()
   
@@ -2067,13 +2054,13 @@
     live.beatAudio1 = new BeatAudio(bp.model)
   
     // TODO handle focus with mouse
-    live.stepFocus = new StepIterElems([
-      live.beatsView1,
-      live.settingsView1,
+    live.stepFocus = new IterElems([
+      live.beatsView,
+      live.settings,
       live.controlsView1,
-      live.playerView1,
-      live.keyboardView1,
-      live.instrumentsView1
+      live.player1,
+      live.keyboard,
+      live.instruments
     ])
     live.stepFocus.get().focus()
   
@@ -2081,10 +2068,10 @@
     m.loadBeatUrl('data/beat0.beat', function (err, model) {
       if (err) throw err
       console.warn('Loaded beat1')
-      live.playerView1.detach()
-      live.playerView1.renderModel()
-      live.playerView1.attach()
-      live.playerView1.gotoPos(0)
+      live.player1.detach()
+      live.player1.renderModel()
+      live.player1.attach()
+      live.player1.gotoPos(0)
     })
   })
   

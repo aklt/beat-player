@@ -208,7 +208,7 @@ function KeyboardView (o) {
     // [2, 'Q', 'R'],
     // [3, 'B', 'M']
   ]
-  o.model.selectedInstrument(o.selectedInstrument || 1)
+  // TODO o.model.selectedInstrument(o.selectedInstrument || 1)
   // properties on o added
 }
 
@@ -344,34 +344,6 @@ createView(bp, KeyboardView, {
 
 // 1}}} KeyboardView
 
-// {{{1 ScoreColumns
-// TODO Get rid of this
-function ScoreColumns (el) {
-  // console.warn(type(el));
-  var els = qa('p', el).filter(function (el1) {
-    // TODO fails if only one instrument
-    return el1.childNodes.length > 1
-  })
-  this.iter = new StepIterElems(els)
-  this.last = els[0]
-}
-
-ScoreColumns.prototype = {
-  step: function (direction) {
-    var selected = this.iter.step(direction)
-    classRemove(this.last, 'active')
-    classAdd(selected, 'active')
-    this.last = selected
-  },
-  gotoPos: function (pos) {
-    var selected = this.iter.set(pos)
-    classRemove(this.last, 'active')
-    classAdd(selected, 'active')
-    this.last = selected
-  }
-}
-// 1}}} ScoreColumns
-
 // {{{1 SettingsView
 
 function SettingsView () {
@@ -404,6 +376,46 @@ createView(bp, SettingsView, {
 
 // {{{1 PlayerView
 // TODO Make scoreSpanTemplate a separate control
+// {{{2 ScoreColumns
+// TODO Merge with focus?
+function ScoreColumns (el) {
+  // console.warn(type(el));
+  var els = qa('.score-columns p', el).filter(function (el1) {
+    // TODO fails if only one instrument
+    return el1.childNodes.length > 1
+  })
+  this.iter = new IterElems(els)
+  this.last = els[0]
+}
+
+ScoreColumns.prototype = {
+  step: function (direction) {
+    var selected = this.iter.step(direction)
+    classRemove(this.last, 'active')
+    classAdd(selected, 'active')
+    this.last = selected
+  },
+  gotoPos: function (pos) {
+    var selected = this.iter.set(pos)
+    classRemove(this.last, 'active')
+    classAdd(selected, 'active')
+    this.last = selected
+  }
+}
+// 2}}} ScoreColumns
+
+// {{{2 Instruments
+function Instruments (el) {
+  var els = qa('.instruments p', el)
+  this.iter = new IterElems(els)
+  this.last = els[0]
+}
+
+Instruments.prototype = {
+
+}
+// 2}}} Instruments
+
 function scoreSpanTemplate (length, tpb) {
   var result = []
   for (var i = 0; i < length; i += 1) {
@@ -478,29 +490,16 @@ createView(bp, PlayerView, {
   afterAttach: function () {
     if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
     this.scoreColumns = new ScoreColumns(this.parentEl)
+    // this.instruments = new Instruments(this.parentEl)
   },
   gotoPos: function (pos) {
-    // TODO get rid of scoreColumns
     this.scoreColumns.gotoPos(pos)
   },
-  start: function (from) {
-    var self = this
-    this.interval = setInterval(function () {
-      requestAnimationFrame(function () {
-        console.warn('step')
-        self.step()
-      })
-    }, 1000 * (60 / this.model.bpm()) / this.model.tpb())
+  step: function (direction) {
+    this.scoreColumns.step(direction)
   },
-  stop: function () {
-    console.warn('asdsadsadsadsadsadads')
-    clearInterval(this.interval)
-    this.interval = null
-  },
-  step: function (amount) {
-    amount = amount || 1
-    this.currentPos += amount
-    this.scoreColumns.step(amount)
+  stepInstrument: function (direction) {
+
   },
   handleKey: function (key, el) {
     switch (key) {
@@ -509,6 +508,10 @@ createView(bp, PlayerView, {
         break
       case 'left':
         this.step(-1)
+        break
+      case 'up':
+        break
+      case 'down':
         break
       default:
         return false
@@ -550,7 +553,6 @@ createView(bp, PlayerView, {
             self.model.note(pos, value)
           }
         })
-        // see https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus
         ev.preventDefault()
         bp.lastPopUp = bp.live.textInput1
         break
@@ -586,22 +588,6 @@ createView(bp, PlayerView, {
   // Default instance args
   id: 'player1'
 })
-
-// PlayerView.prototype.unfocus = function () {
-  // css(this.parentEl.childNodes[0], {
-    // border: 'none'
-  // })
-  // if (bp.lastPopUp) bp.lastPopUp.hide()
-// }
-// PlayerView.prototype.focus = function () {
-  // css(this.parentEl.childNodes[0], {
-    // border: '1px solid blue'
-  // })
-  // if (bp.lastPopUp) {
-    // bp.lastPopUp.show()
-    // bp.lastPopUp.inputEl.select()
-  // }
-// }
 
 function decToalphanum (num) {
   if (num >= alphaNum.length) {
@@ -702,7 +688,7 @@ createView(bp, BeatsView, {
     if (el.value) {
       this.model.loadBeatUrl('data/' + el.value + '.beat', function (err, model) {
         if (err) throw err
-        bp.live.playerView1.gotoPos(1)
+        bp.live.player1.gotoPos(1)
       })
     }
   }

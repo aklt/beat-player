@@ -4,6 +4,9 @@
 // Represents the model of the current beat.
 //
 // Holds all data of the current beat and is referenced from all Views.
+//
+// TODO Principle: modify tghe model first and then the view on basis of model
+// values. In
 
 // TODO Don't expose bp.live
 var bp = __window.bp = {
@@ -44,7 +47,8 @@ var subscriptionEvents = {
   stop: 1,
   forward: 1,
   back: 1,
-  step: 1
+  step: 1,
+  playerStep: 1
 }
 
 BeatModel.prototype = {
@@ -373,4 +377,39 @@ function readConfig (lines) {
 mixinGetSet(BeatModel, 'bpm', 100)
 mixinGetSet(BeatModel, 'tpb', 4)
 mixinGetSet(BeatModel, 'beats', 4)
-bp.model = new BeatModel()
+
+ var m = bp.model = new BeatModel()
+ var live = bp.live
+ m.subscribe('SelectInstrument', function () {
+   live.instrumentsView1.selectInstrumentNumber()
+ })
+
+ m.subscribe('SelectInstrumentRange', function () {
+   live.instrumentsView1.selectInstrumentRange()
+ })
+
+ m.subscribe('NewText', function () {
+   live.player1.update()
+   live.settings.update()
+ })
+
+ m.subscribe('play', function () {
+   live.controlsView1.play()
+   live.beatAudio1.play()
+   m.playing(true)
+ })
+
+ m.subscribe('stop', function () {
+   live.controlsView1.stop()
+   live.beatAudio1.stop()
+   m.playing(false)
+ })
+
+ m.subscribe('playerStep', function (direction) {
+   live.player1.step(direction)
+ })
+
+ m.subscribe('GotoPos', function (pos) {
+   live.player1.gotoPos(pos)
+   m.position(pos)
+ })

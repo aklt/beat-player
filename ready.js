@@ -2,8 +2,8 @@
 
 // TODO use model for defaults
 var defaultOptions = {
-  beatsView1: {
-    id: 'beatView1',
+  beatsView: {
+    id: 'beatView',
     options: ['beat0', 'beat1', 'beat2', 'beat3']
   },
   settingsView1: {
@@ -11,39 +11,6 @@ var defaultOptions = {
     beats: 12
   }
 }
-
- // TODO move subscriptions elsewhere
- var m = bp.model
- var live = bp.live
- m.subscribe('SelectInstrument', function () {
-   live.instrumentsView1.selectInstrumentNumber()
- })
-
- m.subscribe('SelectInstrumentRange', function () {
-   live.instrumentsView1.selectInstrumentRange()
- })
-
- m.subscribe('NewText', function () {
-   live.playerView1.update()
-   live.settingsView1.update()
- })
-
- m.subscribe('play', function () {
-   live.controlsView1.play()
-   live.beatAudio1.play()
-   m.playing(true)
- })
-
- m.subscribe('stop', function () {
-   live.controlsView1.stop()
-   live.beatAudio1.stop()
-   m.playing(false)
- })
-
- m.subscribe('GotoPos', function (pos) {
-   live.playerView1.gotoPos(pos)
-   m.position(pos)
- })
 
 ready(function () {
   bp.started = Date.now()
@@ -60,8 +27,8 @@ ready(function () {
 
   live.inputHandler1 = new InputHandler({
     model: bp.model,
-    keyboardView: live.keyboardView1,
-    player: live.playerView1
+    keyboardView: live.keyboard,
+    player: live.player1
   })
   live.inputHandler1.eventsAttach()
 
@@ -71,13 +38,13 @@ ready(function () {
   live.beatAudio1 = new BeatAudio(bp.model)
 
   // TODO handle focus with mouse
-  live.stepFocus = new StepIterElems([
-    live.beatsView1,
-    live.settingsView1,
+  live.stepFocus = new IterElems([
+    live.beatsView,
+    live.settings,
     live.controlsView1,
-    live.playerView1,
-    live.keyboardView1,
-    live.instrumentsView1
+    live.player1,
+    live.keyboard,
+    live.instruments
   ])
   live.stepFocus.get().focus()
 
@@ -85,10 +52,10 @@ ready(function () {
   m.loadBeatUrl('data/beat0.beat', function (err, model) {
     if (err) throw err
     console.warn('Loaded beat1')
-    live.playerView1.detach()
-    live.playerView1.renderModel()
-    live.playerView1.attach()
-    live.playerView1.gotoPos(0)
+    live.player1.detach()
+    live.player1.renderModel()
+    live.player1.attach()
+    live.player1.gotoPos(0)
   })
 })
 

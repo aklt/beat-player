@@ -514,12 +514,12 @@ function mixinGetSet (AClass, prop, defaultValue) {
   }
 }
 
-function StepIterElems (els, i) {
+function IterElems (els, i) {
   this.elems = els
   this.index = i || 0
 }
 
-StepIterElems.prototype = {
+IterElems.prototype = {
   next: function () {
     this.index += 1
     if (this.index === this.elems.length) this.index = 0
@@ -576,16 +576,11 @@ function createView (bp, AClass, proto, handlers, args) {
   }
   args = args || {}
   if (!args.id) throw new Error('Need args.id')
-  if (!AClass.instanceCount) AClass.instanceCount = 0
   args.model = bp.model
   args.parentEl = $id(args.id)
   var obj = AClass.create(args)
   mixinFocus(bp.focus, obj, 'parentEl', 'focus')
-  AClass.instanceCount += 1
-  var name = lcFirst(AClass.name) + AClass.instanceCount
-  // console.warn('createView', name, AClass, obj)
-  // TODO place live elems elsewhere
-  bp.live[name] = obj
+  bp.live[args.id] = obj
 }
 
 function lcFirst (text) {
