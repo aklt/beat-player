@@ -77,6 +77,7 @@ BeatModel.prototype = {
     o.disabled = true
   },
   // Read a text pattern without instruments
+  // TODO Move reading to a different file
   readBeatText: function (text) {
     var parts = text.split(/^--.*/m)
     if (parts.length < 2) throw new Error('Need at least global anmd beat parts')
@@ -372,6 +373,4 @@ function readConfig (lines) {
 mixinGetSet(BeatModel, 'bpm', 100)
 mixinGetSet(BeatModel, 'tpb', 4)
 mixinGetSet(BeatModel, 'beats', 4)
-
-// TODO create bp.model elsewhere
 bp.model = new BeatModel()

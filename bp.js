@@ -676,6 +676,7 @@
       o.disabled = true
     },
     // Read a text pattern without instruments
+    // TODO Move reading to a different file
     readBeatText: function (text) {
       var parts = text.split(/^--.*/m)
       if (parts.length < 2) throw new Error('Need at least global anmd beat parts')
@@ -971,8 +972,6 @@
   mixinGetSet(BeatModel, 'bpm', 100)
   mixinGetSet(BeatModel, 'tpb', 4)
   mixinGetSet(BeatModel, 'beats', 4)
-  
-  // TODO create bp.model elsewhere
   bp.model = new BeatModel()
   /*global bp, AudioContext */
   
@@ -1121,8 +1120,8 @@
   // ## Player View keys
   // 1-9, a-z, A-Z  select column
   //
-  // ## Mouse
-  //
+  // TODO Do not depend on device typematic delay
+  // TODO Show state and active key being pressed iin footer
   var key0 = '0'.charCodeAt(0)
   var key9 = '9'.charCodeAt(0)
   var keyA = 'A'.charCodeAt(0)
@@ -2009,6 +2008,39 @@
     }
   }
   
+   // TODO move subscriptions elsewhere
+   var m = bp.model
+   var live = bp.live
+   m.subscribe('SelectInstrument', function () {
+     live.instrumentsView1.selectInstrumentNumber()
+   })
+  
+   m.subscribe('SelectInstrumentRange', function () {
+     live.instrumentsView1.selectInstrumentRange()
+   })
+  
+   m.subscribe('NewText', function () {
+     live.playerView1.update()
+     live.settingsView1.update()
+   })
+  
+   m.subscribe('play', function () {
+     live.controlsView1.play()
+     live.beatAudio1.play()
+     m.playing(true)
+   })
+  
+   m.subscribe('stop', function () {
+     live.controlsView1.stop()
+     live.beatAudio1.stop()
+     m.playing(false)
+   })
+  
+   m.subscribe('GotoPos', function (pos) {
+     live.playerView1.gotoPos(pos)
+     m.position(pos)
+   })
+  
   ready(function () {
     bp.started = Date.now()
     var live = bp.live
@@ -2045,37 +2077,6 @@
     ])
     live.stepFocus.get().focus()
   
-    // TODO move subscriptions elsewhere
-    var m = bp.model
-    m.subscribe('SelectInstrument', function () {
-      live.instrumentsView1.selectInstrumentNumber()
-    })
-  
-    m.subscribe('SelectInstrumentRange', function () {
-      live.instrumentsView1.selectInstrumentRange()
-    })
-  
-    m.subscribe('NewText', function () {
-      live.playerView1.update()
-      live.settingsView1.update()
-    })
-  
-    m.subscribe('play', function () {
-      live.controlsView1.play()
-      live.beatAudio1.play()
-      m.playing(true)
-    })
-  
-    m.subscribe('stop', function () {
-      live.controlsView1.stop()
-      live.beatAudio1.stop()
-      m.playing(false)
-    })
-  
-    m.subscribe('GotoPos', function (pos) {
-      live.playerView1.gotoPos(pos)
-      m.position(pos)
-    })
   
     m.loadBeatUrl('data/beat0.beat', function (err, model) {
       if (err) throw err

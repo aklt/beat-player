@@ -33,8 +33,8 @@ keyboardKeys.join('').split('').forEach(function (k, i) {
 // ## Player View keys
 // 1-9, a-z, A-Z  select column
 //
-// ## Mouse
-//
+// TODO Do not depend on device typematic delay
+// TODO Show state and active key being pressed iin footer
 var key0 = '0'.charCodeAt(0)
 var key9 = '9'.charCodeAt(0)
 var keyA = 'A'.charCodeAt(0)

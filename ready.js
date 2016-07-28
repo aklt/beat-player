@@ -12,6 +12,39 @@ var defaultOptions = {
   }
 }
 
+ // TODO move subscriptions elsewhere
+ var m = bp.model
+ var live = bp.live
+ m.subscribe('SelectInstrument', function () {
+   live.instrumentsView1.selectInstrumentNumber()
+ })
+
+ m.subscribe('SelectInstrumentRange', function () {
+   live.instrumentsView1.selectInstrumentRange()
+ })
+
+ m.subscribe('NewText', function () {
+   live.playerView1.update()
+   live.settingsView1.update()
+ })
+
+ m.subscribe('play', function () {
+   live.controlsView1.play()
+   live.beatAudio1.play()
+   m.playing(true)
+ })
+
+ m.subscribe('stop', function () {
+   live.controlsView1.stop()
+   live.beatAudio1.stop()
+   m.playing(false)
+ })
+
+ m.subscribe('GotoPos', function (pos) {
+   live.playerView1.gotoPos(pos)
+   m.position(pos)
+ })
+
 ready(function () {
   bp.started = Date.now()
   var live = bp.live
@@ -48,37 +81,6 @@ ready(function () {
   ])
   live.stepFocus.get().focus()
 
-  // TODO move subscriptions elsewhere
-  var m = bp.model
-  m.subscribe('SelectInstrument', function () {
-    live.instrumentsView1.selectInstrumentNumber()
-  })
-
-  m.subscribe('SelectInstrumentRange', function () {
-    live.instrumentsView1.selectInstrumentRange()
-  })
-
-  m.subscribe('NewText', function () {
-    live.playerView1.update()
-    live.settingsView1.update()
-  })
-
-  m.subscribe('play', function () {
-    live.controlsView1.play()
-    live.beatAudio1.play()
-    m.playing(true)
-  })
-
-  m.subscribe('stop', function () {
-    live.controlsView1.stop()
-    live.beatAudio1.stop()
-    m.playing(false)
-  })
-
-  m.subscribe('GotoPos', function (pos) {
-    live.playerView1.gotoPos(pos)
-    m.position(pos)
-  })
 
   m.loadBeatUrl('data/beat0.beat', function (err, model) {
     if (err) throw err

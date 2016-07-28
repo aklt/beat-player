@@ -10,9 +10,10 @@
 @import neat/neat
 
 // TODO Import skin colors
-$color-focus:  #AAA
-$color-active: #AAC
-$color-bg:     #FFF
+$color-focus:     #AAA
+$color-active:    #AAC
+$color-bg:        #FFF
+$color-footer-bg: #DFD
 
 $col-width: 1rem
 
@@ -167,8 +168,7 @@ div
 @include sticky-footer(48px, '.bp', '.footer-layout', '.footer-content')
 
 .footer-content
-  @extend %border
-  // background-color: green
+  background-color: $color-footer-bg
 
 .input-text
   input[type=text]
