@@ -33,7 +33,7 @@ BeatModel.defaultInstrument = {
 }
 
 var subscriptionEvents = {
-  NewText: 1,
+  LoadBeat: 1,
   ChangeBpm: 1,
   ChangeTpb: 1,
   ChangeBeats: 1,
@@ -48,7 +48,11 @@ var subscriptionEvents = {
   forward: 1,
   back: 1,
   step: 1,
-  playerStep: 1
+  playerStep: 1,
+  focus: 1,
+  focusUp: 1,
+  focusDown: 1,
+  handleKey: 1
 }
 
 BeatModel.prototype = {
@@ -61,11 +65,12 @@ BeatModel.prototype = {
   dispatch: function (ev, data) {
     if (!subscriptionEvents[ev]) throw new Error('Illegal subscription event name ' + ev)
     var cbs = this.subscriptions[ev] || []
-    console.warn('dispatch', ev, data)
     if (!cbs.disabled) {
+      if (cbs.length === 0) {
+        console.warn('No subscriptions for ', ev)
+      }
       for (var i = 0; i < cbs.length; i += 1) {
         var cb = cbs[i]
-        console.warn('  call', cb[0].name, data)
         cb[0].call(cb[1], data)
       }
     }
@@ -91,7 +96,6 @@ BeatModel.prototype = {
     }
     if (parts.length >= 3) this.readInstruments(configLines(parts[2]))
     if (parts.length >= 4) this.readEffects(configLines(parts[3]))
-    this.dispatch('NewText', this.model)
   },
   readGlobal: function (lines) {
     var conf = readConfig(lines)
@@ -241,6 +245,17 @@ BeatModel.prototype = {
     if (typeof pos === 'number') this.model.position = pos
     return this.model.position
   },
+  step: function (direction) {
+    direction = direction || 1
+    if (direction > 0) {
+      this.model.position += 1
+      if (this.model.position >= this.patternLength()) this.model.position = 0
+    } else {
+      this.model.position -= 1
+      if (this.model.position <= -1) this.model.position = this.patternLength() - 1
+    }
+    return this.model.position
+  },
   instrument: function (number) {
     number = number || this.model.selectedInstrument
     var i1 = this.model.instruments[number]
@@ -388,9 +403,13 @@ mixinGetSet(BeatModel, 'beats', 4)
    live.instrumentsView1.selectInstrumentRange()
  })
 
- m.subscribe('NewText', function () {
-   live.player1.update()
-   live.settings.update()
+ m.subscribe('LoadBeat', function (url) {
+   this.loadBeatUrl(url, function (err) {
+     if (err) throw new Error('Could not load', url, err)
+     live.beatAudio1.calcTickTimes()
+     live.player1.update()
+     live.settings.update()
+   })
  })
 
  m.subscribe('play', function () {
@@ -405,8 +424,24 @@ mixinGetSet(BeatModel, 'beats', 4)
    m.playing(false)
  })
 
+ m.subscribe('focus', function (view) {
+   live.stepFocus.set(view)
+   this.view = view
+ })
+
+ m.subscribe('focusUp', function () {
+   this.view = live.stepFocus.prev()
+   this.view.focus()
+ })
+
+ m.subscribe('focusDown', function () {
+   this.view = live.stepFocus.next()
+   this.view.focus()
+ })
+
  m.subscribe('playerStep', function (direction) {
-   live.player1.step(direction)
+   var pos = this.step(direction)
+   this.view.gotoPos(pos)
  })
 
  m.subscribe('GotoPos', function (pos) {

@@ -538,11 +538,16 @@ IterElems.prototype = {
     return this.elems[this.index]
   },
   set: function (pos) {
-    this.index = pos
+    if (typeof pos === 'number') {
+      this.index = pos
+    } else {
+      this.index = this.elems.indexOf(pos)
+    }
     return this.elems[this.index]
   }
 }
 
+// TODO deprecate
 function mixinFocus (context, obj, elName, className) {
   obj.focus = function () {
     if (!obj[elName]) throw new Error('Need obj[' + elName + ']')
@@ -560,8 +565,8 @@ function createView (bp, AClass, proto, handlers, args) {
     if (!proto.renderModel) throw new Error('Need proto.renderModel')
     if (!proto.handleKey) {
       console.warn('installing default handleKey for', AClass.name)
-      proto.handleKey = function () {
-        console.warn('No handling')
+      proto.handleKey = function (o) {
+        console.warn('No key handling', o)
         return false
       }
     }

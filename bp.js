@@ -540,11 +540,16 @@
       return this.elems[this.index]
     },
     set: function (pos) {
-      this.index = pos
+      if (typeof pos === 'number') {
+        this.index = pos
+      } else {
+        this.index = this.elems.indexOf(pos)
+      }
       return this.elems[this.index]
     }
   }
   
+  // TODO deprecate
   function mixinFocus (context, obj, elName, className) {
     obj.focus = function () {
       if (!obj[elName]) throw new Error('Need obj[' + elName + ']')
@@ -562,8 +567,8 @@
       if (!proto.renderModel) throw new Error('Need proto.renderModel')
       if (!proto.handleKey) {
         console.warn('installing default handleKey for', AClass.name)
-        proto.handleKey = function () {
-          console.warn('No handling')
+        proto.handleKey = function (o) {
+          console.warn('No key handling', o)
           return false
         }
       }
@@ -627,7 +632,7 @@
   }
   
   var subscriptionEvents = {
-    NewText: 1,
+    LoadBeat: 1,
     ChangeBpm: 1,
     ChangeTpb: 1,
     ChangeBeats: 1,
@@ -642,7 +647,11 @@
     forward: 1,
     back: 1,
     step: 1,
-    playerStep: 1
+    playerStep: 1,
+    focus: 1,
+    focusUp: 1,
+    focusDown: 1,
+    handleKey: 1
   }
   
   BeatModel.prototype = {
@@ -655,11 +664,12 @@
     dispatch: function (ev, data) {
       if (!subscriptionEvents[ev]) throw new Error('Illegal subscription event name ' + ev)
       var cbs = this.subscriptions[ev] || []
-      console.warn('dispatch', ev, data)
       if (!cbs.disabled) {
+        if (cbs.length === 0) {
+          console.warn('No subscriptions for ', ev)
+        }
         for (var i = 0; i < cbs.length; i += 1) {
           var cb = cbs[i]
-          console.warn('  call', cb[0].name, data)
           cb[0].call(cb[1], data)
         }
       }
@@ -685,7 +695,6 @@
       }
       if (parts.length >= 3) this.readInstruments(configLines(parts[2]))
       if (parts.length >= 4) this.readEffects(configLines(parts[3]))
-      this.dispatch('NewText', this.model)
     },
     readGlobal: function (lines) {
       var conf = readConfig(lines)
@@ -835,6 +844,17 @@
       if (typeof pos === 'number') this.model.position = pos
       return this.model.position
     },
+    step: function (direction) {
+      direction = direction || 1
+      if (direction > 0) {
+        this.model.position += 1
+        if (this.model.position >= this.patternLength()) this.model.position = 0
+      } else {
+        this.model.position -= 1
+        if (this.model.position <= -1) this.model.position = this.patternLength() - 1
+      }
+      return this.model.position
+    },
     instrument: function (number) {
       number = number || this.model.selectedInstrument
       var i1 = this.model.instruments[number]
@@ -982,9 +1002,13 @@
      live.instrumentsView1.selectInstrumentRange()
    })
   
-   m.subscribe('NewText', function () {
-     live.player1.update()
-     live.settings.update()
+   m.subscribe('LoadBeat', function (url) {
+     this.loadBeatUrl(url, function (err) {
+       if (err) throw new Error('Could not load', url, err)
+       live.beatAudio1.calcTickTimes()
+       live.player1.update()
+       live.settings.update()
+     })
    })
   
    m.subscribe('play', function () {
@@ -999,8 +1023,24 @@
      m.playing(false)
    })
   
+   m.subscribe('focus', function (view) {
+     live.stepFocus.set(view)
+     this.view = view
+   })
+  
+   m.subscribe('focusUp', function () {
+     this.view = live.stepFocus.prev()
+     this.view.focus()
+   })
+  
+   m.subscribe('focusDown', function () {
+     this.view = live.stepFocus.next()
+     this.view.focus()
+   })
+  
    m.subscribe('playerStep', function (direction) {
-     live.player1.step(direction)
+     var pos = this.step(direction)
+     this.view.gotoPos(pos)
    })
   
    m.subscribe('GotoPos', function (pos) {
@@ -1203,17 +1243,19 @@
             case IH_INIT:
               switch (key) {
                 case 'up':
-                  this.view = bp.live.stepFocus.prev()
-                  this.view.focus()
+                  m.dispatch('focusUp')
                   break
                 case 'down':
-                  this.view = bp.live.stepFocus.next()
-                  this.view.focus()
+                  m.dispatch('focusDown')
                   break
                 case 'right':
                 case 'left':
                   ih_state = IH_VIEW
-                  this.view.handleKey(key, ev, el)
+                  m.view.handleKey({
+                    key: key,
+                    ev: ev,
+                    el: el
+                  })
                   break
                 default:
                   // code
@@ -1225,7 +1267,11 @@
                   ih_state = IH_INIT
                   break
                 default:
-                  this.view.handleKey(key, ev, el)
+                  m.view.handleKey({
+                    key: key,
+                    ev: ev,
+                    el: el
+                  })
                   break
               }
               break
@@ -1496,26 +1542,15 @@
   // 1}}}
   
   // {{{1 PlayerView
-  // TODO Make scoreSpanTemplate a separate control
-  // {{{2 ScoreColumns
-  // TODO Merge with focus?
-  function ScoreColumns (el) {
-    // console.warn(type(el));
-    var els = qa('.score-columns p', el).filter(function (el1) {
-      // TODO fails if only one instrument
-      return el1.childNodes.length > 1
+  function IterActive (sel, el) {
+    var els = qa(sel, el).filter(function (el) {
+      return el.childNodes.length > 1
     })
     this.iter = new IterElems(els)
     this.last = els[0]
   }
   
-  ScoreColumns.prototype = {
-    step: function (direction) {
-      var selected = this.iter.step(direction)
-      classRemove(this.last, 'active')
-      classAdd(selected, 'active')
-      this.last = selected
-    },
+  IterActive.prototype = {
     gotoPos: function (pos) {
       var selected = this.iter.set(pos)
       classRemove(this.last, 'active')
@@ -1523,20 +1558,8 @@
       this.last = selected
     }
   }
-  // 2}}} ScoreColumns
   
-  // {{{2 Instruments
-  function Instruments (el) {
-    var els = qa('.instruments p', el)
-    this.iter = new IterElems(els)
-    this.last = els[0]
-  }
-  
-  Instruments.prototype = {
-  
-  }
-  // 2}}} Instruments
-  
+  // TODO Make scoreSpanTemplate a separate control
   function scoreSpanTemplate (length, tpb) {
     var result = []
     for (var i = 0; i < length; i += 1) {
@@ -1610,25 +1633,22 @@
     },
     afterAttach: function () {
       if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
-      this.scoreColumns = new ScoreColumns(this.parentEl)
-      // this.instruments = new Instruments(this.parentEl)
+      this.scoreColumns = new IterActive('.score-columns p', this.parentEl)
+      this.instruments = new IterActive('.instruments p', this.parentEl)
     },
     gotoPos: function (pos) {
       this.scoreColumns.gotoPos(pos)
     },
-    step: function (direction) {
-      this.scoreColumns.step(direction)
-    },
     stepInstrument: function (direction) {
   
     },
-    handleKey: function (key, el) {
-      switch (key) {
+    handleKey: function (o) {
+      switch (o.key) {
         case 'right':
-          this.step(1)
+          this.emit('playerStep', 1)
           break
         case 'left':
-          this.step(-1)
+          this.emit('playerStep', -1)
           break
         case 'up':
           break
@@ -1646,7 +1666,7 @@
       // var rowIndex = [].slice.call(el.parentNode.childNodes).indexOf(el)
       // var columnIndex
       // TODO make this idempotent
-      this.focus()
+      this.emit('focus', this)
       var r1
       var live = bp.live
       var self = this
@@ -1681,7 +1701,6 @@
           console.warn('I', alphanumToDec(el.innerText))
           this.model.dispatch('GotoPos', alphanumToDec(el.innerText) - 1)
           ev.preventDefault()
-          ev.stopPropagation()
           break
         case 'ABBR':
           r1 = elRect(qs('dd', el))
@@ -1789,6 +1808,7 @@
     this.collection = {}
   }
   
+  // TODO Make this  nicer
   createView(bp, BeatsView, {
     tpl: function (o) {
       return $t('span', 'Beat',
@@ -1807,10 +1827,7 @@
     click: function (ev, el) {
       this.focus()
       if (el.value) {
-        this.model.loadBeatUrl('data/' + el.value + '.beat', function (err, model) {
-          if (err) throw err
-          bp.live.player1.gotoPos(1)
-        })
+        this.emit('LoadBeat', 'data/' + el.value + '.beat')
       }
     }
   }, {

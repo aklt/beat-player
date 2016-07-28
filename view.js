@@ -82,17 +82,19 @@ mixinHandlers(InputHandler, {
           case IH_INIT:
             switch (key) {
               case 'up':
-                this.view = bp.live.stepFocus.prev()
-                this.view.focus()
+                m.dispatch('focusUp')
                 break
               case 'down':
-                this.view = bp.live.stepFocus.next()
-                this.view.focus()
+                m.dispatch('focusDown')
                 break
               case 'right':
               case 'left':
                 ih_state = IH_VIEW
-                this.view.handleKey(key, ev, el)
+                m.view.handleKey({
+                  key: key,
+                  ev: ev,
+                  el: el
+                })
                 break
               default:
                 // code
@@ -104,7 +106,11 @@ mixinHandlers(InputHandler, {
                 ih_state = IH_INIT
                 break
               default:
-                this.view.handleKey(key, ev, el)
+                m.view.handleKey({
+                  key: key,
+                  ev: ev,
+                  el: el
+                })
                 break
             }
             break
@@ -375,26 +381,15 @@ createView(bp, SettingsView, {
 // 1}}}
 
 // {{{1 PlayerView
-// TODO Make scoreSpanTemplate a separate control
-// {{{2 ScoreColumns
-// TODO Merge with focus?
-function ScoreColumns (el) {
-  // console.warn(type(el));
-  var els = qa('.score-columns p', el).filter(function (el1) {
-    // TODO fails if only one instrument
-    return el1.childNodes.length > 1
+function IterActive (sel, el) {
+  var els = qa(sel, el).filter(function (el) {
+    return el.childNodes.length > 1
   })
   this.iter = new IterElems(els)
   this.last = els[0]
 }
 
-ScoreColumns.prototype = {
-  step: function (direction) {
-    var selected = this.iter.step(direction)
-    classRemove(this.last, 'active')
-    classAdd(selected, 'active')
-    this.last = selected
-  },
+IterActive.prototype = {
   gotoPos: function (pos) {
     var selected = this.iter.set(pos)
     classRemove(this.last, 'active')
@@ -402,20 +397,8 @@ ScoreColumns.prototype = {
     this.last = selected
   }
 }
-// 2}}} ScoreColumns
 
-// {{{2 Instruments
-function Instruments (el) {
-  var els = qa('.instruments p', el)
-  this.iter = new IterElems(els)
-  this.last = els[0]
-}
-
-Instruments.prototype = {
-
-}
-// 2}}} Instruments
-
+// TODO Make scoreSpanTemplate a separate control
 function scoreSpanTemplate (length, tpb) {
   var result = []
   for (var i = 0; i < length; i += 1) {
@@ -489,25 +472,22 @@ createView(bp, PlayerView, {
   },
   afterAttach: function () {
     if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
-    this.scoreColumns = new ScoreColumns(this.parentEl)
-    // this.instruments = new Instruments(this.parentEl)
+    this.scoreColumns = new IterActive('.score-columns p', this.parentEl)
+    this.instruments = new IterActive('.instruments p', this.parentEl)
   },
   gotoPos: function (pos) {
     this.scoreColumns.gotoPos(pos)
   },
-  step: function (direction) {
-    this.scoreColumns.step(direction)
-  },
   stepInstrument: function (direction) {
 
   },
-  handleKey: function (key, el) {
-    switch (key) {
+  handleKey: function (o) {
+    switch (o.key) {
       case 'right':
-        this.step(1)
+        this.emit('playerStep', 1)
         break
       case 'left':
-        this.step(-1)
+        this.emit('playerStep', -1)
         break
       case 'up':
         break
@@ -525,7 +505,7 @@ createView(bp, PlayerView, {
     // var rowIndex = [].slice.call(el.parentNode.childNodes).indexOf(el)
     // var columnIndex
     // TODO make this idempotent
-    this.focus()
+    this.emit('focus', this)
     var r1
     var live = bp.live
     var self = this
@@ -560,7 +540,6 @@ createView(bp, PlayerView, {
         console.warn('I', alphanumToDec(el.innerText))
         this.model.dispatch('GotoPos', alphanumToDec(el.innerText) - 1)
         ev.preventDefault()
-        ev.stopPropagation()
         break
       case 'ABBR':
         r1 = elRect(qs('dd', el))
@@ -668,6 +647,7 @@ function BeatsView (o) {
   this.collection = {}
 }
 
+// TODO Make this  nicer
 createView(bp, BeatsView, {
   tpl: function (o) {
     return $t('span', 'Beat',
@@ -686,10 +666,7 @@ createView(bp, BeatsView, {
   click: function (ev, el) {
     this.focus()
     if (el.value) {
-      this.model.loadBeatUrl('data/' + el.value + '.beat', function (err, model) {
-        if (err) throw err
-        bp.live.player1.gotoPos(1)
-      })
+      this.emit('LoadBeat', 'data/' + el.value + '.beat')
     }
   }
 }, {
