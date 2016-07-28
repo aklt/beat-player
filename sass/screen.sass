@@ -9,6 +9,11 @@
 @import bourbon/bourbon
 @import neat/neat
 
+// TODO Import skin colors
+$color-focus:  #AAA
+$color-active: #AAC
+$color-bg:     #FFF
+
 $col-width: 1rem
 
 %row-container
@@ -20,10 +25,13 @@ $col-width: 1rem
 %view
   @include row()
   @include pad(0.1rem 1rem 0.1rem 0.5rem)
-  // @extend %border
 
 %hidden
   display: none
+
+div
+  border: 2px solid $color-bg
+  background-color: $color-bg
 
 .hidden
   @extend %hidden
@@ -109,7 +117,7 @@ $col-width: 1rem
       height: 1rem
       text-align: center
     & .active
-      background-color: lightblue
+      background-color: $color-active
 
 .keyboard
   font-size: 150%
@@ -168,7 +176,6 @@ $col-width: 1rem
     margin: 0
     padding: 0
 
-
 .input-slider
   // @extend %hidden
 
@@ -176,5 +183,5 @@ $col-width: 1rem
   // @extend %hidden
 
 .focus
-  background-color: #DDD
+  border: 2px solid $color-focus
 

@@ -1,4 +1,4 @@
-/*global bp XMLHttpRequest Node*/
+/*global XMLHttpRequest Node*/
 var __slice = [].slice
 var __hasProp = {}.hasOwnProperty
 var __proto = 'prototype'
@@ -52,34 +52,6 @@ function each (objOrArray, fn) {
       }
     }
   }
-}
-
-function StepIterElems (o) {
-  this.elems = o.elems
-  this.index = o.index || 0
-}
-
-StepIterElems.prototype = {
-  next: function () {
-    this.index += 1
-    if (this.index === this.elems.length) this.index = 0
-    return this.elems[this.index]
-  },
-  prev: function () {
-    this.index -= 1
-    if (this.index === -1) this.index = this.elems.length - 1
-    return this.elems[this.index]
-  },
-  get: function () {
-    return this.elems[this.index]
-  }
-}
-
-function stepIter (elems, index) {
-  return new StepIterElems({
-    elems: elems,
-    index: index || 0
-  })
 }
 
 function eachPush (objOrArray, fn) {
@@ -147,9 +119,6 @@ function $t_attr (opts) {
   if (result.length === 0) return ''
   return ' ' + result.join(' ')
 }
-//
-// b.js
-//
 
 var __window = window
 var __document = __window.document
@@ -545,38 +514,57 @@ function mixinGetSet (AClass, prop, defaultValue) {
   }
 }
 
-var lastFocusEl
-function mixinFocus (obj, elName) {
+function StepIterElems (els, i) {
+  this.elems = els
+  this.index = i || 0
+}
+
+StepIterElems.prototype = {
+  next: function () {
+    this.index += 1
+    if (this.index === this.elems.length) this.index = 0
+    return this.elems[this.index]
+  },
+  prev: function () {
+    this.index -= 1
+    if (this.index === -1) this.index = this.elems.length - 1
+    return this.elems[this.index]
+  },
+  step: function (s) {
+    if (s > 0) return this.next()
+    return this.prev()
+  },
+  get: function () {
+    return this.elems[this.index]
+  },
+  set: function (pos) {
+    this.index = pos
+    return this.elems[this.index]
+  }
+}
+
+function mixinFocus (context, obj, elName, className) {
   obj.focus = function () {
     if (!obj[elName]) throw new Error('Need obj[' + elName + ']')
-    classAdd(obj[elName], 'focus')
-    if (lastFocusEl) {
-      classRemove(lastFocusEl, 'focus')
-    }
-    lastFocusEl = obj[elName]
+    if (context.lastEl) classRemove(context.lastEl, className)
+    classAdd(obj[elName], className)
+    context.lastEl = obj[elName]
   }
 }
 
-function mixinViewModel (obj, name) {
-  if (!bp.model) throw new Error('Need bp.model')
-  // if (!origSave) throw new Error('Need vmSave function for ' + name)
-  // if (!origLoad) throw new Error('Need vmLoad function for ' + name)
-  var m = bp.model
-  obj.vmSave = function (values) {
-    m.view(name, values)
-  }
-  obj.vmLoad = function () {
-    return m.view(name)
-  }
-}
-
-function createView (AClass, proto, handlers, args) {
-  if (typeof bp === 'undefined') throw new Error('Need bp')
+function createView (bp, AClass, proto, handlers, args) {
   if (!bp.model) throw new Error('Need bp.model')
   if (!bp.live) throw new Error('Need bp.live')
   if (!AClass.mixedIn) {
     if (!proto.tpl) throw new Error('Need proto.tpl function for markup')
     if (!proto.renderModel) throw new Error('Need proto.renderModel')
+    if (!proto.handleKey) {
+      console.warn('installing default handleKey for', AClass.name)
+      proto.handleKey = function () {
+        console.warn('No handling')
+        return false
+      }
+    }
     AClass.prototype = proto
     // TODO move elsewhere
     AClass.prototype.emit = function (ev, arg) {
@@ -588,14 +576,15 @@ function createView (AClass, proto, handlers, args) {
   }
   args = args || {}
   if (!args.id) throw new Error('Need args.id')
-  if (!AClass.instance) AClass.instanceCount = 0
+  if (!AClass.instanceCount) AClass.instanceCount = 0
   args.model = bp.model
   args.parentEl = $id(args.id)
   var obj = AClass.create(args)
-  mixinFocus(obj, 'parentEl')
+  mixinFocus(bp.focus, obj, 'parentEl', 'focus')
   AClass.instanceCount += 1
   var name = lcFirst(AClass.name) + AClass.instanceCount
   // console.warn('createView', name, AClass, obj)
+  // TODO place live elems elsewhere
   bp.live[name] = obj
 }
 

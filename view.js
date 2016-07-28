@@ -54,83 +54,69 @@ function InputHandler (o) {
   if (!o.model) throw new Error('o.model')
   this.keyboardView = o.keyboardView
   this.player = o.player
+  this.model = o.model
   this.parentEl = __document
+  this.view = bp.live[0]
 }
 
 InputHandler.prototype = {
 }
 
-var IH_INIT = 1
+const IH_INIT = 1
+const IH_VIEW = 2
+const IH_END = 3
 
-var IH_END = 4
 var ih_state = IH_INIT
 
 mixinHandlers(InputHandler, {
   keydown: function (ev, el) {
-    var k = translateKey(ev)
-    console.warn('key', k)
-    // hack
-    if (k === 'space') {
-      if (!bp.model.playing()) bp.model.dispatch('play')
-      else bp.model.dispatch('stop')
-    }
-    var code = ev.which
-    var obj
-    switch (ih_state) {
-      case IH_INIT:
-        if (code <= key9 && code >= key0) {
-          this.keyboardView.selectInstrument(String.fromCharCode(code))
-        } else if (code === keyUp) {
-          console.warn('keyUp')
-          if (bp.lastPopUp && bp.lastPopUp.keyUp) bp.lastPopUp.keyUp()
-          ev.preventDefault()
-        } else if (code === keyDown) {
-          console.warn('keyDown')
-          if (bp.lastPopUp && bp.lastPopUp.keyDown) bp.lastPopUp.keyDown()
-          ev.preventDefault()
-        } else if (code === keyLeft) {
-          obj = bp.live.stepFocus.prev()
-          console.warn('keyLeft', obj)
-          obj.focus()
-          if (bp.lastPopUp && bp.lastPopUp.keyLeft) bp.lastPopUp.keyLeft()
-          ev.preventDefault()
-        } else if (code === keyRight) {
-          obj = bp.live.stepFocus.next()
-          obj.focus()
-          console.warn('keyRight', obj)
-          if (bp.lastPopUp && bp.lastPopUp.keyRight) bp.lastPopUp.keyRight()
-          ev.preventDefault()
-        } else if (code === keySpace) {
-          console.warn('keySpace')
-          ev.preventDefault()
-        } else if (code === keyEsc) {
-          console.warn('keyEsc')
-          if (bp.lastPopUp) bp.lastPopUp.inputEl.hide()
-          ev.preventDefault()
-        } else if (code === keyEnter) {
-          console.warn('keyEnter')
-          ev.preventDefault()
-        } else if (code === keyTab) {
-          console.warn('keyTab')
-          if (!this.activeTab) this.activeTab = this.keyboardView
-          this.activeTab.unfocus()
-          if (this.activeTab === this.keyboardView) this.activeTab = this.player
-          else this.activeTab = this.keyboardView
-          this.activeTab.focus()
-
-          return ev.preventDefault()
-        } else {
-          if (keyboardKeyMap[k]) {
-            console.warn('play key', k)
-          }
-        }
-        break
-      case IH_END:
+    var m = this.model
+    var key = translateKey(ev)
+    switch (key) {
+      case 'space':
+        if (!m.playing()) m.dispatch('play')
+        else m.dispatch('stop')
         break
       default:
-        console.warn('Unknown ih_state', ih_state)
-        break
+        switch (ih_state) {
+          case IH_INIT:
+            switch (key) {
+              case 'up':
+                this.view = bp.live.stepFocus.prev()
+                this.view.focus()
+                break
+              case 'down':
+                this.view = bp.live.stepFocus.next()
+                this.view.focus()
+                break
+              case 'right':
+              case 'left':
+                ih_state = IH_VIEW
+                this.view.handleKey(key, ev, el)
+                break
+              default:
+                // code
+            }
+            break
+          case IH_VIEW:
+            switch (key) {
+              case 'esc':
+                ih_state = IH_INIT
+                break
+              default:
+                this.view.handleKey(key, ev, el)
+                break
+            }
+            break
+          case IH_END:
+            break
+          default:
+            console.warn('Unknown ih_state', ih_state)
+            break
+        }
     }
+    ev.preventDefault()
+    ev.stopPropagation()
   },
   keyup: function () {
     console.warn('up', arguments)
@@ -139,6 +125,55 @@ mixinHandlers(InputHandler, {
     console.warn('scroll', arguments)
   }
 })
+
+// {{{1 old key
+//      if (code <= key9 && code >= key0) {
+//        this.keyboardView.selectInstrument(String.fromCharCode(code))
+//      } else if (code === keyUp) {
+//        console.warn('keyUp')
+//        if (bp.lastPopUp && bp.lastPopUp.keyUp) bp.lastPopUp.keyUp()
+//        ev.preventDefault()
+//      } else if (code === keyDown) {
+//        console.warn('keyDown')
+//        if (bp.lastPopUp && bp.lastPopUp.keyDown) bp.lastPopUp.keyDown()
+//        ev.preventDefault()
+//      } else if (code === keyLeft) {
+//        obj = bp.live.stepFocus.prev()
+//        console.warn('keyLeft', obj)
+//        obj.focus()
+//        if (bp.lastPopUp && bp.lastPopUp.keyLeft) bp.lastPopUp.keyLeft()
+//        ev.preventDefault()
+//      } else if (code === keyRight) {
+//        obj = bp.live.stepFocus.next()
+//        obj.focus()
+//        console.warn('keyRight', obj)
+//        if (bp.lastPopUp && bp.lastPopUp.keyRight) bp.lastPopUp.keyRight()
+//        ev.preventDefault()
+//      } else if (code === keySpace) {
+//        console.warn('keySpace')
+//        ev.preventDefault()
+//      } else if (code === keyEsc) {
+//        console.warn('keyEsc')
+//        if (bp.lastPopUp) bp.lastPopUp.inputEl.hide()
+//        ev.preventDefault()
+//      } else if (code === keyEnter) {
+//        console.warn('keyEnter')
+//        ev.preventDefault()
+//      } else if (code === keyTab) {
+//        console.warn('keyTab')
+//        if (!this.activeTab) this.activeTab = this.keyboardView
+//        this.activeTab.unfocus()
+//        if (this.activeTab === this.keyboardView) this.activeTab = this.player
+//        else this.activeTab = this.keyboardView
+//        this.activeTab.focus()
+//
+//        return ev.preventDefault()
+//      } else {
+//        if (keyboardKeyMap[k]) {
+//          console.warn('play key', k)
+//        }
+//      }
+// 1}}}
 
 function translateKey (ev) {
   // TODO browser compat
@@ -177,7 +212,7 @@ function KeyboardView (o) {
   // properties on o added
 }
 
-createView(KeyboardView, {
+createView(bp, KeyboardView, {
   tpl: function (o) {
     o = o || {}
     return $t('pre', keyboardKeys.map(function (row, j) {
@@ -313,27 +348,26 @@ createView(KeyboardView, {
 // TODO Get rid of this
 function ScoreColumns (el) {
   // console.warn(type(el));
-  this.els = qa('p', el).filter(function (el1) {
+  var els = qa('p', el).filter(function (el1) {
     // TODO fails if only one instrument
     return el1.childNodes.length > 1
   })
-  this.selectedIndex = -1
-  this.selectedEl = this.els[this.selectedIndex]
-  this.lastSelectedEl = this.selectedEl
-  console.warn('ScoreColumns', this)
+  this.iter = new StepIterElems(els)
+  this.last = els[0]
 }
 
 ScoreColumns.prototype = {
-  step: function (units) {
-    if (!units) units = 1
-    this.selectedIndex += units
-    if (this.selectedIndex >= this.els.length) this.selectedIndex = 0
-    this.lastSelectedEl = this.selectedEl
-    this.selectedEl = this.els[this.selectedIndex]
-
-    if (!this.selectedEl) throw new Error('BAd ' + this.selectedIndex)
-    if (this.lastSelectedEl) classRemove(this.lastSelectedEl, 'active')
-    classAdd(this.selectedEl, 'active')
+  step: function (direction) {
+    var selected = this.iter.step(direction)
+    classRemove(this.last, 'active')
+    classAdd(selected, 'active')
+    this.last = selected
+  },
+  gotoPos: function (pos) {
+    var selected = this.iter.set(pos)
+    classRemove(this.last, 'active')
+    classAdd(selected, 'active')
+    this.last = selected
   }
 }
 // 1}}} ScoreColumns
@@ -343,7 +377,7 @@ ScoreColumns.prototype = {
 function SettingsView () {
 }
 
-createView(SettingsView, {
+createView(bp, SettingsView, {
   tpl: function (o) {
     return $t('dl',
         eachPush([{title: 'Beats Per Minute', abbr: 'BPM', name: 'bpm'},
@@ -384,7 +418,7 @@ const emptyCol = $t('p', $t('b', '&nbsp;'))
 function PlayerView (o) {
 }
 
-createView(PlayerView, {
+createView(bp, PlayerView, {
   tpl: function (o) {
     var m = this.model
     var t = extend({tracks: o.tracks,
@@ -447,8 +481,7 @@ createView(PlayerView, {
   },
   gotoPos: function (pos) {
     // TODO get rid of scoreColumns
-    this.scoreColumns.selectedIndex = -1
-    this.scoreColumns.step(pos)
+    this.scoreColumns.gotoPos(pos)
   },
   start: function (from) {
     var self = this
@@ -469,19 +502,18 @@ createView(PlayerView, {
     this.currentPos += amount
     this.scoreColumns.step(amount)
   },
-
-  // Keys
-  keyLeft: function (ev, el) {
-    console.warn(ev, el)
-  },
-  keyRight: function (ev, el) {
-    console.warn(ev, el)
-  },
-  keyUp: function (ev, el) {
-    console.warn(ev, el)
-  },
-  keyDown: function (ev, el) {
-    console.warn(ev, el)
+  handleKey: function (key, el) {
+    switch (key) {
+      case 'right':
+        this.step(1)
+        break
+      case 'left':
+        this.step(-1)
+        break
+      default:
+        return false
+    }
+    return true
   }
 }, {
 // Handlers
@@ -615,6 +647,7 @@ function ControlsView (o) {
   this.parentEl = $id('controls')
   this.btnPlay = qs('#btn-play', this.parentEl)
   this.btnStop = qs('#btn-stop', this.parentEl)
+  mixinFocus(bp.focus, this, 'parentEl', 'focus')
 }
 
 ControlsView.prototype = {
@@ -649,7 +682,7 @@ function BeatsView (o) {
   this.collection = {}
 }
 
-createView(BeatsView, {
+createView(bp, BeatsView, {
   tpl: function (o) {
     return $t('span', 'Beat',
       $t('select', { type: 'multi' },
@@ -683,7 +716,7 @@ createView(BeatsView, {
 function InstrumentsView (o) {
 }
 
-createView(InstrumentsView, {
+createView(bp, InstrumentsView, {
   tpl: function (o) {
     return [
       $t('h4', 'Instrument ' + o.number),

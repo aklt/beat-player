@@ -1,6 +1,6 @@
 /* Beat player v0.0.1*/
 ;(function () {
-  /*global bp XMLHttpRequest Node*/
+  /*global XMLHttpRequest Node*/
   var __slice = [].slice
   var __hasProp = {}.hasOwnProperty
   var __proto = 'prototype'
@@ -54,34 +54,6 @@
         }
       }
     }
-  }
-  
-  function StepIterElems (o) {
-    this.elems = o.elems
-    this.index = o.index || 0
-  }
-  
-  StepIterElems.prototype = {
-    next: function () {
-      this.index += 1
-      if (this.index === this.elems.length) this.index = 0
-      return this.elems[this.index]
-    },
-    prev: function () {
-      this.index -= 1
-      if (this.index === -1) this.index = this.elems.length - 1
-      return this.elems[this.index]
-    },
-    get: function () {
-      return this.elems[this.index]
-    }
-  }
-  
-  function stepIter (elems, index) {
-    return new StepIterElems({
-      elems: elems,
-      index: index || 0
-    })
   }
   
   function eachPush (objOrArray, fn) {
@@ -149,9 +121,6 @@
     if (result.length === 0) return ''
     return ' ' + result.join(' ')
   }
-  //
-  // b.js
-  //
   
   var __window = window
   var __document = __window.document
@@ -547,38 +516,57 @@
     }
   }
   
-  var lastFocusEl
-  function mixinFocus (obj, elName) {
+  function StepIterElems (els, i) {
+    this.elems = els
+    this.index = i || 0
+  }
+  
+  StepIterElems.prototype = {
+    next: function () {
+      this.index += 1
+      if (this.index === this.elems.length) this.index = 0
+      return this.elems[this.index]
+    },
+    prev: function () {
+      this.index -= 1
+      if (this.index === -1) this.index = this.elems.length - 1
+      return this.elems[this.index]
+    },
+    step: function (s) {
+      if (s > 0) return this.next()
+      return this.prev()
+    },
+    get: function () {
+      return this.elems[this.index]
+    },
+    set: function (pos) {
+      this.index = pos
+      return this.elems[this.index]
+    }
+  }
+  
+  function mixinFocus (context, obj, elName, className) {
     obj.focus = function () {
       if (!obj[elName]) throw new Error('Need obj[' + elName + ']')
-      classAdd(obj[elName], 'focus')
-      if (lastFocusEl) {
-        classRemove(lastFocusEl, 'focus')
-      }
-      lastFocusEl = obj[elName]
+      if (context.lastEl) classRemove(context.lastEl, className)
+      classAdd(obj[elName], className)
+      context.lastEl = obj[elName]
     }
   }
   
-  function mixinViewModel (obj, name) {
-    if (!bp.model) throw new Error('Need bp.model')
-    // if (!origSave) throw new Error('Need vmSave function for ' + name)
-    // if (!origLoad) throw new Error('Need vmLoad function for ' + name)
-    var m = bp.model
-    obj.vmSave = function (values) {
-      m.view(name, values)
-    }
-    obj.vmLoad = function () {
-      return m.view(name)
-    }
-  }
-  
-  function createView (AClass, proto, handlers, args) {
-    if (typeof bp === 'undefined') throw new Error('Need bp')
+  function createView (bp, AClass, proto, handlers, args) {
     if (!bp.model) throw new Error('Need bp.model')
     if (!bp.live) throw new Error('Need bp.live')
     if (!AClass.mixedIn) {
       if (!proto.tpl) throw new Error('Need proto.tpl function for markup')
       if (!proto.renderModel) throw new Error('Need proto.renderModel')
+      if (!proto.handleKey) {
+        console.warn('installing default handleKey for', AClass.name)
+        proto.handleKey = function () {
+          console.warn('No handling')
+          return false
+        }
+      }
       AClass.prototype = proto
       // TODO move elsewhere
       AClass.prototype.emit = function (ev, arg) {
@@ -590,14 +578,15 @@
     }
     args = args || {}
     if (!args.id) throw new Error('Need args.id')
-    if (!AClass.instance) AClass.instanceCount = 0
+    if (!AClass.instanceCount) AClass.instanceCount = 0
     args.model = bp.model
     args.parentEl = $id(args.id)
     var obj = AClass.create(args)
-    mixinFocus(obj, 'parentEl')
+    mixinFocus(bp.focus, obj, 'parentEl', 'focus')
     AClass.instanceCount += 1
     var name = lcFirst(AClass.name) + AClass.instanceCount
     // console.warn('createView', name, AClass, obj)
+    // TODO place live elems elsewhere
     bp.live[name] = obj
   }
   
@@ -614,12 +603,12 @@
   // Represents the model of the current beat.
   //
   // Holds all data of the current beat and is referenced from all Views.
-  //
-  // TODO Add subscriptions to events
   
+  // TODO Don't expose bp.live
   var bp = __window.bp = {
     live: {},
-    test: {}
+    test: {},
+    focus: {}
   }
   
   function BeatModel (o) {
@@ -1153,83 +1142,69 @@
     if (!o.model) throw new Error('o.model')
     this.keyboardView = o.keyboardView
     this.player = o.player
+    this.model = o.model
     this.parentEl = __document
+    this.view = bp.live[0]
   }
   
   InputHandler.prototype = {
   }
   
-  var IH_INIT = 1
+  const IH_INIT = 1
+  const IH_VIEW = 2
+  const IH_END = 3
   
-  var IH_END = 4
   var ih_state = IH_INIT
   
   mixinHandlers(InputHandler, {
     keydown: function (ev, el) {
-      var k = translateKey(ev)
-      console.warn('key', k)
-      // hack
-      if (k === 'space') {
-        if (!bp.model.playing()) bp.model.dispatch('play')
-        else bp.model.dispatch('stop')
-      }
-      var code = ev.which
-      var obj
-      switch (ih_state) {
-        case IH_INIT:
-          if (code <= key9 && code >= key0) {
-            this.keyboardView.selectInstrument(String.fromCharCode(code))
-          } else if (code === keyUp) {
-            console.warn('keyUp')
-            if (bp.lastPopUp && bp.lastPopUp.keyUp) bp.lastPopUp.keyUp()
-            ev.preventDefault()
-          } else if (code === keyDown) {
-            console.warn('keyDown')
-            if (bp.lastPopUp && bp.lastPopUp.keyDown) bp.lastPopUp.keyDown()
-            ev.preventDefault()
-          } else if (code === keyLeft) {
-            obj = bp.live.stepFocus.prev()
-            console.warn('keyLeft', obj)
-            obj.focus()
-            if (bp.lastPopUp && bp.lastPopUp.keyLeft) bp.lastPopUp.keyLeft()
-            ev.preventDefault()
-          } else if (code === keyRight) {
-            obj = bp.live.stepFocus.next()
-            obj.focus()
-            console.warn('keyRight', obj)
-            if (bp.lastPopUp && bp.lastPopUp.keyRight) bp.lastPopUp.keyRight()
-            ev.preventDefault()
-          } else if (code === keySpace) {
-            console.warn('keySpace')
-            ev.preventDefault()
-          } else if (code === keyEsc) {
-            console.warn('keyEsc')
-            if (bp.lastPopUp) bp.lastPopUp.inputEl.hide()
-            ev.preventDefault()
-          } else if (code === keyEnter) {
-            console.warn('keyEnter')
-            ev.preventDefault()
-          } else if (code === keyTab) {
-            console.warn('keyTab')
-            if (!this.activeTab) this.activeTab = this.keyboardView
-            this.activeTab.unfocus()
-            if (this.activeTab === this.keyboardView) this.activeTab = this.player
-            else this.activeTab = this.keyboardView
-            this.activeTab.focus()
-  
-            return ev.preventDefault()
-          } else {
-            if (keyboardKeyMap[k]) {
-              console.warn('play key', k)
-            }
-          }
-          break
-        case IH_END:
+      var m = this.model
+      var key = translateKey(ev)
+      switch (key) {
+        case 'space':
+          if (!m.playing()) m.dispatch('play')
+          else m.dispatch('stop')
           break
         default:
-          console.warn('Unknown ih_state', ih_state)
-          break
+          switch (ih_state) {
+            case IH_INIT:
+              switch (key) {
+                case 'up':
+                  this.view = bp.live.stepFocus.prev()
+                  this.view.focus()
+                  break
+                case 'down':
+                  this.view = bp.live.stepFocus.next()
+                  this.view.focus()
+                  break
+                case 'right':
+                case 'left':
+                  ih_state = IH_VIEW
+                  this.view.handleKey(key, ev, el)
+                  break
+                default:
+                  // code
+              }
+              break
+            case IH_VIEW:
+              switch (key) {
+                case 'esc':
+                  ih_state = IH_INIT
+                  break
+                default:
+                  this.view.handleKey(key, ev, el)
+                  break
+              }
+              break
+            case IH_END:
+              break
+            default:
+              console.warn('Unknown ih_state', ih_state)
+              break
+          }
       }
+      ev.preventDefault()
+      ev.stopPropagation()
     },
     keyup: function () {
       console.warn('up', arguments)
@@ -1238,6 +1213,55 @@
       console.warn('scroll', arguments)
     }
   })
+  
+  // {{{1 old key
+  //      if (code <= key9 && code >= key0) {
+  //        this.keyboardView.selectInstrument(String.fromCharCode(code))
+  //      } else if (code === keyUp) {
+  //        console.warn('keyUp')
+  //        if (bp.lastPopUp && bp.lastPopUp.keyUp) bp.lastPopUp.keyUp()
+  //        ev.preventDefault()
+  //      } else if (code === keyDown) {
+  //        console.warn('keyDown')
+  //        if (bp.lastPopUp && bp.lastPopUp.keyDown) bp.lastPopUp.keyDown()
+  //        ev.preventDefault()
+  //      } else if (code === keyLeft) {
+  //        obj = bp.live.stepFocus.prev()
+  //        console.warn('keyLeft', obj)
+  //        obj.focus()
+  //        if (bp.lastPopUp && bp.lastPopUp.keyLeft) bp.lastPopUp.keyLeft()
+  //        ev.preventDefault()
+  //      } else if (code === keyRight) {
+  //        obj = bp.live.stepFocus.next()
+  //        obj.focus()
+  //        console.warn('keyRight', obj)
+  //        if (bp.lastPopUp && bp.lastPopUp.keyRight) bp.lastPopUp.keyRight()
+  //        ev.preventDefault()
+  //      } else if (code === keySpace) {
+  //        console.warn('keySpace')
+  //        ev.preventDefault()
+  //      } else if (code === keyEsc) {
+  //        console.warn('keyEsc')
+  //        if (bp.lastPopUp) bp.lastPopUp.inputEl.hide()
+  //        ev.preventDefault()
+  //      } else if (code === keyEnter) {
+  //        console.warn('keyEnter')
+  //        ev.preventDefault()
+  //      } else if (code === keyTab) {
+  //        console.warn('keyTab')
+  //        if (!this.activeTab) this.activeTab = this.keyboardView
+  //        this.activeTab.unfocus()
+  //        if (this.activeTab === this.keyboardView) this.activeTab = this.player
+  //        else this.activeTab = this.keyboardView
+  //        this.activeTab.focus()
+  //
+  //        return ev.preventDefault()
+  //      } else {
+  //        if (keyboardKeyMap[k]) {
+  //          console.warn('play key', k)
+  //        }
+  //      }
+  // 1}}}
   
   function translateKey (ev) {
     // TODO browser compat
@@ -1276,7 +1300,7 @@
     // properties on o added
   }
   
-  createView(KeyboardView, {
+  createView(bp, KeyboardView, {
     tpl: function (o) {
       o = o || {}
       return $t('pre', keyboardKeys.map(function (row, j) {
@@ -1412,27 +1436,26 @@
   // TODO Get rid of this
   function ScoreColumns (el) {
     // console.warn(type(el));
-    this.els = qa('p', el).filter(function (el1) {
+    var els = qa('p', el).filter(function (el1) {
       // TODO fails if only one instrument
       return el1.childNodes.length > 1
     })
-    this.selectedIndex = -1
-    this.selectedEl = this.els[this.selectedIndex]
-    this.lastSelectedEl = this.selectedEl
-    console.warn('ScoreColumns', this)
+    this.iter = new StepIterElems(els)
+    this.last = els[0]
   }
   
   ScoreColumns.prototype = {
-    step: function (units) {
-      if (!units) units = 1
-      this.selectedIndex += units
-      if (this.selectedIndex >= this.els.length) this.selectedIndex = 0
-      this.lastSelectedEl = this.selectedEl
-      this.selectedEl = this.els[this.selectedIndex]
-  
-      if (!this.selectedEl) throw new Error('BAd ' + this.selectedIndex)
-      if (this.lastSelectedEl) classRemove(this.lastSelectedEl, 'active')
-      classAdd(this.selectedEl, 'active')
+    step: function (direction) {
+      var selected = this.iter.step(direction)
+      classRemove(this.last, 'active')
+      classAdd(selected, 'active')
+      this.last = selected
+    },
+    gotoPos: function (pos) {
+      var selected = this.iter.set(pos)
+      classRemove(this.last, 'active')
+      classAdd(selected, 'active')
+      this.last = selected
     }
   }
   // 1}}} ScoreColumns
@@ -1442,7 +1465,7 @@
   function SettingsView () {
   }
   
-  createView(SettingsView, {
+  createView(bp, SettingsView, {
     tpl: function (o) {
       return $t('dl',
           eachPush([{title: 'Beats Per Minute', abbr: 'BPM', name: 'bpm'},
@@ -1483,7 +1506,7 @@
   function PlayerView (o) {
   }
   
-  createView(PlayerView, {
+  createView(bp, PlayerView, {
     tpl: function (o) {
       var m = this.model
       var t = extend({tracks: o.tracks,
@@ -1546,8 +1569,7 @@
     },
     gotoPos: function (pos) {
       // TODO get rid of scoreColumns
-      this.scoreColumns.selectedIndex = -1
-      this.scoreColumns.step(pos)
+      this.scoreColumns.gotoPos(pos)
     },
     start: function (from) {
       var self = this
@@ -1568,19 +1590,18 @@
       this.currentPos += amount
       this.scoreColumns.step(amount)
     },
-  
-    // Keys
-    keyLeft: function (ev, el) {
-      console.warn(ev, el)
-    },
-    keyRight: function (ev, el) {
-      console.warn(ev, el)
-    },
-    keyUp: function (ev, el) {
-      console.warn(ev, el)
-    },
-    keyDown: function (ev, el) {
-      console.warn(ev, el)
+    handleKey: function (key, el) {
+      switch (key) {
+        case 'right':
+          this.step(1)
+          break
+        case 'left':
+          this.step(-1)
+          break
+        default:
+          return false
+      }
+      return true
     }
   }, {
   // Handlers
@@ -1714,6 +1735,7 @@
     this.parentEl = $id('controls')
     this.btnPlay = qs('#btn-play', this.parentEl)
     this.btnStop = qs('#btn-stop', this.parentEl)
+    mixinFocus(bp.focus, this, 'parentEl', 'focus')
   }
   
   ControlsView.prototype = {
@@ -1748,7 +1770,7 @@
     this.collection = {}
   }
   
-  createView(BeatsView, {
+  createView(bp, BeatsView, {
     tpl: function (o) {
       return $t('span', 'Beat',
         $t('select', { type: 'multi' },
@@ -1782,7 +1804,7 @@
   function InstrumentsView (o) {
   }
   
-  createView(InstrumentsView, {
+  createView(bp, InstrumentsView, {
     tpl: function (o) {
       return [
         $t('h4', 'Instrument ' + o.number),
@@ -2013,7 +2035,7 @@
     live.beatAudio1 = new BeatAudio(bp.model)
   
     // TODO handle focus with mouse
-    live.stepFocus = stepIter([
+    live.stepFocus = new StepIterElems([
       live.beatsView1,
       live.settingsView1,
       live.controlsView1,
@@ -2051,17 +2073,17 @@
     })
   
     m.subscribe('GotoPos', function (pos) {
-      live.playerView1.gotoPos(pos + 1)
+      live.playerView1.gotoPos(pos)
       m.position(pos)
     })
   
-    m.loadBeatUrl('data/beat1.beat', function (err, model) {
+    m.loadBeatUrl('data/beat0.beat', function (err, model) {
       if (err) throw err
       console.warn('Loaded beat1')
       live.playerView1.detach()
       live.playerView1.renderModel()
       live.playerView1.attach()
-      live.playerView1.gotoPos(1)
+      live.playerView1.gotoPos(0)
     })
   })
   

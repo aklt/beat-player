@@ -4,12 +4,12 @@
 // Represents the model of the current beat.
 //
 // Holds all data of the current beat and is referenced from all Views.
-//
-// TODO Add subscriptions to events
 
+// TODO Don't expose bp.live
 var bp = __window.bp = {
   live: {},
-  test: {}
+  test: {},
+  focus: {}
 }
 
 function BeatModel (o) {
