@@ -81,6 +81,8 @@ div
   @extend %view
   font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif
   cursor: pointer
+  overflow-x: auto
+  white-space: nowrap
   div
     float: left
   .instruments
@@ -91,6 +93,8 @@ div
       display: block
       clear: left
       height: $col-width
+    .active
+      background-color: $color-active
   .score
     text-align: left
     float: left
@@ -163,9 +167,6 @@ div
 .active-instrument
   background-color: lightgreen
 
-.instruments
-  @extend %view
-
 @include sticky-footer(48px, '.bp', '.footer-layout', '.footer-content')
 
 .footer-content
@@ -190,4 +191,8 @@ input::-moz-focus-inner
 
 .focus
   border: 2px solid $color-focus
+
+.debugView
+  border: 1px solid red
+  font-size: 80%
 

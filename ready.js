@@ -38,6 +38,7 @@ ready(function () {
   live.beatAudio1 = new BeatAudio(bp.model)
 
   // TODO handle focus with mouse
+  // TODO Put this in inputhandler
   live.stepFocus = new IterElems([
     live.beatsView,
     live.settings,
@@ -48,14 +49,8 @@ ready(function () {
   ])
   live.stepFocus.get().focus()
 
+  // Load initial beat
+  m.dispatch('LoadBeat', 'data/beat0.beat')
 
-  m.loadBeatUrl('data/beat0.beat', function (err, model) {
-    if (err) throw err
-    console.warn('Loaded beat1')
-    live.player1.detach()
-    live.player1.renderModel()
-    live.player1.attach()
-    live.player1.gotoPos(0)
-  })
 })
 

@@ -49,10 +49,11 @@ var subscriptionEvents = {
   back: 1,
   step: 1,
   playerStep: 1,
+  instrumentStep: 1,
   focus: 1,
   focusUp: 1,
   focusDown: 1,
-  handleKey: 1
+  EditText: 1
 }
 
 BeatModel.prototype = {
@@ -74,6 +75,13 @@ BeatModel.prototype = {
         cb[0].call(cb[1], data)
       }
     }
+    var json = extend({}, this.model)
+    delete json.instruments
+    delete json.patterns
+    DebugView({
+      id: 'debugView',
+      debug: json
+    })
   },
   enable: function (evName) {
     var o = this.subscriptions[evName]
@@ -291,8 +299,8 @@ BeatModel.prototype = {
     // TODO Also change tracks here so live record is emabled
     if (typeof pos === 'string') pos = parseNotePos(pos)
     var ps = this.model.patterns
-    if (type(value) === 'undefined') return ps[pos[1]][pos[0]]
-    if (!value || value === '.') delete ps[pos[1]][pos[0]]
+    if (type(value) === 'undefined') return ps[pos[0]][pos[1]]
+    if (!value || value === '.') delete ps[pos[0]][pos[1]]
     else ps[pos[1]][pos[0]] = value
     return ps[pos[1]][pos[0]]
   },
@@ -393,58 +401,68 @@ mixinGetSet(BeatModel, 'bpm', 100)
 mixinGetSet(BeatModel, 'tpb', 4)
 mixinGetSet(BeatModel, 'beats', 4)
 
- var m = bp.model = new BeatModel()
- var live = bp.live
- m.subscribe('SelectInstrument', function () {
-   live.instrumentsView1.selectInstrumentNumber()
- })
+var m = bp.model = new BeatModel()
+var live = bp.live
+m.subscribe('SelectInstrument', function () {
+  live.instrumentsView1.selectInstrumentNumber()
+})
 
- m.subscribe('SelectInstrumentRange', function () {
-   live.instrumentsView1.selectInstrumentRange()
- })
+m.subscribe('SelectInstrumentRange', function () {
+  live.instrumentsView1.selectInstrumentRange()
+})
 
- m.subscribe('LoadBeat', function (url) {
-   this.loadBeatUrl(url, function (err) {
-     if (err) throw new Error('Could not load', url, err)
-     live.beatAudio1.calcTickTimes()
-     live.player1.update()
-     live.settings.update()
-   })
- })
+m.subscribe('LoadBeat', function (url) {
+  this.loadBeatUrl(url, function (err) {
+    if (err) throw new Error('Could not load', url, err)
+    live.beatAudio1.calcTickTimes()
+    console.warn('load', this)
+    live.player1.update()
+    live.settings.update()
+  })
+})
 
- m.subscribe('play', function () {
-   live.controlsView1.play()
-   live.beatAudio1.play()
-   m.playing(true)
- })
+m.subscribe('play', function () {
+  live.controlsView1.play()
+  live.beatAudio1.play()
+  m.playing(true)
+})
 
- m.subscribe('stop', function () {
-   live.controlsView1.stop()
-   live.beatAudio1.stop()
-   m.playing(false)
- })
+m.subscribe('stop', function () {
+  live.controlsView1.stop()
+  live.beatAudio1.stop()
+  m.playing(false)
+})
 
- m.subscribe('focus', function (view) {
-   live.stepFocus.set(view)
-   this.view = view
- })
+m.subscribe('focus', function (view) {
+  live.stepFocus.set(view)
+  this.view = view
+})
 
- m.subscribe('focusUp', function () {
-   this.view = live.stepFocus.prev()
-   this.view.focus()
- })
+m.subscribe('focusUp', function () {
+  this.view = live.stepFocus.prev()
+  this.view.focus()
+})
 
- m.subscribe('focusDown', function () {
-   this.view = live.stepFocus.next()
-   this.view.focus()
- })
+m.subscribe('focusDown', function () {
+  this.view = live.stepFocus.next()
+  this.view.focus()
+})
 
- m.subscribe('playerStep', function (direction) {
-   var pos = this.step(direction)
-   this.view.gotoPos(pos)
- })
+m.subscribe('playerStep', function (direction) {
+  var pos = this.step(direction)
+  this.view.gotoPos(pos)
+})
 
- m.subscribe('GotoPos', function (pos) {
-   live.player1.gotoPos(pos)
-   m.position(pos)
- })
+m.subscribe('GotoPos', function (pos) {
+  live.player1.gotoPos(pos)
+  m.position(pos)
+})
+
+m.subscribe('EditText', function (o) {
+  // TODO handle input handler nicer
+  live.inputHandler1.state = IH_INPUT
+  live.textInput1.popup(o, function (text) {
+    o.el.innerText = text
+    m.note(pos, text)
+  })
+})

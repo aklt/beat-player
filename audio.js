@@ -57,7 +57,7 @@ BeatAudio.prototype = {
   play: function () {
     if (!this.timeout) {
       this.calcTickTimes()
-      // TODO Trigger timeout just before event
+      // TODO Handle drift better
       this.nextTick = this.context.currentTime + Math.max(this.secondsPerTick / 10, 0.05)
       this._play()
     }

@@ -46,6 +46,9 @@
           </div>
         </div>
         <div class="player" id="player1"> </div>
+        <pre class="debugView" id="debugView">
+        debug
+        </pre>
         <div class="instrumentsbar">
           <div class="keyboard" id="keyboard"></div>
           <div class="instruments" id="instruments"> </div>
@@ -83,6 +86,7 @@
     // mocha.checkLeaks();
     mocha.globals(['bp']);
     mocha.run();
+    // TODO rerun mocha tests on an event while developing
     </script>
     <!-- endif test -->
   </body>

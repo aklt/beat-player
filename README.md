@@ -4,7 +4,13 @@ Simple hack to use setTimeout to start a number of audio files.
 
 This is a work i progress...
 
-* Should probably use preformance, it is more accurate.
+## Keyboard controls
+
+User Up, Down to focus a control
+
+### Player
+
+
 
 ## APIs and Techniques
 

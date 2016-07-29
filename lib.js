@@ -445,6 +445,7 @@ function mixinDom (AClass) {
       parent.appendChild(this.dom)
     }
     this.parentEl = parent
+    console.warn('Attach', parent)
     if (typeof this.eventsAttach === 'function') this.eventsAttach()
     if (typeof this.afterAttach === 'function') this.afterAttach()
     return this

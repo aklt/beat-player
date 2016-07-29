@@ -48,6 +48,11 @@ var keySpace = 32
 var keyEsc = 27
 var keyTab = 9
 
+const IH_INIT = 1
+const IH_VIEW = 2
+const IH_INPUT = 3
+const IH_END = 4
+
 function InputHandler (o) {
   if (!o.keyboardView) throw new Error('Need o.keyboardView')
   if (!o.player) throw new Error('o.player')
@@ -57,16 +62,11 @@ function InputHandler (o) {
   this.model = o.model
   this.parentEl = __document
   this.view = bp.live[0]
+  this.state = o.state || IH_INIT
 }
 
 InputHandler.prototype = {
 }
-
-const IH_INIT = 1
-const IH_VIEW = 2
-const IH_END = 3
-
-var ih_state = IH_INIT
 
 mixinHandlers(InputHandler, {
   keydown: function (ev, el) {
@@ -78,7 +78,7 @@ mixinHandlers(InputHandler, {
         else m.dispatch('stop')
         break
       default:
-        switch (ih_state) {
+        switch (this.state) {
           case IH_INIT:
             switch (key) {
               case 'up':
@@ -89,21 +89,28 @@ mixinHandlers(InputHandler, {
                 break
               case 'right':
               case 'left':
-                ih_state = IH_VIEW
+                this.state = IH_VIEW
+                // falls through
+              default:
                 m.view.handleKey({
                   key: key,
                   ev: ev,
                   el: el
                 })
                 break
-              default:
-                // code
+            }
+            break
+          case IH_INPUT:
+            switch (key) {
+              case 'esc':
+                this.state = IH_VIEW
+                break
             }
             break
           case IH_VIEW:
             switch (key) {
               case 'esc':
-                ih_state = IH_INIT
+                this.state = IH_INIT
                 break
               default:
                 m.view.handleKey({
@@ -117,7 +124,7 @@ mixinHandlers(InputHandler, {
           case IH_END:
             break
           default:
-            console.warn('Unknown ih_state', ih_state)
+            console.warn('Unknown this.state', this.state)
             break
         }
     }
@@ -125,61 +132,13 @@ mixinHandlers(InputHandler, {
     ev.stopPropagation()
   },
   keyup: function () {
-    console.warn('up', arguments)
+    console.warn('TODO unpress key', arguments)
   },
   wheel: function () {
-    console.warn('scroll', arguments)
+    console.warn('TODO scroll views', arguments)
   }
 })
 
-// {{{1 old key
-//      if (code <= key9 && code >= key0) {
-//        this.keyboardView.selectInstrument(String.fromCharCode(code))
-//      } else if (code === keyUp) {
-//        console.warn('keyUp')
-//        if (bp.lastPopUp && bp.lastPopUp.keyUp) bp.lastPopUp.keyUp()
-//        ev.preventDefault()
-//      } else if (code === keyDown) {
-//        console.warn('keyDown')
-//        if (bp.lastPopUp && bp.lastPopUp.keyDown) bp.lastPopUp.keyDown()
-//        ev.preventDefault()
-//      } else if (code === keyLeft) {
-//        obj = bp.live.stepFocus.prev()
-//        console.warn('keyLeft', obj)
-//        obj.focus()
-//        if (bp.lastPopUp && bp.lastPopUp.keyLeft) bp.lastPopUp.keyLeft()
-//        ev.preventDefault()
-//      } else if (code === keyRight) {
-//        obj = bp.live.stepFocus.next()
-//        obj.focus()
-//        console.warn('keyRight', obj)
-//        if (bp.lastPopUp && bp.lastPopUp.keyRight) bp.lastPopUp.keyRight()
-//        ev.preventDefault()
-//      } else if (code === keySpace) {
-//        console.warn('keySpace')
-//        ev.preventDefault()
-//      } else if (code === keyEsc) {
-//        console.warn('keyEsc')
-//        if (bp.lastPopUp) bp.lastPopUp.inputEl.hide()
-//        ev.preventDefault()
-//      } else if (code === keyEnter) {
-//        console.warn('keyEnter')
-//        ev.preventDefault()
-//      } else if (code === keyTab) {
-//        console.warn('keyTab')
-//        if (!this.activeTab) this.activeTab = this.keyboardView
-//        this.activeTab.unfocus()
-//        if (this.activeTab === this.keyboardView) this.activeTab = this.player
-//        else this.activeTab = this.keyboardView
-//        this.activeTab.focus()
-//
-//        return ev.preventDefault()
-//      } else {
-//        if (keyboardKeyMap[k]) {
-//          console.warn('play key', k)
-//        }
-//      }
-// 1}}}
 
 function translateKey (ev) {
   // TODO browser compat
@@ -381,10 +340,10 @@ createView(bp, SettingsView, {
 // 1}}}
 
 // {{{1 PlayerView
-function IterActive (sel, el) {
-  var els = qa(sel, el).filter(function (el) {
-    return el.childNodes.length > 1
-  })
+function IterActive (el, sel, filter) {
+  // Set the active class on elems
+  var els = qa(sel, el)
+  if (filter) els = els.filter(filter)
   this.iter = new IterElems(els)
   this.last = els[0]
 }
@@ -392,9 +351,11 @@ function IterActive (sel, el) {
 IterActive.prototype = {
   gotoPos: function (pos) {
     var selected = this.iter.set(pos)
+    if (selected) {
     classRemove(this.last, 'active')
     classAdd(selected, 'active')
     this.last = selected
+    }
   }
 }
 
@@ -419,7 +380,7 @@ createView(bp, PlayerView, {
     var t = extend({tracks: o.tracks,
                     length: m.patternLength(),
                     tpb: m.tpb()}, o)
-    return [
+    var r1 = [
       $t('div', {'class': 'instruments'},
         eachPush(t.instruments, function (i, i1) {
           return $t('p', i1.name)
@@ -435,6 +396,8 @@ createView(bp, PlayerView, {
             }))]
           })))
     ].join('\n')
+    console.warn('PlayerView', r1, t)
+    return r1
   },
   renderModel: function () {
     // Extract the parts needed for the playerview
@@ -472,14 +435,19 @@ createView(bp, PlayerView, {
   },
   afterAttach: function () {
     if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
-    this.scoreColumns = new IterActive('.score-columns p', this.parentEl)
-    this.instruments = new IterActive('.instruments p', this.parentEl)
+    this.scoreColumns = new IterActive(this.parentEl, '.score-columns p', function (el) {
+      return el.childNodes.length > 1
+    })
+    console.warn('IIII', this.parentEl)
+    this.instruments = new IterActive(this.parentEl, '.instruments p')
+    this.gotoPos(0)
+    this.gotoInstrument(0)
   },
   gotoPos: function (pos) {
     this.scoreColumns.gotoPos(pos)
   },
-  stepInstrument: function (direction) {
-
+  gotoInstrument: function (pos) {
+    this.instruments.gotoPos(pos)
   },
   handleKey: function (o) {
     switch (o.key) {
@@ -490,8 +458,10 @@ createView(bp, PlayerView, {
         this.emit('playerStep', -1)
         break
       case 'up':
+        this.emit('instrumentStep', 1)
         break
       case 'down':
+        this.emit('instrumentStep', -1)
         break
       default:
         return false
@@ -518,23 +488,14 @@ createView(bp, PlayerView, {
         r1 = elRect(el)
         var value = el.innerText
         var pos = attr(el, 'data-pos')
-        if (!pos) return
-        console.warn('POS', pos)
-        if (!value || /^\s*$/.test(value)) value = '.'
-        live.textInput1.popup({
+        this.emit('EditText', {
           top: r1.top,
           left: r1.left,
           width: r1.width,
           value: value,
-          // TODO use dispatch on all events
-          set: function (value) {
-            var pos = attr(el, 'data-pos')
-            el.innerText = value
-            self.model.note(pos, value)
-          }
+          pos: pos,
+          once: 1 // get only one key
         })
-        ev.preventDefault()
-        bp.lastPopUp = bp.live.textInput1
         break
       case 'I': // Click top row to go to position
         console.warn('I', alphanumToDec(el.innerText))
@@ -810,7 +771,7 @@ function TextInput (o) {
 }
 
 TextInput.prototype = {
-  popup: function (o) {
+  popup: function (o, cb) {
     var value = o.value
     css(this.parentEl, {
       position: 'absolute',
@@ -821,7 +782,8 @@ TextInput.prototype = {
       width: o.width + 'px',
       height: o.height + 'px'
     })
-    this.setModelValue = o.set
+    this.once = o.once || false
+    this.cb = cb
     // TODO Use dispatch instead
     this.show()
     this.inputEl.value = value
@@ -832,10 +794,28 @@ TextInput.prototype = {
     this.parentEl.blur()
     this.hide()
   },
-  setValue: function (val) {
-    this.inputEl.value = val
-    if (this.setModelValue) this.setModelValue(val)
-    console.warn('VAL', val)
+  setValue: function () {
+    this.cb(this.inputEl.value)
+  },
+  handleKey: function (o) {
+    switch (this.state) {
+      case IH_INIT:
+        switch (o.key) {
+          case 'esc':
+            this.popdown()
+            break;
+          case 'enter':
+            this.popdown()
+            this.setValue()
+          default:
+            // code
+        }
+        break;
+
+      default:
+        // code
+    }
+    this.inputEl.value += key
   }
 }
 
@@ -870,3 +850,12 @@ Samples.prototype = {
 }
 
 // 1}}} Samples
+
+
+// {{{1 DebugView
+function DebugView (o) {
+  this.parentEl = $id(o.id)
+  if (!this.parentEl) throw new Error('Need id')
+  this.parentEl.innerHTML = JSON.stringify(o.debug, 0, 2)
+}
+// 1}}}
