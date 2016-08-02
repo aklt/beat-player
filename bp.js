@@ -1021,10 +1021,10 @@
     })
   })
   
-  m.subscribe('play', function () {
+  m.subscribe('play', function (o) {
+    m.playing(true)
     live.controlsView1.play()
     live.beatAudio1.play()
-    m.playing(true)
   })
   
   m.subscribe('stop', function () {
@@ -1308,8 +1308,6 @@
               break
           }
       }
-      ev.preventDefault()
-      ev.stopPropagation()
     },
     keyup: function () {
       console.warn('TODO unpress key', arguments)
@@ -1405,6 +1403,7 @@
         begin = endEl
         end = beginEl
       }
+      // TODO dispatch
       this.model.selectedInstrumentRange([begin.innerText, end.innerText])
       var span = htmlEl('span', {'class': 'color' + instrumentNumber})
       span = insertBefore(begin.parentNode, span, begin)
@@ -1430,6 +1429,7 @@
       }
       classAdd(el, 'active-instrument')
       this.lastInstrumentEl = el
+      // TODO dispatch
       this.model.selectedInstrument(sample)
     },
   
@@ -1781,7 +1781,7 @@
   // TODO don't create this here
   bp.live.controlsView1 = new ControlsView()
   
-  // 1}}} Svg
+  // 1}}} ControlsView
   
   // {{{1 BeatsView
   function BeatsView (o) {
@@ -2045,7 +2045,7 @@
   var defaultOptions = {
     beatsView: {
       id: 'beatView',
-      options: ['beat0', 'beat1', 'beat2', 'beat3']
+      options: ['beat0', 'beat1', 'beat2', 'beat3', 'dundunba']
     },
     settingsView1: {
       tpb: 4,

@@ -128,8 +128,6 @@ mixinHandlers(InputHandler, {
             break
         }
     }
-    ev.preventDefault()
-    ev.stopPropagation()
   },
   keyup: function () {
     console.warn('TODO unpress key', arguments)
@@ -225,6 +223,7 @@ createView(bp, KeyboardView, {
       begin = endEl
       end = beginEl
     }
+    // TODO dispatch
     this.model.selectedInstrumentRange([begin.innerText, end.innerText])
     var span = htmlEl('span', {'class': 'color' + instrumentNumber})
     span = insertBefore(begin.parentNode, span, begin)
@@ -250,6 +249,7 @@ createView(bp, KeyboardView, {
     }
     classAdd(el, 'active-instrument')
     this.lastInstrumentEl = el
+    // TODO dispatch
     this.model.selectedInstrument(sample)
   },
 
@@ -601,7 +601,7 @@ mixinHandlers(ControlsView, {
 // TODO don't create this here
 bp.live.controlsView1 = new ControlsView()
 
-// 1}}} Svg
+// 1}}} ControlsView
 
 // {{{1 BeatsView
 function BeatsView (o) {

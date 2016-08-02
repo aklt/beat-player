@@ -4,7 +4,7 @@
 var defaultOptions = {
   beatsView: {
     id: 'beatView',
-    options: ['beat0', 'beat1', 'beat2', 'beat3']
+    options: ['beat0', 'beat1', 'beat2', 'beat3', 'dundunba']
   },
   settingsView1: {
     tpb: 4,

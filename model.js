@@ -421,10 +421,10 @@ m.subscribe('LoadBeat', function (url) {
   })
 })
 
-m.subscribe('play', function () {
+m.subscribe('play', function (o) {
+  m.playing(true)
   live.controlsView1.play()
   live.beatAudio1.play()
-  m.playing(true)
 })
 
 m.subscribe('stop', function () {
