@@ -1,0 +1,33 @@
+name: Dundunba
+version: 0.0.1
+bpm: 100
+--
+Dundun:  ... ... .bb .bb ... .bb .bb .bb
+Djembee: s.. s.. s.. s.. s.. s.. s.. s..
+HiHat:   ..x ..x ..x ..x ..x ..x ..x ..x
+--
+# instruments
+Bass Drum:
+  url: data/bd.mp3
+  pan: 10
+  range: b
+  display: B
+
+Snare:
+  url: data/sd.mp3
+  range: s
+  pan: 10
+
+HiHat:
+  url: data/hat.mp3
+  range: x
+  volume: 80%
+  pan: 20
+--
+# global effects
+pan: -10
+
+# var b1 = new BeatModel()
+#
+# b1.readBeatText(beat1)
+# console.warn(JSON.stringify(b1, 0, 2))
