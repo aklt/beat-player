@@ -871,6 +871,20 @@
       }
       return this.model.position
     },
+    stepInstrument: function (direction) {
+      var count = this.instrumentCount()
+      direction = direction || 1
+      var value = this.model.selectedInstrument || 0
+      if (direction > 0) {
+        value += 1
+        if (value >= count) value = 0
+      } else {
+        value -= 1
+        if (value < 0) value = count - 1
+      }
+      this.model.selectedInstrument = value
+      return value
+    },
     instrument: function (number) {
       number = number || this.model.selectedInstrument
       var i1 = this.model.instruments[number]
@@ -879,6 +893,9 @@
         this.model.instruments[number] = i1
       }
       return i1
+    },
+    instrumentCount: function () {
+      return this.instruments().length
     },
     instruments: function (changeUrls) {
       if (!changeUrls) {
@@ -1073,6 +1090,11 @@
       m.note(pos, text)
     })
   })
+  
+  m.subscribe('instrumentStep', function (dir) {
+    var pos = this.stepInstrument(dir)
+    live.player1.gotoInstrument(pos)
+  })
   /*global bp, AudioContext */
   
   // # BeatAudio
@@ -1263,6 +1285,7 @@
         case 'space':
           if (!m.playing()) m.dispatch('play')
           else m.dispatch('stop')
+          ev.preventDefault()
           break
         default:
           switch (this.state) {
@@ -1270,9 +1293,11 @@
               switch (key) {
                 case 'up':
                   m.dispatch('focusUp')
+                  ev.preventDefault()
                   break
                 case 'down':
                   m.dispatch('focusDown')
+                  ev.preventDefault()
                   break
                 case 'right':
                 case 'left':
@@ -1323,9 +1348,9 @@
       console.warn('TODO scroll views', arguments)
     },
     dragover: function (ev) {
-      console.warn('over')
       ev.preventDefault()
     },
+    // handle dropping files.  Urls go into a box
     drop: function (ev) {
       var m = this.model
       ev.preventDefault()
@@ -1687,14 +1712,15 @@
           this.emit('playerStep', -1)
           break
         case 'up':
-          this.emit('instrumentStep', 1)
+          this.emit('instrumentStep', -1)
           break
         case 'down':
-          this.emit('instrumentStep', -1)
+          this.emit('instrumentStep', 1)
           break
         default:
           return false
       }
+      o.ev.preventDefault()
       return true
     }
   }, {
@@ -2079,7 +2105,6 @@
   }
   
   // 1}}} Samples
-  
   
   // {{{1 DebugView
   function DebugView (o) {

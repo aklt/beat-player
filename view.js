@@ -76,6 +76,7 @@ mixinHandlers(InputHandler, {
       case 'space':
         if (!m.playing()) m.dispatch('play')
         else m.dispatch('stop')
+        ev.preventDefault()
         break
       default:
         switch (this.state) {
@@ -83,9 +84,11 @@ mixinHandlers(InputHandler, {
             switch (key) {
               case 'up':
                 m.dispatch('focusUp')
+                ev.preventDefault()
                 break
               case 'down':
                 m.dispatch('focusDown')
+                ev.preventDefault()
                 break
               case 'right':
               case 'left':
@@ -136,9 +139,9 @@ mixinHandlers(InputHandler, {
     console.warn('TODO scroll views', arguments)
   },
   dragover: function (ev) {
-    console.warn('over')
     ev.preventDefault()
   },
+  // handle dropping files.  Urls go into a box
   drop: function (ev) {
     var m = this.model
     ev.preventDefault()
@@ -500,14 +503,15 @@ createView(bp, PlayerView, {
         this.emit('playerStep', -1)
         break
       case 'up':
-        this.emit('instrumentStep', 1)
+        this.emit('instrumentStep', -1)
         break
       case 'down':
-        this.emit('instrumentStep', -1)
+        this.emit('instrumentStep', 1)
         break
       default:
         return false
     }
+    o.ev.preventDefault()
     return true
   }
 }, {
@@ -892,7 +896,6 @@ Samples.prototype = {
 }
 
 // 1}}} Samples
-
 
 // {{{1 DebugView
 function DebugView (o) {

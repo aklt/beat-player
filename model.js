@@ -267,6 +267,20 @@ BeatModel.prototype = {
     }
     return this.model.position
   },
+  stepInstrument: function (direction) {
+    var count = this.instrumentCount()
+    direction = direction || 1
+    var value = this.model.selectedInstrument || 0
+    if (direction > 0) {
+      value += 1
+      if (value >= count) value = 0
+    } else {
+      value -= 1
+      if (value < 0) value = count - 1
+    }
+    this.model.selectedInstrument = value
+    return value
+  },
   instrument: function (number) {
     number = number || this.model.selectedInstrument
     var i1 = this.model.instruments[number]
@@ -275,6 +289,9 @@ BeatModel.prototype = {
       this.model.instruments[number] = i1
     }
     return i1
+  },
+  instrumentCount: function () {
+    return this.instruments().length
   },
   instruments: function (changeUrls) {
     if (!changeUrls) {
@@ -468,4 +485,9 @@ m.subscribe('EditText', function (o) {
     o.el.innerText = text
     m.note(pos, text)
   })
+})
+
+m.subscribe('instrumentStep', function (dir) {
+  var pos = this.stepInstrument(dir)
+  live.player1.gotoInstrument(pos)
 })
