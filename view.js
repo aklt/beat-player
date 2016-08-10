@@ -1,7 +1,7 @@
 /*global bp __document requestAnimationFrame htmlEl insertBefore
   appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
   elRect attr nextSibling prevSibling $id mixinHideShow eachPush $t $ts
-  extend createView
+  extend createView FileReader
 */
 
 // TODO Grid https://www.reddit.com/r/Frontend/comments/4lkww8/grid_system_research/
@@ -134,6 +134,48 @@ mixinHandlers(InputHandler, {
   },
   wheel: function () {
     console.warn('TODO scroll views', arguments)
+  },
+  dragover: function (ev) {
+    console.warn('over')
+    ev.preventDefault()
+  },
+  drop: function (ev) {
+    var m = this.model
+    ev.preventDefault()
+    var files = ev.dataTransfer.files
+    for (var i = 0; i < files.length; i += 1) {
+      var f0 = files[i]
+      var readAs = (f0.type === '' || /^(?:text|application)/i.test(f0.type))
+                   ? 'Text' : 'ArrayBuffer'
+      var type = f0.type
+      var name = f0.name
+      var size = f0.size
+      m.dispatch('dropFileBegin', {
+          type: type,
+          name: name,
+          size: size
+      })
+      // see: https://developer.mozilla.org/en-US/docs/Web/API/FileReader
+      var reader = new FileReader()
+      reader.onload = function () {
+        console.warn('loading', arguments)
+      }
+      reader.onloadend = function () {
+        console.warn('loadend', arguments, reader.result, reader.result.toString())
+        m.dispatch('dropFileEnd', {
+          type: type,
+          name: name,
+          size: size,
+          data: reader.result
+        })
+      }
+      reader['readAs' + readAs](f0)
+    }
+  },
+  // TODO window leave
+  dragleave: function (ev) {
+    console.warn('leave')
+    ev.preventDefault()
   }
 })
 

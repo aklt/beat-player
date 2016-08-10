@@ -53,7 +53,9 @@ var subscriptionEvents = {
   focus: 1,
   focusUp: 1,
   focusDown: 1,
-  EditText: 1
+  EditText: 1,
+  dropFileBegin: 1,
+  dropFileEnd: 1
 }
 
 BeatModel.prototype = {
@@ -68,11 +70,12 @@ BeatModel.prototype = {
     var cbs = this.subscriptions[ev] || []
     if (!cbs.disabled) {
       if (cbs.length === 0) {
-        console.warn('No subscriptions for ', ev)
+        console.warn('No subscriptions for ', ev, data)
       }
       for (var i = 0; i < cbs.length; i += 1) {
         var cb = cbs[i]
         cb[0].call(cb[1], data)
+        console.warn('dispatch', ev, data)
       }
     }
     var json = extend({}, this.model)

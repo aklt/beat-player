@@ -14,6 +14,9 @@ User Up, Down to focus a control
 
 ## APIs and Techniques
 
+* https://github.com/kbjr/DragDrop/blob/master/drag-drop.js
+* https://github.com/avoidwork/filesize.js
+
 * [Panner Node](https://developer.mozilla.org/en-US/docs/Web/API/PannerNode)
 * [Example](http://mdn.github.io/panner-node/)
 

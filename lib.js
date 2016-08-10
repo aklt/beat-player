@@ -388,6 +388,10 @@ function mixinHandlers (AClass, events, capture) {
   }
 }
 
+function mixinDropHandlers (el, context) {
+
+}
+
 // ## mixinDom(DefinedClassName)
 //
 // Mixin function
