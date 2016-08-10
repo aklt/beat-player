@@ -619,6 +619,8 @@
     focus: {}
   }
   
+  const DEBUG = false
+  
   function BeatModel (o) {
     o = o || {}
     this.model = {
@@ -685,10 +687,12 @@
       var json = extend({}, this.model)
       delete json.instruments
       delete json.patterns
-      DebugView({
-        id: 'debugView',
-        debug: json
-      })
+      if (DEBUG) {
+        DebugView({
+          id: 'debugView',
+          debug: json
+        })
+      }
     },
     enable: function (evName) {
       var o = this.subscriptions[evName]
@@ -1094,8 +1098,8 @@
   
   m.subscribe('instrumentStep', function (dir) {
     var pos = this.stepInstrument(dir)
-    live.player1.gotoInstrument(pos)
-  })
+      live.player1.gotoInstrument(pos)
+    })
   /*global bp, AudioContext */
   
   // # BeatAudio
@@ -2193,7 +2197,8 @@
       live.controlsView1,
       live.player1,
       live.keyboard,
-      live.instruments
+      live.instruments,
+      live.sounds
     ])
     live.stepFocus.get().focus()
   

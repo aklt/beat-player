@@ -45,7 +45,8 @@ ready(function () {
     live.controlsView1,
     live.player1,
     live.keyboard,
-    live.instruments
+    live.instruments,
+    live.sounds
   ])
   live.stepFocus.get().focus()
 
