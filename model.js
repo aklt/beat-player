@@ -438,6 +438,7 @@ m.subscribe('LoadBeat', function (url) {
     console.warn('load', this)
     live.player1.update()
     live.settings.update()
+    live.sounds.update()
   })
 })
 

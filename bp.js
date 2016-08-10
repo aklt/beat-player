@@ -1042,6 +1042,7 @@
       console.warn('load', this)
       live.player1.update()
       live.settings.update()
+      live.sounds.update()
     })
   })
   
@@ -1909,9 +1910,9 @@
           )
       ].join('\n')
     },
-    renderModel: function () {
+    renderModel: function (o) {
       // TODO Render model
-      this.render({})
+      this.render(o)
     },
     selectInstrumentNumber: function (number) {
       this.update(this.model.instrument())
@@ -1949,6 +1950,38 @@
     id: 'instruments'
   })
   // 1}}} InstrumentsView
+  
+  // {{{1 SoundsView
+  function SoundsView () {
+  }
+  
+  createView(bp, SoundsView, {
+    tpl: function (o) {
+      console.warn('o', o)
+      return [
+        $t('h4', 'Sounds'),
+        $t('table',
+        eachPush(o.instruments, function (i, opt) {
+          return $t('tr', $ts('td', opt.name, opt.url))
+        }))].join('\n')
+    },
+    renderModel: function (o) {
+      this.render({
+        instruments: this.model.instruments()
+      })
+    },
+    afterAttach: function () {
+      if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
+    }
+  }, { // Handlers
+    click: function () {
+      console.warn('click')
+    }
+  }, {
+    id: 'sounds'
+  })
+  
+  // 1}}} SoundsView
   
   // {{{1 SliderInput
   function SliderInput (o) {

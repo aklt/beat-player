@@ -27,6 +27,7 @@ $col-width: 1rem
 %view
   @include row()
   @include pad(0.1rem 1rem 0.1rem 0.5rem)
+  // border: 1px solid green
 
 %hidden
   display: none
@@ -45,6 +46,12 @@ body
 div
   border: 2px solid $color-bg
   background-color: $color-bg
+
+h4
+  margin: 1.45rem 0 0 0
+
+dl
+  margin: 0
 
 .hidden
   @extend %hidden
@@ -174,6 +181,9 @@ div
   .color9
     i
       background-color: #bd9bc9
+
+.sounds
+  @extend %view
 
 .active-instrument
   background-color: lightgreen
