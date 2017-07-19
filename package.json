@@ -1,4 +1,6 @@
 {
+  "name": "beat-player-experimental-hack",
+  "version": "0.0.1-dev",
   "dependencies": {
     "normalizecss": "^3.0.0"
   }
