@@ -1,7 +1,5 @@
 /*global bp, AudioContext */
 
-// TODO Define AudioContext
-
 // # BeatAudio
 //
 // Load and play patterns and instruments
@@ -27,6 +25,7 @@ BeatAudio.prototype = {
       if (typeof cb === 'function') cb(null, self)
     })
   },
+  // TODO Move this to model for live record to function
   calcTickTimes: function () {
     var patterns = this.model.patterns()
     var bpm = this.model.bpm()
@@ -58,7 +57,7 @@ BeatAudio.prototype = {
   play: function () {
     if (!this.timeout) {
       this.calcTickTimes()
-      // TODO Trigger timeout just before event
+      // TODO Handle drift better
       this.nextTick = this.context.currentTime + Math.max(this.secondsPerTick / 10, 0.05)
       this._play()
     }

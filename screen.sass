@@ -1,0 +1,238 @@
+/* Welcome to Compass.
+ * In this file you should write your main styles. (or centralize your imports)
+ * Import this file using the following HTML or equivalent:
+ * <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css" />
+ */
+
+@import "node_modules/normalizecss/normalize.css";
+
+// TODO Import skin colors
+$color-focus:     #AAA;
+$color-active:    #AAC;
+$color-bg:        #FFF;
+$color-footer-bg: #DFD;
+
+$col-width: 1rem;
+
+body
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+div
+  border: 2px solid $color-bg;
+  background-color: $color-bg;
+
+h4
+  margin: 1.45rem 0 0 0;
+
+dl
+  margin: 0;
+
+.hidden
+  display: none;
+
+.row-container
+  margin: auto auto;
+
+.beats::after,
+.controls::after,
+.instrumentsbar::after,
+.keyboard::after,
+.player::after,
+.row-container::after
+.settings::after,
+.sounds::after
+.topbar::after,
+  clear: both
+  content: ""
+  display: block
+
+.topbar,
+.instrumentsbar,
+.beats,
+.settings,
+.controls,
+.player,
+.keyboard,
+.sounds
+  display: block
+  padding: 0.1rem 1rem 0.1rem 0.5rem
+
+
+.topbar
+  font-size: 120%
+  &::after
+    clear: both
+    content: ""
+    display: block
+  & div
+    float: left
+
+// .instrumentsbar
+//   @extend %columns
+// 
+// .beats
+//   @extend %view
+// 
+.settings
+  dl, dt, dd
+    display: inline
+  dt
+    font-weight: bold
+  dd
+    margin: 0 0.3rem 0 0
+
+.controls
+  & span.pause
+    cursor: pointer
+    font-size: 70%
+    letter-spacing: -0.2rem
+    vertical-align: middle
+  & > span
+    cursor: pointer
+    padding-left: 1rem
+    width: 1rem
+
+.player
+  font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif
+  cursor: pointer
+  overflow-x: auto
+  white-space: nowrap
+  div
+    float: left
+  .instruments
+    margin: 0.8rem 0 1rem 0
+    padding-top: 0.4rem
+    p
+      margin: 0
+      display: block
+      clear: left
+      height: $col-width
+    .active
+      background-color: $color-active
+  .score
+    text-align: left
+    float: left
+    p
+      margin: 0
+      float: left
+      display: block
+    i
+      margin: 0
+      padding: 0
+      width: $col-width
+      text-align: center
+      display: block
+      float: left
+    span
+      clear: left
+      display: block
+
+  & .score-columns
+    display: block
+    b
+      margin: 0
+      padding: 0
+      display: block
+      width: $col-width
+      height: 1rem
+      text-align: center
+    & .active
+      background-color: $color-active
+
+.keyboard
+  font-size: 150%
+  pre
+    unicode-bidi: embed
+    font-family: monospace
+    white-space: pre
+  cursor: pointer
+  .color0
+    i
+      background-color: #9eecda
+  .color1
+    i
+      background-color: #ac78b5
+  .color2
+    i
+      background-color: #dab58f
+  .color3
+    i
+      background-color: #78f19a
+  .color4
+    i
+      background-color: #b72e75
+  .color5
+    i
+      background-color: #b56acf
+  .color6
+    i
+      background-color: #93a7fa
+  .color7
+    i
+      background-color: #f1e3d5
+  .color8
+    i
+      background-color: #8fafaf
+  .color9
+    i
+      background-color: #bd9bc9
+
+.active-instrument
+  background-color: lightgreen
+
+// {{{2 footer
+
+/* line 10, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/layout/_sticky-footer.scss */
+html,
+body
+  height: 100%;
+
+/* line 12, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/layout/_sticky-footer.scss */
+.bp
+  clear: both;
+  min-height: 100%;
+  height: auto !important;
+  height: 100%;
+  margin-bottom: -48px;
+
+/* line 18, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/layout/_sticky-footer.scss */
+.bp .footer-layout
+  height: 48px;
+
+/* line 20, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/layout/_sticky-footer.scss */
+.footer-content
+  clear: both;
+  position: relative;
+  height: 48px;
+
+/* line 193, sass/screen.sass */
+.footer-content
+  background-color: #DFD;
+// 2}}}
+
+.footer-content
+  background-color: $color-footer-bg
+
+input::-moz-focus-inner
+  border: 0
+  margin: -2px
+  padding: 0
+
+.input-text
+  input[type=text]
+    border: 0
+    margin: 0
+    padding: 0
+
+.focus
+  border: 2px solid $color-focus
+
+.debugView
+  border: 1px solid red
+  font-size: 80%
+

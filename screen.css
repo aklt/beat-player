@@ -1,279 +1,159 @@
 /* Welcome to Compass.
  * In this file you should write your main styles. (or centralize your imports)
  * Import this file using the following HTML or equivalent:
- * <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css" /> */
-/* line 5, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/reset/_utilities.scss */
-html, body, div, span, applet, object, iframe,
-h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-a, abbr, acronym, address, big, cite, code,
-del, dfn, em, img, ins, kbd, q, s, samp,
-small, strike, strong, sub, sup, tt, var,
-b, u, i, center,
-dl, dt, dd, ol, ul, li,
-fieldset, form, label, legend,
-table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed,
-figure, figcaption, footer, header, hgroup,
-menu, nav, output, ruby, section, summary,
-time, mark, audio, video {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  font: inherit;
-  font-size: 100%;
-  vertical-align: baseline;
-}
+ * <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css" />
+ */
+@import url(node_modules/normalizecss/normalize.css);
+body {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none; }
 
-/* line 22, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/reset/_utilities.scss */
-html {
-  line-height: 1;
-}
+div {
+  border: 2px solid #FFF;
+  background-color: #FFF; }
 
-/* line 24, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/reset/_utilities.scss */
-ol, ul {
-  list-style: none;
-}
+h4 {
+  margin: 1.45rem 0 0 0; }
 
-/* line 26, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/reset/_utilities.scss */
-table {
-  border-collapse: collapse;
-  border-spacing: 0;
-}
+dl {
+  margin: 0; }
 
-/* line 28, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/reset/_utilities.scss */
-caption, th, td {
-  text-align: left;
-  font-weight: normal;
-  vertical-align: middle;
-}
+.hidden {
+  display: none; }
 
-/* line 30, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/reset/_utilities.scss */
-q, blockquote {
-  quotes: none;
-}
-/* line 103, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/reset/_utilities.scss */
-q:before, q:after, blockquote:before, blockquote:after {
-  content: "";
-  content: none;
-}
-
-/* line 32, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/reset/_utilities.scss */
-a img {
-  border: none;
-}
-
-/* line 116, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/reset/_utilities.scss */
-article, aside, details, figcaption, figure, footer, header, hgroup, main, menu, nav, section, summary {
-  display: block;
-}
-
-/* line 4, sass/neat/grid/_box-sizing.scss */
-html {
-  box-sizing: border-box;
-}
-
-/* line 9, sass/neat/grid/_box-sizing.scss */
-*, *::after, *::before {
-  box-sizing: inherit;
-}
-
-/* line 14, sass/screen.sass */
 .row-container {
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-}
-/* line 20, sass/neat/mixins/_clearfix.scss */
-.row-container::after {
+  margin: auto auto; }
+
+.topbar::after {
   clear: both;
   content: "";
+  display: block; }
+
+.topbar,
+.instrumentsbar,
+.beats,
+.settings,
+.controls,
+.player,
+.keyboard,
+.sounds {
   display: block;
-}
+  padding: 0.1rem 1rem 0.1rem 0.5rem; }
 
-/* line 17, sass/screen.sass */
-.footer-content {
-  border: 1px solid #999999;
-}
-
-/* line 20, sass/screen.sass */
-.topbar, .instrumentsbar, .beats, .settings, .controls, .player, .keyboard, .instruments {
-  display: block;
-  padding: 0.1rem 1rem 0.1rem 0.5rem;
-}
-/* line 20, sass/neat/mixins/_clearfix.scss */
-.topbar::after, .instrumentsbar::after, .beats::after, .settings::after, .controls::after, .player::after, .keyboard::after, .instruments::after {
-  clear: both;
-  content: "";
-  display: block;
-}
-
-/* line 25, sass/screen.sass */
-.hidden, .input-text, .input-slider, .popup {
-  display: none;
-}
-
-/* line 36, sass/screen.sass */
-.topbar div, .instrumentsbar div {
-  float: left;
-}
-
-/* line 39, sass/screen.sass */
 .topbar {
-  font-size: 120%;
-}
+  font-size: 120%; }
+  .topbar::after {
+    clear: both;
+    content: "";
+    display: block; }
+  .topbar div {
+    float: left; }
 
-/* line 51, sass/screen.sass */
 .settings dl, .settings dt, .settings dd {
-  display: inline;
-}
-/* line 53, sass/screen.sass */
-.settings dt {
-  font-weight: bold;
-}
-/* line 55, sass/screen.sass */
-.settings dd {
-  margin: 0 0.3rem 0 0;
-}
+  display: inline; }
 
-/* line 60, sass/screen.sass */
+.settings dt {
+  font-weight: bold; }
+
+.settings dd {
+  margin: 0 0.3rem 0 0; }
+
 .controls span.pause {
   cursor: pointer;
   font-size: 70%;
   letter-spacing: -0.2rem;
-  vertical-align: middle;
-}
-/* line 65, sass/screen.sass */
+  vertical-align: middle; }
+
 .controls > span {
   cursor: pointer;
   padding-left: 1rem;
-  width: 1rem;
-}
+  width: 1rem; }
 
-/* line 70, sass/screen.sass */
 .player {
   font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif;
   cursor: pointer;
-}
-/* line 74, sass/screen.sass */
-.player div {
-  float: left;
-}
-/* line 76, sass/screen.sass */
-.player .instruments {
-  margin: 0.8rem 0 1rem 0;
-  padding-top: 0.4rem;
-}
-/* line 79, sass/screen.sass */
-.player .instruments p {
-  margin: 0;
-  display: block;
-  clear: left;
-  height: 1rem;
-}
-/* line 84, sass/screen.sass */
-.player .score {
-  text-align: left;
-  float: left;
-}
-/* line 87, sass/screen.sass */
-.player .score p {
-  margin: 0;
-  float: left;
-  display: block;
-}
-/* line 91, sass/screen.sass */
-.player .score i {
-  margin: 0;
-  padding: 0;
-  width: 1rem;
-  text-align: center;
-  display: block;
-  float: left;
-}
-/* line 98, sass/screen.sass */
-.player .score span {
-  clear: left;
-  display: block;
-}
-/* line 102, sass/screen.sass */
-.player .score-columns {
-  display: block;
-}
-/* line 104, sass/screen.sass */
-.player .score-columns b {
-  margin: 0;
-  padding: 0;
-  display: block;
-  width: 1rem;
-  height: 1rem;
-  text-align: center;
-}
-/* line 111, sass/screen.sass */
-.player .score-columns .active {
-  background-color: lightblue;
-}
+  overflow-x: auto;
+  white-space: nowrap; }
+  .player div {
+    float: left; }
+  .player .instruments {
+    margin: 0.8rem 0 1rem 0;
+    padding-top: 0.4rem; }
+    .player .instruments p {
+      margin: 0;
+      display: block;
+      clear: left;
+      height: 1rem; }
+    .player .instruments .active {
+      background-color: #AAC; }
+  .player .score {
+    text-align: left;
+    float: left; }
+    .player .score p {
+      margin: 0;
+      float: left;
+      display: block; }
+    .player .score i {
+      margin: 0;
+      padding: 0;
+      width: 1rem;
+      text-align: center;
+      display: block;
+      float: left; }
+    .player .score span {
+      clear: left;
+      display: block; }
+  .player .score-columns {
+    display: block; }
+    .player .score-columns b {
+      margin: 0;
+      padding: 0;
+      display: block;
+      width: 1rem;
+      height: 1rem;
+      text-align: center; }
+    .player .score-columns .active {
+      background-color: #AAC; }
 
-/* line 114, sass/screen.sass */
 .keyboard {
   font-size: 150%;
-  cursor: pointer;
-}
-/* line 116, sass/screen.sass */
-.keyboard pre {
-  unicode-bidi: embed;
-  font-family: monospace;
-  white-space: pre;
-}
-/* line 123, sass/screen.sass */
-.keyboard .color0 i {
-  background-color: #9eecda;
-}
-/* line 126, sass/screen.sass */
-.keyboard .color1 i {
-  background-color: #ac78b5;
-}
-/* line 129, sass/screen.sass */
-.keyboard .color2 i {
-  background-color: #dab58f;
-}
-/* line 132, sass/screen.sass */
-.keyboard .color3 i {
-  background-color: #78f19a;
-}
-/* line 135, sass/screen.sass */
-.keyboard .color4 i {
-  background-color: #b72e75;
-}
-/* line 138, sass/screen.sass */
-.keyboard .color5 i {
-  background-color: #b56acf;
-}
-/* line 141, sass/screen.sass */
-.keyboard .color6 i {
-  background-color: #93a7fa;
-}
-/* line 144, sass/screen.sass */
-.keyboard .color7 i {
-  background-color: #f1e3d5;
-}
-/* line 147, sass/screen.sass */
-.keyboard .color8 i {
-  background-color: #8fafaf;
-}
-/* line 150, sass/screen.sass */
-.keyboard .color9 i {
-  background-color: #bd9bc9;
-}
+  cursor: pointer; }
+  .keyboard pre {
+    unicode-bidi: embed;
+    font-family: monospace;
+    white-space: pre; }
+  .keyboard .color0 i {
+    background-color: #9eecda; }
+  .keyboard .color1 i {
+    background-color: #ac78b5; }
+  .keyboard .color2 i {
+    background-color: #dab58f; }
+  .keyboard .color3 i {
+    background-color: #78f19a; }
+  .keyboard .color4 i {
+    background-color: #b72e75; }
+  .keyboard .color5 i {
+    background-color: #b56acf; }
+  .keyboard .color6 i {
+    background-color: #93a7fa; }
+  .keyboard .color7 i {
+    background-color: #f1e3d5; }
+  .keyboard .color8 i {
+    background-color: #8fafaf; }
+  .keyboard .color9 i {
+    background-color: #bd9bc9; }
 
-/* line 153, sass/screen.sass */
 .active-instrument {
-  background-color: lightgreen;
-}
+  background-color: lightgreen; }
 
 /* line 10, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/layout/_sticky-footer.scss */
-html, body {
-  height: 100%;
-}
+html,
+body {
+  height: 100%; }
 
 /* line 12, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/layout/_sticky-footer.scss */
 .bp {
@@ -281,21 +161,38 @@ html, body {
   min-height: 100%;
   height: auto !important;
   height: 100%;
-  margin-bottom: -48px;
-}
+  margin-bottom: -48px; }
+
 /* line 18, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/layout/_sticky-footer.scss */
 .bp .footer-layout {
-  height: 48px;
-}
+  height: 48px; }
 
 /* line 20, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/layout/_sticky-footer.scss */
 .footer-content {
   clear: both;
   position: relative;
-  height: 48px;
-}
+  height: 48px; }
 
-/* line 174, sass/screen.sass */
+/* line 193, sass/screen.sass */
+.footer-content {
+  background-color: #DFD; }
+
+.footer-content {
+  background-color: #DFD; }
+
+input::-moz-focus-inner {
+  border: 0;
+  margin: -2px;
+  padding: 0; }
+
+.input-text input[type=text] {
+  border: 0;
+  margin: 0;
+  padding: 0; }
+
 .focus {
-  background-color: #DDD;
-}
+  border: 2px solid #AAA; }
+
+.debugView {
+  border: 1px solid red;
+  font-size: 80%; }

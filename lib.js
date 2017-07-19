@@ -1,4 +1,4 @@
-/*global bp XMLHttpRequest*/
+/*global XMLHttpRequest Node*/
 var __slice = [].slice
 var __hasProp = {}.hasOwnProperty
 var __proto = 'prototype'
@@ -52,34 +52,6 @@ function each (objOrArray, fn) {
       }
     }
   }
-}
-
-function StepIterElems (o) {
-  this.elems = o.elems
-  this.index = o.index || 0
-}
-
-StepIterElems.prototype = {
-  next: function () {
-    this.index += 1
-    if (this.index === this.elems.length) this.index = 0
-    return this.elems[this.index]
-  },
-  prev: function () {
-    this.index -= 1
-    if (this.index === -1) this.index = this.elems.length - 1
-    return this.elems[this.index]
-  },
-  get: function () {
-  return this.elems[this.index]
-  }
-}
-
-function stepIter (elems, index) {
-  return new StepIterElems({
-    elems: elems,
-    index: index || 0
-  })
 }
 
 function eachPush (objOrArray, fn) {
@@ -147,9 +119,6 @@ function $t_attr (opts) {
   if (result.length === 0) return ''
   return ' ' + result.join(' ')
 }
-//
-// b.js
-//
 
 var __window = window
 var __document = __window.document
@@ -223,18 +192,21 @@ function css (el, props) {
   return el
 }
 
-// ## browser.rect(node)
-//
-// Get position rect of an element or text node
-function rect (node) {
-  if (node.nodeType === 3 && __document.createRange) {
-    var range = __document.createRange()
-    range.selectNodeContents(node)
-    if (range.getBoundingClientRect) {
-      return range.getBoundingClientRect()
-    }
-  } else if (node.getBoundingClientRect) {
-    return node.getBoundingClientRect()
+function elRect (el) {
+  if (!el.offsetParent) throw new Error('Need offsetParent')
+  var curleft = el.offsetLeft
+  var curtop = el.offsetTop
+  var width = el.offsetWidth
+  var height = el.offsetHeight
+  while ((el = el.offsetParent)) {
+    curleft += el.offsetLeft
+    curtop += el.offsetTop
+  }
+  return {
+    left: curleft,
+    top: curtop,
+    width: width,
+    height: height
   }
 }
 
@@ -245,10 +217,10 @@ function ready (fn) {
   _readyFuncs.push(fn)
   if (_readyFuncs.length === 1) {
     __document.addEventListener('DOMContentLoaded', function (ev) {
-      _loaded = 1
       for (var i = 0; i < _readyFuncs.length; i += 1) {
         _readyFuncs[i]()
       }
+      _loaded = 1
     })
   }
 }
@@ -355,16 +327,6 @@ function htmlEl (name, attrs) {
   return el
 }
 
-const xmlns = 'http://www.w3.org/2000/svg'
-function svgEl (name, attrs) {
-  var el = __document.createElementNS(xmlns, name)
-  if (attrs) {
-    if (attrs.text) append(el, textEl(attrs.text))
-    attr(el, attrs)
-  }
-  return el
-}
-
 // Adapted from http://www.quirksmode.org/js/events_properties.html
 function eventTarget (e) {
   e = e || __window.event
@@ -426,6 +388,10 @@ function mixinHandlers (AClass, events, capture) {
   }
 }
 
+function mixinDropHandlers (el, context) {
+
+}
+
 // ## mixinDom(DefinedClassName)
 //
 // Mixin function
@@ -479,10 +445,11 @@ function mixinDom (AClass) {
     parent = (typeof parent === 'string') ? qs(parent) : parent
     if (!parent) throw new Error('No such parent el: ' + parent)
     if (this.domCount === 0) this.render()
-	if (this.dom) {
-	  parent.appendChild(this.dom)
-	}
+    if (this.dom) {
+      parent.appendChild(this.dom)
+    }
     this.parentEl = parent
+    console.warn('Attach', parent)
     if (typeof this.eventsAttach === 'function') this.eventsAttach()
     if (typeof this.afterAttach === 'function') this.afterAttach()
     return this
@@ -552,38 +519,62 @@ function mixinGetSet (AClass, prop, defaultValue) {
   }
 }
 
-var lastFocusEl
-function mixinFocus (obj, elName) {
+function IterElems (els, i) {
+  this.elems = els
+  this.index = i || 0
+}
+
+IterElems.prototype = {
+  next: function () {
+    this.index += 1
+    if (this.index === this.elems.length) this.index = 0
+    return this.elems[this.index]
+  },
+  prev: function () {
+    this.index -= 1
+    if (this.index === -1) this.index = this.elems.length - 1
+    return this.elems[this.index]
+  },
+  step: function (s) {
+    if (s > 0) return this.next()
+    return this.prev()
+  },
+  get: function () {
+    return this.elems[this.index]
+  },
+  set: function (pos) {
+    if (typeof pos === 'number') {
+      this.index = pos
+    } else {
+      this.index = this.elems.indexOf(pos)
+    }
+    return this.elems[this.index]
+  }
+}
+
+// TODO deprecate
+function mixinFocus (context, obj, elName, className) {
   obj.focus = function () {
     if (!obj[elName]) throw new Error('Need obj[' + elName + ']')
-    classAdd(obj[elName], 'focus')
-    if (lastFocusEl) {
-      classRemove(lastFocusEl, 'focus')
-    }
-    lastFocusEl = obj[elName]
+    if (context.lastEl) classRemove(context.lastEl, className)
+    classAdd(obj[elName], className)
+    context.lastEl = obj[elName]
   }
 }
 
-function mixinViewModel (obj, name) {
-  if (!bp.model) throw new Error('Need bp.model')
-  // if (!origSave) throw new Error('Need vmSave function for ' + name)
-  // if (!origLoad) throw new Error('Need vmLoad function for ' + name)
-  var m = bp.model
-  obj.vmSave = function (values) {
-    m.view(name, values)
-  }
-  obj.vmLoad = function () {
-    return m.view(name)
-  }
-}
-
-function createView (AClass, proto, handlers, args) {
-  if (typeof bp === 'undefined') throw new Error('Need bp')
+function createView (bp, AClass, proto, handlers, args) {
   if (!bp.model) throw new Error('Need bp.model')
   if (!bp.live) throw new Error('Need bp.live')
   if (!AClass.mixedIn) {
     if (!proto.tpl) throw new Error('Need proto.tpl function for markup')
     if (!proto.renderModel) throw new Error('Need proto.renderModel')
+    if (!proto.handleKey) {
+      console.warn('installing default handleKey for', AClass.name)
+      proto.handleKey = function (o) {
+        console.warn('No key handling', o)
+        return false
+      }
+    }
     AClass.prototype = proto
     // TODO move elsewhere
     AClass.prototype.emit = function (ev, arg) {
@@ -595,15 +586,11 @@ function createView (AClass, proto, handlers, args) {
   }
   args = args || {}
   if (!args.id) throw new Error('Need args.id')
-  if (!AClass.instance) AClass.instanceCount = 0
   args.model = bp.model
   args.parentEl = $id(args.id)
   var obj = AClass.create(args)
-  mixinFocus(obj, 'parentEl')
-  AClass.instanceCount += 1
-  var name = lcFirst(AClass.name) + AClass.instanceCount
-  // console.warn('createView', name, AClass, obj)
-  bp.live[name] = obj
+  mixinFocus(bp.focus, obj, 'parentEl', 'focus')
+  bp.live[args.id] = obj
 }
 
 function lcFirst (text) {

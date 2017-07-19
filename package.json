@@ -1,17 +1,5 @@
 {
-  "name": "beat-player",
-  "description": "",
-  "version": "0.0.1",
-  "author": "Anders Thøgersen <anders@bladre.dk>",
-  "licenses": [
-    "MIT"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/aklt/"
-  },
   "dependencies": {
-    "speaker": "^0.3.0",
-    "web-audio-api": "^0.2.2"
+    "normalizecss": "^3.0.0"
   }
 }
