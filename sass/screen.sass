@@ -3,11 +3,18 @@
  * Import this file using the following HTML or equivalent:
  * <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css" />
 
-@import compass/reset
+@import normalize
+// @import compass/reset
 @import compass/css3
 @import compass/layout/sticky-footer
 @import bourbon/bourbon
 @import neat/neat
+
+// TODO Import skin colors
+$color-focus:     #AAA
+$color-active:    #AAC
+$color-bg:        #FFF
+$color-footer-bg: #DFD
 
 $col-width: 1rem
 
@@ -20,10 +27,34 @@ $col-width: 1rem
 %view
   @include row()
   @include pad(0.1rem 1rem 0.1rem 0.5rem)
-  // @extend %border
+  // border: 1px solid green
 
 %hidden
   display: none
+
+%noselect
+  -webkit-touch-callout: none
+  -webkit-user-select: none
+  -khtml-user-select: none
+  -moz-user-select: none
+  -ms-user-select: none
+  user-select: none
+
+body
+  @extend %noselect
+
+div
+  border: 2px solid $color-bg
+  background-color: $color-bg
+
+h4
+  margin: 1.45rem 0 0 0
+
+dl
+  margin: 0
+
+.hidden
+  @extend %hidden
 
 .row-container
   @extend %row-container
@@ -68,6 +99,8 @@ $col-width: 1rem
   @extend %view
   font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif
   cursor: pointer
+  overflow-x: auto
+  white-space: nowrap
   div
     float: left
   .instruments
@@ -78,6 +111,8 @@ $col-width: 1rem
       display: block
       clear: left
       height: $col-width
+    .active
+      background-color: $color-active
   .score
     text-align: left
     float: left
@@ -106,7 +141,7 @@ $col-width: 1rem
       height: 1rem
       text-align: center
     & .active
-      background-color: lightblue
+      background-color: $color-active
 
 .keyboard
   font-size: 150%
@@ -147,27 +182,38 @@ $col-width: 1rem
     i
       background-color: #bd9bc9
 
+.sounds
+  @extend %view
+
 .active-instrument
   background-color: lightgreen
-
-.instruments
-  @extend %view
 
 @include sticky-footer(48px, '.bp', '.footer-layout', '.footer-content')
 
 .footer-content
-  @extend %border
-  background-color: green
+  background-color: $color-footer-bg
+
+input::-moz-focus-inner
+  border: 0
+  margin: -2px
+  padding: 0
 
 .input-text
-  @extend %hidden
+  input[type=text]
+    border: 0
+    margin: 0
+    padding: 0
 
 .input-slider
-  @extend %hidden
+  // @extend %hidden
 
 .popup
-  @extend %hidden
+  // @extend %hidden
 
 .focus
-  background-color: #DDD
+  border: 2px solid $color-focus
+
+.debugView
+  border: 1px solid red
+  font-size: 80%
 

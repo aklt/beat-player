@@ -1,16 +1,21 @@
-/*global __window extend xhr AudioContext webkitAudioContext mixinGetSet */
+/*global __window extend xhr AudioContext webkitAudioContext mixinGetSet type*/
 // # BeatModel
 //
 // Represents the model of the current beat.
 //
 // Holds all data of the current beat and is referenced from all Views.
 //
-// TODO Add subscriptions to events
+// TODO Principle: modify tghe model first and then the view on basis of model
+// values. In
 
+// TODO Don't expose bp.live
 var bp = __window.bp = {
   live: {},
-  test: {}
+  test: {},
+  focus: {}
 }
+
+const DEBUG = false
 
 function BeatModel (o) {
   o = o || {}
@@ -30,11 +35,12 @@ BeatModel.defaultInstrument = {
 }
 
 var subscriptionEvents = {
-  NewText: 1,
+  LoadBeat: 1,
   ChangeBpm: 1,
   ChangeTpb: 1,
   ChangeBeats: 1,
   ChangeNote: 1,
+  GotoPos: 1,
   SelectInstrument: 1,
   SelectInstrumentRange: 1,
   LoadedSamples: 1,
@@ -43,7 +49,15 @@ var subscriptionEvents = {
   stop: 1,
   forward: 1,
   back: 1,
-  step: 1
+  step: 1,
+  playerStep: 1,
+  instrumentStep: 1,
+  focus: 1,
+  focusUp: 1,
+  focusDown: 1,
+  EditText: 1,
+  dropFileBegin: 1,
+  dropFileEnd: 1
 }
 
 BeatModel.prototype = {
@@ -56,13 +70,24 @@ BeatModel.prototype = {
   dispatch: function (ev, data) {
     if (!subscriptionEvents[ev]) throw new Error('Illegal subscription event name ' + ev)
     var cbs = this.subscriptions[ev] || []
-    console.warn('dispatch', ev, data)
     if (!cbs.disabled) {
+      if (cbs.length === 0) {
+        console.warn('No subscriptions for ', ev, data)
+      }
       for (var i = 0; i < cbs.length; i += 1) {
         var cb = cbs[i]
-        console.warn('  call', cb[0].name, data)
         cb[0].call(cb[1], data)
+        console.warn('dispatch', ev, data)
       }
+    }
+    var json = extend({}, this.model)
+    delete json.instruments
+    delete json.patterns
+    if (DEBUG) {
+      DebugView({
+        id: 'debugView',
+        debug: json
+      })
     }
   },
   enable: function (evName) {
@@ -76,6 +101,7 @@ BeatModel.prototype = {
     o.disabled = true
   },
   // Read a text pattern without instruments
+  // TODO Move reading to a different file
   readBeatText: function (text) {
     var parts = text.split(/^--.*/m)
     if (parts.length < 2) throw new Error('Need at least global anmd beat parts')
@@ -85,7 +111,6 @@ BeatModel.prototype = {
     }
     if (parts.length >= 3) this.readInstruments(configLines(parts[2]))
     if (parts.length >= 4) this.readEffects(configLines(parts[3]))
-    this.dispatch('NewText', this.model)
   },
   readGlobal: function (lines) {
     var conf = readConfig(lines)
@@ -123,6 +148,7 @@ BeatModel.prototype = {
             lastLpb = k
           } else {
             if (k - lastLpb - 1 !== tpb) {
+              // TODO Better check here
               console.warn(new Error('Bad tpb ' + lastLpb + ' ' + k))
             }
           }
@@ -169,12 +195,13 @@ BeatModel.prototype = {
   readEffects: function () {
   },
   // Load a beat including samples
-  loadBeat: function (url, cb) {
+  loadBeatUrl: function (url, cb) {
     var self = this
     this.loadBeatText(url, function (err) {
       if (err) return cb(err)
       self.loadBeatSamples(function (err, model) {
         if (err) return cb(err)
+        self.position(0)
         cb(null, model)
       })
     })
@@ -230,8 +257,33 @@ BeatModel.prototype = {
   },
   // ## Modifying the model with getters and setters
   position: function (pos) {
-    if (!pos) return this.model.position
-    this.model.position = pos
+    if (typeof pos === 'number') this.model.position = pos
+    return this.model.position
+  },
+  step: function (direction) {
+    direction = direction || 1
+    if (direction > 0) {
+      this.model.position += 1
+      if (this.model.position >= this.patternLength()) this.model.position = 0
+    } else {
+      this.model.position -= 1
+      if (this.model.position <= -1) this.model.position = this.patternLength() - 1
+    }
+    return this.model.position
+  },
+  stepInstrument: function (direction) {
+    var count = this.instrumentCount()
+    direction = direction || 1
+    var value = this.model.selectedInstrument || 0
+    if (direction > 0) {
+      value += 1
+      if (value >= count) value = 0
+    } else {
+      value -= 1
+      if (value < 0) value = count - 1
+    }
+    this.model.selectedInstrument = value
+    return value
   },
   instrument: function (number) {
     number = number || this.model.selectedInstrument
@@ -241,6 +293,9 @@ BeatModel.prototype = {
       this.model.instruments[number] = i1
     }
     return i1
+  },
+  instrumentCount: function () {
+    return this.instruments().length
   },
   instruments: function (changeUrls) {
     if (!changeUrls) {
@@ -265,9 +320,13 @@ BeatModel.prototype = {
     throw new Error('TODO: set patternLength')
   },
   note: function (pos, value) {
+    // TODO Also change tracks here so live record is emabled
     if (typeof pos === 'string') pos = parseNotePos(pos)
-    if (!value) return this.tracks[pos[0]][pos[1]]
-    this.tracks[pos[0]][pos[1]] = value
+    var ps = this.model.patterns
+    if (type(value) === 'undefined') return ps[pos[0]][pos[1]]
+    if (!value || value === '.') delete ps[pos[0]][pos[1]]
+    else ps[pos[1]][pos[0]] = value
+    return ps[pos[1]][pos[0]]
   },
   selectedInstrument: function (number) {
     if (!number) return this.model.selectedInstrument
@@ -306,6 +365,11 @@ BeatModel.prototype = {
   version: function (ver) {
     if (ver) this.model.version = ver
     return this.model.version
+  },
+  playing: function (val) {
+    if (typeof val !== 'boolean') return this.model.playing
+    else this.model.playing = val
+    return this.model.playing
   }
 }
 
@@ -362,12 +426,73 @@ mixinGetSet(BeatModel, 'tpb', 4)
 mixinGetSet(BeatModel, 'beats', 4)
 
 var m = bp.model = new BeatModel()
+var live = bp.live
+m.subscribe('SelectInstrument', function () {
+  live.instrumentsView1.selectInstrumentNumber()
+})
 
-bp.test.beatModel = function () {
-  var bm1 = new BeatModel()
-  bm1.loadBeat('data/beat0.beat', function (err, model) {
-    if (err) throw err
-    console.warn('Loaded', model)
-    console.warn('instruments', model.instruments())
+m.subscribe('SelectInstrumentRange', function () {
+  live.instrumentsView1.selectInstrumentRange()
+})
+
+m.subscribe('LoadBeat', function (url) {
+  this.loadBeatUrl(url, function (err) {
+    if (err) throw new Error('Could not load', url, err)
+    live.beatAudio1.calcTickTimes()
+    console.warn('load', this)
+    live.player1.update()
+    live.settings.update()
+    live.sounds.update()
   })
-}
+})
+
+m.subscribe('play', function (o) {
+  m.playing(true)
+  live.controlsView1.play()
+  live.beatAudio1.play()
+})
+
+m.subscribe('stop', function () {
+  live.controlsView1.stop()
+  live.beatAudio1.stop()
+  m.playing(false)
+})
+
+m.subscribe('focus', function (view) {
+  live.stepFocus.set(view)
+  this.view = view
+})
+
+m.subscribe('focusUp', function () {
+  this.view = live.stepFocus.prev()
+  this.view.focus()
+})
+
+m.subscribe('focusDown', function () {
+  this.view = live.stepFocus.next()
+  this.view.focus()
+})
+
+m.subscribe('playerStep', function (direction) {
+  var pos = this.step(direction)
+  this.view.gotoPos(pos)
+})
+
+m.subscribe('GotoPos', function (pos) {
+  live.player1.gotoPos(pos)
+  m.position(pos)
+})
+
+m.subscribe('EditText', function (o) {
+  // TODO handle input handler nicer
+  live.inputHandler1.state = IH_INPUT
+  live.textInput1.popup(o, function (text) {
+    o.el.innerText = text
+    m.note(pos, text)
+  })
+})
+
+m.subscribe('instrumentStep', function (dir) {
+  var pos = this.stepInstrument(dir)
+    live.player1.gotoInstrument(pos)
+  })

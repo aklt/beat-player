@@ -1,5 +1,6 @@
+/* Beat player v0.0.1*/
 ;(function () {
-  /*global bp XMLHttpRequest*/
+  /*global XMLHttpRequest Node*/
   var __slice = [].slice
   var __hasProp = {}.hasOwnProperty
   var __proto = 'prototype'
@@ -53,34 +54,6 @@
         }
       }
     }
-  }
-  
-  function StepIterElems (o) {
-    this.elems = o.elems
-    this.index = o.index || 0
-  }
-  
-  StepIterElems.prototype = {
-    next: function () {
-      this.index += 1
-      if (this.index === this.elems.length) this.index = 0
-      return this.elems[this.index]
-    },
-    prev: function () {
-      this.index -= 1
-      if (this.index === -1) this.index = this.elems.length - 1
-      return this.elems[this.index]
-    },
-    get: function () {
-  	return this.elems[this.index]
-    }
-  }
-  
-  function stepIter (elems, index) {
-    return new StepIterElems({
-      elems: elems,
-      index: index || 0
-    })
   }
   
   function eachPush (objOrArray, fn) {
@@ -148,9 +121,6 @@
     if (result.length === 0) return ''
     return ' ' + result.join(' ')
   }
-  //
-  // b.js
-  //
   
   var __window = window
   var __document = __window.document
@@ -224,18 +194,21 @@
     return el
   }
   
-  // ## browser.rect(node)
-  //
-  // Get position rect of an element or text node
-  function rect (node) {
-    if (node.nodeType === 3 && __document.createRange) {
-      var range = __document.createRange()
-      range.selectNodeContents(node)
-      if (range.getBoundingClientRect) {
-        return range.getBoundingClientRect()
-      }
-    } else if (node.getBoundingClientRect) {
-      return node.getBoundingClientRect()
+  function elRect (el) {
+    if (!el.offsetParent) throw new Error('Need offsetParent')
+    var curleft = el.offsetLeft
+    var curtop = el.offsetTop
+    var width = el.offsetWidth
+    var height = el.offsetHeight
+    while ((el = el.offsetParent)) {
+      curleft += el.offsetLeft
+      curtop += el.offsetTop
+    }
+    return {
+      left: curleft,
+      top: curtop,
+      width: width,
+      height: height
     }
   }
   
@@ -246,10 +219,10 @@
     _readyFuncs.push(fn)
     if (_readyFuncs.length === 1) {
       __document.addEventListener('DOMContentLoaded', function (ev) {
-        _loaded = 1
         for (var i = 0; i < _readyFuncs.length; i += 1) {
           _readyFuncs[i]()
         }
+        _loaded = 1
       })
     }
   }
@@ -306,6 +279,7 @@
   
   function appendChild (root, child) {
     root.appendChild(child)
+    return root
   }
   
   function insertBefore(parent, newElement, beforeThis) {
@@ -416,6 +390,10 @@
     }
   }
   
+  function mixinDropHandlers (el, context) {
+  
+  }
+  
   // ## mixinDom(DefinedClassName)
   //
   // Mixin function
@@ -469,9 +447,11 @@
       parent = (typeof parent === 'string') ? qs(parent) : parent
       if (!parent) throw new Error('No such parent el: ' + parent)
       if (this.domCount === 0) this.render()
-      if (!this.dom) throw new Error('Need to render before')
-      parent.appendChild(this.dom)
+      if (this.dom) {
+        parent.appendChild(this.dom)
+      }
       this.parentEl = parent
+      console.warn('Attach', parent)
       if (typeof this.eventsAttach === 'function') this.eventsAttach()
       if (typeof this.afterAttach === 'function') this.afterAttach()
       return this
@@ -541,38 +521,62 @@
     }
   }
   
-  var lastFocusEl
-  function mixinFocus (obj, elName) {
+  function IterElems (els, i) {
+    this.elems = els
+    this.index = i || 0
+  }
+  
+  IterElems.prototype = {
+    next: function () {
+      this.index += 1
+      if (this.index === this.elems.length) this.index = 0
+      return this.elems[this.index]
+    },
+    prev: function () {
+      this.index -= 1
+      if (this.index === -1) this.index = this.elems.length - 1
+      return this.elems[this.index]
+    },
+    step: function (s) {
+      if (s > 0) return this.next()
+      return this.prev()
+    },
+    get: function () {
+      return this.elems[this.index]
+    },
+    set: function (pos) {
+      if (typeof pos === 'number') {
+        this.index = pos
+      } else {
+        this.index = this.elems.indexOf(pos)
+      }
+      return this.elems[this.index]
+    }
+  }
+  
+  // TODO deprecate
+  function mixinFocus (context, obj, elName, className) {
     obj.focus = function () {
       if (!obj[elName]) throw new Error('Need obj[' + elName + ']')
-      classAdd(obj[elName], 'focus')
-      if (lastFocusEl) {
-        classRemove(lastFocusEl, 'focus')
-      }
-      lastFocusEl = obj[elName]
+      if (context.lastEl) classRemove(context.lastEl, className)
+      classAdd(obj[elName], className)
+      context.lastEl = obj[elName]
     }
   }
   
-  function mixinViewModel (obj, name) {
-    if (!bp.model) throw new Error('Need bp.model')
-    // if (!origSave) throw new Error('Need vmSave function for ' + name)
-    // if (!origLoad) throw new Error('Need vmLoad function for ' + name)
-    var m = bp.model
-    obj.vmSave = function (values) {
-      m.view(name, values)
-    }
-    obj.vmLoad = function () {
-      return m.view(name)
-    }
-  }
-  
-  function createView (AClass, proto, handlers, args) {
-    if (typeof bp === 'undefined') throw new Error('Need bp')
+  function createView (bp, AClass, proto, handlers, args) {
     if (!bp.model) throw new Error('Need bp.model')
     if (!bp.live) throw new Error('Need bp.live')
     if (!AClass.mixedIn) {
       if (!proto.tpl) throw new Error('Need proto.tpl function for markup')
       if (!proto.renderModel) throw new Error('Need proto.renderModel')
+      if (!proto.handleKey) {
+        console.warn('installing default handleKey for', AClass.name)
+        proto.handleKey = function (o) {
+          console.warn('No key handling', o)
+          return false
+        }
+      }
       AClass.prototype = proto
       // TODO move elsewhere
       AClass.prototype.emit = function (ev, arg) {
@@ -584,16 +588,11 @@
     }
     args = args || {}
     if (!args.id) throw new Error('Need args.id')
-    if (!AClass.instance) AClass.instanceCount = 0
     args.model = bp.model
     args.parentEl = $id(args.id)
     var obj = AClass.create(args)
-    mixinFocus(obj, 'parentEl')
-    AClass.instanceCount += 1
-    var name = lcFirst(AClass.name) + AClass.instanceCount
-    mixinViewModel(obj, name)
-    console.warn('createView', name, AClass, obj)
-    bp.live[name] = obj
+    mixinFocus(bp.focus, obj, 'parentEl', 'focus')
+    bp.live[args.id] = obj
   }
   
   function lcFirst (text) {
@@ -603,19 +602,24 @@
   function ucFirst (text) {
     return text[0].toUpperCase() + text.slice(1)
   }
-  /*global __window extend xhr AudioContext webkitAudioContext mixinGetSet */
+  /*global __window extend xhr AudioContext webkitAudioContext mixinGetSet type*/
   // # BeatModel
   //
   // Represents the model of the current beat.
   //
   // Holds all data of the current beat and is referenced from all Views.
   //
-  // TODO Add subscriptions to events
+  // TODO Principle: modify tghe model first and then the view on basis of model
+  // values. In
   
+  // TODO Don't expose bp.live
   var bp = __window.bp = {
     live: {},
-    test: {}
+    test: {},
+    focus: {}
   }
+  
+  const DEBUG = false
   
   function BeatModel (o) {
     o = o || {}
@@ -635,11 +639,12 @@
   }
   
   var subscriptionEvents = {
-    NewText: 1,
+    LoadBeat: 1,
     ChangeBpm: 1,
     ChangeTpb: 1,
     ChangeBeats: 1,
     ChangeNote: 1,
+    GotoPos: 1,
     SelectInstrument: 1,
     SelectInstrumentRange: 1,
     LoadedSamples: 1,
@@ -648,7 +653,15 @@
     stop: 1,
     forward: 1,
     back: 1,
-    step: 1
+    step: 1,
+    playerStep: 1,
+    instrumentStep: 1,
+    focus: 1,
+    focusUp: 1,
+    focusDown: 1,
+    EditText: 1,
+    dropFileBegin: 1,
+    dropFileEnd: 1
   }
   
   BeatModel.prototype = {
@@ -661,13 +674,24 @@
     dispatch: function (ev, data) {
       if (!subscriptionEvents[ev]) throw new Error('Illegal subscription event name ' + ev)
       var cbs = this.subscriptions[ev] || []
-      console.warn('dispatch', ev, data)
       if (!cbs.disabled) {
+        if (cbs.length === 0) {
+          console.warn('No subscriptions for ', ev, data)
+        }
         for (var i = 0; i < cbs.length; i += 1) {
           var cb = cbs[i]
-          console.warn('  call', cb[0].name, data)
           cb[0].call(cb[1], data)
+          console.warn('dispatch', ev, data)
         }
+      }
+      var json = extend({}, this.model)
+      delete json.instruments
+      delete json.patterns
+      if (DEBUG) {
+        DebugView({
+          id: 'debugView',
+          debug: json
+        })
       }
     },
     enable: function (evName) {
@@ -681,6 +705,7 @@
       o.disabled = true
     },
     // Read a text pattern without instruments
+    // TODO Move reading to a different file
     readBeatText: function (text) {
       var parts = text.split(/^--.*/m)
       if (parts.length < 2) throw new Error('Need at least global anmd beat parts')
@@ -690,7 +715,6 @@
       }
       if (parts.length >= 3) this.readInstruments(configLines(parts[2]))
       if (parts.length >= 4) this.readEffects(configLines(parts[3]))
-      this.dispatch('NewText', this.model)
     },
     readGlobal: function (lines) {
       var conf = readConfig(lines)
@@ -728,6 +752,7 @@
               lastLpb = k
             } else {
               if (k - lastLpb - 1 !== tpb) {
+                // TODO Better check here
                 console.warn(new Error('Bad tpb ' + lastLpb + ' ' + k))
               }
             }
@@ -774,12 +799,13 @@
     readEffects: function () {
     },
     // Load a beat including samples
-    loadBeat: function (url, cb) {
+    loadBeatUrl: function (url, cb) {
       var self = this
       this.loadBeatText(url, function (err) {
         if (err) return cb(err)
         self.loadBeatSamples(function (err, model) {
           if (err) return cb(err)
+          self.position(0)
           cb(null, model)
         })
       })
@@ -835,8 +861,33 @@
     },
     // ## Modifying the model with getters and setters
     position: function (pos) {
-      if (!pos) return this.model.position
-      this.model.position = pos
+      if (typeof pos === 'number') this.model.position = pos
+      return this.model.position
+    },
+    step: function (direction) {
+      direction = direction || 1
+      if (direction > 0) {
+        this.model.position += 1
+        if (this.model.position >= this.patternLength()) this.model.position = 0
+      } else {
+        this.model.position -= 1
+        if (this.model.position <= -1) this.model.position = this.patternLength() - 1
+      }
+      return this.model.position
+    },
+    stepInstrument: function (direction) {
+      var count = this.instrumentCount()
+      direction = direction || 1
+      var value = this.model.selectedInstrument || 0
+      if (direction > 0) {
+        value += 1
+        if (value >= count) value = 0
+      } else {
+        value -= 1
+        if (value < 0) value = count - 1
+      }
+      this.model.selectedInstrument = value
+      return value
     },
     instrument: function (number) {
       number = number || this.model.selectedInstrument
@@ -846,6 +897,9 @@
         this.model.instruments[number] = i1
       }
       return i1
+    },
+    instrumentCount: function () {
+      return this.instruments().length
     },
     instruments: function (changeUrls) {
       if (!changeUrls) {
@@ -870,9 +924,13 @@
       throw new Error('TODO: set patternLength')
     },
     note: function (pos, value) {
+      // TODO Also change tracks here so live record is emabled
       if (typeof pos === 'string') pos = parseNotePos(pos)
-      if (!value) return this.tracks[pos[0]][pos[1]]
-      this.tracks[pos[0]][pos[1]] = value
+      var ps = this.model.patterns
+      if (type(value) === 'undefined') return ps[pos[0]][pos[1]]
+      if (!value || value === '.') delete ps[pos[0]][pos[1]]
+      else ps[pos[1]][pos[0]] = value
+      return ps[pos[1]][pos[0]]
     },
     selectedInstrument: function (number) {
       if (!number) return this.model.selectedInstrument
@@ -911,6 +969,11 @@
     version: function (ver) {
       if (ver) this.model.version = ver
       return this.model.version
+    },
+    playing: function (val) {
+      if (typeof val !== 'boolean') return this.model.playing
+      else this.model.playing = val
+      return this.model.playing
     }
   }
   
@@ -967,16 +1030,77 @@
   mixinGetSet(BeatModel, 'beats', 4)
   
   var m = bp.model = new BeatModel()
+  var live = bp.live
+  m.subscribe('SelectInstrument', function () {
+    live.instrumentsView1.selectInstrumentNumber()
+  })
   
-  bp.test.beatModel = function () {
-    var bm1 = new BeatModel()
-    bm1.loadBeat('data/beat0.beat', function (err, model) {
-      if (err) throw err
-      console.warn('Loaded', model)
-      console.warn('instruments', model.instruments())
+  m.subscribe('SelectInstrumentRange', function () {
+    live.instrumentsView1.selectInstrumentRange()
+  })
+  
+  m.subscribe('LoadBeat', function (url) {
+    this.loadBeatUrl(url, function (err) {
+      if (err) throw new Error('Could not load', url, err)
+      live.beatAudio1.calcTickTimes()
+      console.warn('load', this)
+      live.player1.update()
+      live.settings.update()
+      live.sounds.update()
     })
-  }
-  /*global bp, AudioContext, webkitAudioContext, BeatModel*/
+  })
+  
+  m.subscribe('play', function (o) {
+    m.playing(true)
+    live.controlsView1.play()
+    live.beatAudio1.play()
+  })
+  
+  m.subscribe('stop', function () {
+    live.controlsView1.stop()
+    live.beatAudio1.stop()
+    m.playing(false)
+  })
+  
+  m.subscribe('focus', function (view) {
+    live.stepFocus.set(view)
+    this.view = view
+  })
+  
+  m.subscribe('focusUp', function () {
+    this.view = live.stepFocus.prev()
+    this.view.focus()
+  })
+  
+  m.subscribe('focusDown', function () {
+    this.view = live.stepFocus.next()
+    this.view.focus()
+  })
+  
+  m.subscribe('playerStep', function (direction) {
+    var pos = this.step(direction)
+    this.view.gotoPos(pos)
+  })
+  
+  m.subscribe('GotoPos', function (pos) {
+    live.player1.gotoPos(pos)
+    m.position(pos)
+  })
+  
+  m.subscribe('EditText', function (o) {
+    // TODO handle input handler nicer
+    live.inputHandler1.state = IH_INPUT
+    live.textInput1.popup(o, function (text) {
+      o.el.innerText = text
+      m.note(pos, text)
+    })
+  })
+  
+  m.subscribe('instrumentStep', function (dir) {
+    var pos = this.stepInstrument(dir)
+      live.player1.gotoInstrument(pos)
+    })
+  /*global bp, AudioContext */
   
   // # BeatAudio
   //
@@ -987,99 +1111,81 @@
   function BeatAudio (model) {
     this.model = model
     // TODO There is a max. limit on the number of AudioContexts
-    this.context = new (AudioContext || webkitAudioContext)()
+    this.context = new AudioContext()
     this.volume = this.context.createGain()
     this.volume.gain.value = 1
     this.volume.connect(this.context.destination)
     this.playing = []
-    this.position = 0
-    this.positionTime = 0
     this.lookaheadTime = 0.4
   }
   
-  // divide notes on property `note.time` into buckets of `intervalTime` size
-  // TODO deprecate and use setTimeout with intervals
-  function timeBuckets (notes, intervalTime) {
-    var time = intervalTime
-    var buckets = [[]]
-    var ibucket = 0
-    var i = 0
-    var note = notes[i]
-    while (note && i < notes.length) {
-      if (note.time < time) {
-        buckets[ibucket].push(note)
-      } else {
-        ibucket += 1
-        buckets[ibucket] = []
-        time += intervalTime
-        i -= 1
-      }
-      i += 1
-      note = notes[i]
-    }
-    return buckets
-  }
-  
   BeatAudio.prototype = {
-    // load and reset variables
-    load: function (url, cb) {
+    loadUrl: function (url, cb) {
       var self = this
-      this.model.load(url, function (err, model) {
+      this.model.loadBeatUrl(url, function (err, model) {
         if (err) return cb(err)
-        self.calculateNoteBuckets()
         if (typeof cb === 'function') cb(null, self)
       })
     },
-    // Schedule offset times of samples according to pattern
-    calculateNoteBuckets: function () {
+    // TODO Move this to model for live record to function
+    calcTickTimes: function () {
       var patterns = this.model.patterns()
-      this.secondsPerTick = (60 / this.model.bpm()) / this.model.tpb()
-      console.warn('bpm, secondsPerTick', this.model.bpm(), this.secondsPerTick)
-      this.orderedNotes = []
-      for (var instrumentNumber in patterns) {
-        var notes = patterns[instrumentNumber]
-        for (var offset in notes) {
-          var key = notes[offset]
-          this.orderedNotes.push({
-            time: this.secondsPerTick * parseInt(offset, 10),
-            instrument: instrumentNumber,
-            key: key,
-            pos: offset
-          })
+      var bpm = this.model.bpm()
+      var tpb = this.model.tpb()
+      var secondsPerTick = 60 / (bpm * tpb)
+      var length = this.model.patternLength()
+      var ordered = new Array(length)
+  
+      for (var tick = 0; tick < length; tick += 1) {
+        var notes = []
+        for (var instrumentIndex in patterns) {
+          var instrumentLine = patterns[instrumentIndex]
+          if (instrumentLine[tick]) {
+            notes.push({
+              inst: instrumentIndex,
+              note: instrumentLine[tick]
+            })
+          }
+        }
+        if (notes.length > 0) {
+          ordered[tick] = notes
         }
       }
-      this.orderedNotes.sort(function (a, b) { return a.time - b.time })
-      this.noteBuckets = timeBuckets(this.orderedNotes, this.lookaheadTime)
-      this.noteBucketsIndex = 0
+  
+      this.patternLength = length
+      this.orderedNotes = ordered
+      this.secondsPerTick = secondsPerTick
     },
-    // Start playback at pattern position
     play: function () {
       if (!this.timeout) {
-        this.calculateNoteBuckets()
-        var self = this
-        var ctx = this.context
-        var time0 = ctx.currentTime
-        var bucketIndex = this.noteBucketsIndex
-        var length = this.noteBuckets.length
-        var deltaTime = 0
-        this.timeout = setInterval(function () {
-          var timePassed = ctx.currentTime - time0
-          var bucketTime = bucketIndex * self.lookaheadTime
-          deltaTime = bucketTime - timePassed
-          var bucket = self.noteBuckets[bucketIndex]
-          for (var i = 0; i < bucket.length; i += 1) {
-            var note = bucket[i]
-            var xTime = self.lookaheadTime + note.time - bucketTime + deltaTime
-            self.playSample(note.instrument, xTime)
-        // self.model.dispatch('step', note.pos)
-          }
-          bucketIndex += 1
-          if (bucketIndex === length) {
-            bucketIndex = 0
-            time0 += timePassed
-          }
-        }, this.lookaheadTime * 1000)
+        this.calcTickTimes()
+        // TODO Handle drift better
+        this.nextTick = this.context.currentTime + Math.max(this.secondsPerTick / 10, 0.05)
+        this._play()
       }
+    },
+    _play: function () {
+      var pos = this.model.position()
+      var playThese = this.orderedNotes[pos] || []
+      var delta = this.nextTick - this.context.currentTime
+      // TODO scale this according to drift
+      // TODO live recording, changing bpm
+      var timeoutTime = this.secondsPerTick * 1000
+      var self = this
+  
+      this.model.dispatch('GotoPos', pos)
+      for (var i = 0; i < playThese.length; i += 1) {
+        this.playSample(playThese[i].inst, this.context.currentTime + delta)
+      }
+      this.timeout = setTimeout(function () {
+        pos = self.model.position() + 1
+        self.nextTick += self.secondsPerTick
+        if (pos === self.patternLength) {
+          pos = 0
+        }
+        self.model.position(pos)
+        self._play()
+      }, timeoutTime)
     },
     // Stop all playing samples
     stop: function () {
@@ -1098,38 +1204,18 @@
       // TODO Make ranges of notes
       // source.detune.value = detune
       // source.playbackRate.value = 2
-      source.start(this.context.currentTime + when)
-      source.onended = function () {
-        this.ended = true
-      }
-      this.playing.push(source)
-    },
-    // Remove sounds that have been played drom this.playing
-    removeEnded: function () {
-      this.playing = this.playing.filter(function (s1) {
-        return !s1.ended
-      })
+      source.start(when)
+      // source.onended = function () {
+      //   console.warn('ended')
+      // }
     }
-  
     // TODO Mixing https://developer.mozilla.org/en-US/docs/Web/API/OfflineAudioContext
   }
-  
   bp.BeatAudio = BeatAudio
-  
-  bp.testBeatAudio = function () {
-    var beat1Model = bp.model || new BeatModel(beat1)
-    var beat1 = bp.beat1 = new BeatAudio(beat1Model)
-    beat1.model.bpm(110)
-    beat1.calculateNoteBuckets()
-    beat1.play()
-    setTimeout(function (o) {
-      beat1.stop()
-    }, 3000)
-  }
   /*global bp __document requestAnimationFrame htmlEl insertBefore
     appendChild, removeChild mixinDom mixinHandlers css qa qs classRemove classAdd
-    rect attr nextSibling prevSibling $id mixinHideShow BeatModel
-    eachPush $t $ts extend createView html
+    elRect attr nextSibling prevSibling $id mixinHideShow eachPush $t $ts
+    extend createView FileReader
   */
   
   // TODO Grid https://www.reddit.com/r/Frontend/comments/4lkww8/grid_system_research/
@@ -1153,6 +1239,7 @@
   // ## Global keys
   //
   // space         play, stop
+  // esc           move focus out, record
   // 1-9           select instrument
   // qwerty        play sound
   // Left, Right   select view
@@ -1160,8 +1247,8 @@
   // ## Player View keys
   // 1-9, a-z, A-Z  select column
   //
-  // ## Mouse
-  //
+  // TODO Do not depend on device typematic delay
+  // TODO Show state and active key being pressed iin footer
   var key0 = '0'.charCodeAt(0)
   var key9 = '9'.charCodeAt(0)
   var keyA = 'A'.charCodeAt(0)
@@ -1175,105 +1262,140 @@
   var keyEsc = 27
   var keyTab = 9
   
+  const IH_INIT = 1
+  const IH_VIEW = 2
+  const IH_INPUT = 3
+  const IH_END = 4
+  
   function InputHandler (o) {
     if (!o.keyboardView) throw new Error('Need o.keyboardView')
     if (!o.player) throw new Error('o.player')
     if (!o.model) throw new Error('o.model')
     this.keyboardView = o.keyboardView
     this.player = o.player
+    this.model = o.model
     this.parentEl = __document
+    this.view = bp.live[0]
+    this.state = o.state || IH_INIT
   }
   
   InputHandler.prototype = {
   }
   
-  var IH_INIT = 1
-  
-  var IH_END = 4
-  var ih_state = IH_INIT
-  
-  // hack
-  var isPlay = false
   mixinHandlers(InputHandler, {
     keydown: function (ev, el) {
-      var k = translateKey(ev)
-      console.warn('key', k)
-      // hack
-      if (k === 'space') {
-        if (!isPlay) {
-          bp.model.dispatch('play')
-          isPlay = true
-        } else {
-          bp.model.dispatch('stop')
-          isPlay = false
-        }
-      }
-      var code = ev.which
-      var obj
-      switch (ih_state) {
-        case IH_INIT:
-          if (code <= key9 && code >= key0) {
-            this.keyboardView.selectInstrument(String.fromCharCode(code))
-          } else if (code === keyUp) {
-            console.warn('keyUp')
-            if (bp.lastPopUp && bp.lastPopUp.keyUp) bp.lastPopUp.keyUp()
-            ev.preventDefault()
-          } else if (code === keyDown) {
-            console.warn('keyDown')
-            if (bp.lastPopUp && bp.lastPopUp.keyDown) bp.lastPopUp.keyDown()
-            ev.preventDefault()
-          } else if (code === keyLeft) {
-            obj = bp.live.stepFocus.prev()
-            console.warn('keyLeft', obj)
-            obj.focus()
-            if (bp.lastPopUp && bp.lastPopUp.keyLeft) bp.lastPopUp.keyLeft()
-            ev.preventDefault()
-          } else if (code === keyRight) {
-            obj = bp.live.stepFocus.next()
-            obj.focus()
-            console.warn('keyRight', obj)
-            if (bp.lastPopUp && bp.lastPopUp.keyRight) bp.lastPopUp.keyRight()
-            ev.preventDefault()
-          } else if (code === keySpace) {
-            console.warn('keySpace')
-            ev.preventDefault()
-          } else if (code === keyEsc) {
-            console.warn('keyEsc')
-            if (bp.lastPopUp) bp.lastPopUp.inputEl.hide()
-            ev.preventDefault()
-          } else if (code === keyEnter) {
-            console.warn('keyEnter')
-            ev.preventDefault()
-          } else if (code === keyTab) {
-            console.warn('keyTab')
-            if (!this.activeTab) this.activeTab = this.keyboardView
-            this.activeTab.unfocus()
-            if (this.activeTab === this.keyboardView) this.activeTab = this.player
-            else this.activeTab = this.keyboardView
-            this.activeTab.focus()
-  
-            return ev.preventDefault()
-          } else {
-            var k = String.fromCharCode(code)
-            if (keyboardKeyMap[k]) {
-              console.warn('play key', k)
-            }
-          }
-          break
-        case IH_END:
+      var m = this.model
+      var key = translateKey(ev)
+      switch (key) {
+        case 'space':
+          if (!m.playing()) m.dispatch('play')
+          else m.dispatch('stop')
+          ev.preventDefault()
           break
         default:
-          console.warn('Unknown ih_state', ih_state)
-          break
+          switch (this.state) {
+            case IH_INIT:
+              switch (key) {
+                case 'up':
+                  m.dispatch('focusUp')
+                  ev.preventDefault()
+                  break
+                case 'down':
+                  m.dispatch('focusDown')
+                  ev.preventDefault()
+                  break
+                case 'right':
+                case 'left':
+                  this.state = IH_VIEW
+                  // falls through
+                default:
+                  m.view.handleKey({
+                    key: key,
+                    ev: ev,
+                    el: el
+                  })
+                  break
+              }
+              break
+            case IH_INPUT:
+              switch (key) {
+                case 'esc':
+                  this.state = IH_VIEW
+                  break
+              }
+              break
+            case IH_VIEW:
+              switch (key) {
+                case 'esc':
+                  this.state = IH_INIT
+                  break
+                default:
+                  m.view.handleKey({
+                    key: key,
+                    ev: ev,
+                    el: el
+                  })
+                  break
+              }
+              break
+            case IH_END:
+              break
+            default:
+              console.warn('Unknown this.state', this.state)
+              break
+          }
       }
     },
     keyup: function () {
-      console.warn('up', arguments)
+      console.warn('TODO unpress key', arguments)
     },
     wheel: function () {
-      console.warn('scroll', arguments)
+      console.warn('TODO scroll views', arguments)
+    },
+    dragover: function (ev) {
+      ev.preventDefault()
+    },
+    // handle dropping files.  Urls go into a box
+    drop: function (ev) {
+      var m = this.model
+      ev.preventDefault()
+      var files = ev.dataTransfer.files
+      for (var i = 0; i < files.length; i += 1) {
+        var f0 = files[i]
+        var readAs = (f0.type === '' || /^(?:text|application)/i.test(f0.type))
+                     ? 'Text' : 'ArrayBuffer'
+        var type = f0.type
+        var name = f0.name
+        var size = f0.size
+        m.dispatch('dropFileBegin', {
+            type: type,
+            name: name,
+            size: size
+        })
+        // see: https://developer.mozilla.org/en-US/docs/Web/API/FileReader
+        var reader = new FileReader()
+        reader.onload = function () {
+          console.warn('loading', arguments)
+        }
+        reader.onloadend = function () {
+          console.warn('loadend', arguments, reader.result, reader.result.toString())
+          m.dispatch('dropFileEnd', {
+            type: type,
+            name: name,
+            size: size,
+            data: reader.result
+          })
+        }
+        reader['readAs' + readAs](f0)
+      }
+    },
+    // TODO window leave
+    dragleave: function (ev) {
+      console.warn('leave')
+      ev.preventDefault()
     }
   })
+  
   
   function translateKey (ev) {
     // TODO browser compat
@@ -1308,15 +1430,14 @@
       // [2, 'Q', 'R'],
       // [3, 'B', 'M']
     ]
-    o.model.selectedInstrument(o.selectedInstrument || 1)
+    // TODO o.model.selectedInstrument(o.selectedInstrument || 1)
     // properties on o added
   }
   
-  createView(KeyboardView, {
+  createView(bp, KeyboardView, {
     tpl: function (o) {
       o = o || {}
       return $t('pre', keyboardKeys.map(function (row, j) {
-        var keys = ''
         var chars = row.split('')
         if (j === 0) return $ts('b', chars).join('')
         return (j > 1 ? ' ' : '') + $ts('i', chars).join('')
@@ -1361,6 +1482,7 @@
         begin = endEl
         end = beginEl
       }
+      // TODO dispatch
       this.model.selectedInstrumentRange([begin.innerText, end.innerText])
       var span = htmlEl('span', {'class': 'color' + instrumentNumber})
       span = insertBefore(begin.parentNode, span, begin)
@@ -1386,6 +1508,7 @@
       }
       classAdd(el, 'active-instrument')
       this.lastInstrumentEl = el
+      // TODO dispatch
       this.model.selectedInstrument(sample)
     },
   
@@ -1445,41 +1568,12 @@
   
   // 1}}} KeyboardView
   
-  // {{{1 ScoreColumns
-  // TODO Get rid of this
-  function ScoreColumns (el) {
-    // console.warn(type(el));
-    this.els = qa('p', el).filter(function (el1) {
-      // TODO fails if only one instrument
-      return el1.childNodes.length > 1
-    })
-    this.selectedIndex = -1
-    this.selectedEl = this.els[this.selectedIndex]
-    this.lastSelectedEl = this.selectedEl
-    console.warn('ScoreColumns', this)
-  }
-  
-  ScoreColumns.prototype = {
-    step: function (units) {
-      if (!units) units = 1
-      this.selectedIndex += units
-      if (this.selectedIndex >= this.els.length) this.selectedIndex = 0
-      this.lastSelectedEl = this.selectedEl
-      this.selectedEl = this.els[this.selectedIndex]
-  
-      if (!this.selectedEl) throw new Error('BAd ' + this.selectedIndex)
-      if (this.lastSelectedEl) classRemove(this.lastSelectedEl, 'active')
-      classAdd(this.selectedEl, 'active')
-    }
-  }
-  // 1}}} ScoreColumns
-  
   // {{{1 SettingsView
   
   function SettingsView () {
   }
   
-  createView(SettingsView, {
+  createView(bp, SettingsView, {
     tpl: function (o) {
       return $t('dl',
           eachPush([{title: 'Beats Per Minute', abbr: 'BPM', name: 'bpm'},
@@ -1505,6 +1599,26 @@
   // 1}}}
   
   // {{{1 PlayerView
+  function IterActive (el, sel, filter) {
+    // Set the active class on elems
+    var els = qa(sel, el)
+    if (filter) els = els.filter(filter)
+    this.iter = new IterElems(els)
+    this.last = els[0]
+  }
+  
+  IterActive.prototype = {
+    gotoPos: function (pos) {
+      var selected = this.iter.set(pos)
+      if (selected) {
+      classRemove(this.last, 'active')
+      classAdd(selected, 'active')
+      this.last = selected
+      }
+    }
+  }
+  
+  // TODO Make scoreSpanTemplate a separate control
   function scoreSpanTemplate (length, tpb) {
     var result = []
     for (var i = 0; i < length; i += 1) {
@@ -1519,13 +1633,13 @@
   function PlayerView (o) {
   }
   
-  createView(PlayerView, {
+  createView(bp, PlayerView, {
     tpl: function (o) {
       var m = this.model
       var t = extend({tracks: o.tracks,
                       length: m.patternLength(),
                       tpb: m.tpb()}, o)
-      return [
+      var r1 = [
         $t('div', {'class': 'instruments'},
           eachPush(t.instruments, function (i, i1) {
             return $t('p', i1.name)
@@ -1541,6 +1655,8 @@
               }))]
             })))
       ].join('\n')
+      console.warn('PlayerView', r1, t)
+      return r1
     },
     renderModel: function () {
       // Extract the parts needed for the playerview
@@ -1550,6 +1666,7 @@
       var instruments = m.instruments()
       var patternLength = m.patternLength()
       var tracks = []
+      var tracksTransposed
       for (var i = 0; i < instruments.length; i += 1) {
         tracks.push(charArray(patternLength, '.'))
         // TODO Instrument lookup in pattern
@@ -1567,55 +1684,49 @@
             tracks[pats[i]][cols[j]] = p[cols[j]]
           }
         }
-        m.tracks = transpose(tracks)
+        tracksTransposed = transpose(tracks)
       }
   
       this.render({
         instruments: instruments,
-        tracks: m.tracks
+        tracks: tracksTransposed
       })
     },
     afterAttach: function () {
       if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
-      this.scoreColumns = new ScoreColumns(this.parentEl)
+      this.scoreColumns = new IterActive(this.parentEl, '.score-columns p', function (el) {
+        return el.childNodes.length > 1
+      })
+      console.warn('IIII', this.parentEl)
+      this.instruments = new IterActive(this.parentEl, '.instruments p')
+      this.gotoPos(0)
+      this.gotoInstrument(0)
     },
     gotoPos: function (pos) {
-      this.scoreColumns.selectedIndex = -1
-      this.scoreColumns.step(pos)
-      this.model.position(pos)
+      this.scoreColumns.gotoPos(pos)
     },
-    start: function (from) {
-      var self = this
-      this.interval = setInterval(function () {
-        requestAnimationFrame(function () {
-          console.warn('step')
-          self.step()
-        })
-      }, 1000 * (60 / this.model.bpm()) / this.model.tpb() )
+    gotoInstrument: function (pos) {
+      this.instruments.gotoPos(pos)
     },
-    stop: function () {
-      console.warn('asdsadsadsadsadsadads')
-      clearInterval(this.interval)
-      this.interval = null
-    },
-    step: function (amount) {
-      amount = amount || 1
-      this.currentPos += amount
-      this.scoreColumns.step(amount)
-    },
-  
-    // Keys
-    keyLeft: function (ev, el) {
-      console.warn(ev, el)
-    },
-    keyRight: function (ev, el) {
-      console.warn(ev, el)
-    },
-    keyUp: function (ev, el) {
-      console.warn(ev, el)
-    },
-    keyDown: function (ev, el) {
-      console.warn(ev, el)
+    handleKey: function (o) {
+      switch (o.key) {
+        case 'right':
+          this.emit('playerStep', 1)
+          break
+        case 'left':
+          this.emit('playerStep', -1)
+          break
+        case 'up':
+          this.emit('instrumentStep', -1)
+          break
+        case 'down':
+          this.emit('instrumentStep', 1)
+          break
+        default:
+          return false
+      }
+      o.ev.preventDefault()
+      return true
     }
   }, {
   // Handlers
@@ -1623,7 +1734,8 @@
       // console.warn('You clicked', ev, el, el.parentNode)
       // var rowIndex = [].slice.call(el.parentNode.childNodes).indexOf(el)
       // var columnIndex
-      this.focus()
+      // TODO make this idempotent
+      this.emit('focus', this)
       var r1
       var live = bp.live
       var self = this
@@ -1633,43 +1745,30 @@
           // var dom2 = ab.dom('<div class="instruments">${instruments}</div>')
           // falls through
         case 'B':
-          r1 = rect(el)
+          r1 = elRect(el)
           var value = el.innerText
           var pos = attr(el, 'data-pos')
-          if (!pos) return
-          console.warn('POS', pos)
-          if (!value || /^\s*$/.test(value)) value = '.'
-          live.textInput1.popup({
+          this.emit('EditText', {
             top: r1.top,
             left: r1.left,
             width: r1.width,
             value: value,
-            getInput: function (ev) {
-              // return string typed
-              console.warn('getInput', ev)
-            },
-            set: function (value) {
-              var pos = attr(el, 'data-pos')
-              console.warn('textInput1 set', pos, value)
-              self.model.note(pos, value)
-              el.innerText = value
-            }
+            pos: pos,
+            once: 1 // get only one key
           })
-          bp.lastPopUp = bp.live.textInput1
           break
         case 'I': // Click top row to go to position
           console.warn('I', alphanumToDec(el.innerText))
-          this.gotoPos(alphanumToDec(el.innerText))
+          this.model.dispatch('GotoPos', alphanumToDec(el.innerText) - 1)
           ev.preventDefault()
-          ev.stopPropagation()
           break
         case 'ABBR':
-          r1 = rect(qs('dd', el))
+          r1 = elRect(qs('dd', el))
           // falls through
         case 'DT':
           // falls through
         case 'DD':
-          r1 = rect(el)
+          r1 = elRect(el)
           // if (bp.lastPopUp) bp.lastPopUp.hide()
           bp.sliderInput1.popup({
             top: r1.top,
@@ -1689,22 +1788,6 @@
     // Default instance args
     id: 'player1'
   })
-  
-  // PlayerView.prototype.unfocus = function () {
-    // css(this.parentEl.childNodes[0], {
-      // border: 'none'
-    // })
-    // if (bp.lastPopUp) bp.lastPopUp.hide()
-  // }
-  // PlayerView.prototype.focus = function () {
-    // css(this.parentEl.childNodes[0], {
-      // border: '1px solid blue'
-    // })
-    // if (bp.lastPopUp) {
-      // bp.lastPopUp.show()
-      // bp.lastPopUp.inputEl.select()
-    // }
-  // }
   
   function decToalphanum (num) {
     if (num >= alphaNum.length) {
@@ -1747,76 +1830,36 @@
   
   // {{{1 ControlsView
   function ControlsView (o) {
-    this.isPlaying = false
-    this.isPaused = false
+    this.parentEl = $id('controls')
+    this.btnPlay = qs('#btn-play', this.parentEl)
+    this.btnStop = qs('#btn-stop', this.parentEl)
+    mixinFocus(bp.focus, this, 'parentEl', 'focus')
   }
   
-  const btnPlay = '►'
-  const btnStop = '■'
-  const controlChars = [
-    '⏮', btnPlay, $t('span', {'class': 'pause'}, '▍▍'), '⏭' ]
-  
-  createView(ControlsView, {
-    tpl: function (o) {
-      return eachPush(controlChars, function (i, ch) {
-        return $t('span', {id: 'ctrl-' + i}, ch)
-      }).join('')
-    },
-    renderModel: function (o) {
-      // TODO Render model
-      this.render(o || {})
-    },
-    afterAttach: function () {
-      var el = this.parentEl
-      this.btnBack = qs('#ctrl-0', el)
-      this.btnPlay = qs('#ctrl-1', el)
-      this.btnPause = qs('#ctrl-2', el)
-      this.btnForward = qs('#ctrl-3', el)
+  ControlsView.prototype = {
+    play: function () {
+      classAdd(this.btnPlay, 'hidden')
+      classRemove(this.btnStop, 'hidden')
     },
     stop: function () {
-      if (this.isPlaying) {
-        html(this.btnPlay, btnPlay)
-        this.isPlaying = false
-        this.emit('stop')
-      }
-    },
-    play: function () {
-      if (!this.isPlaying) {
-        html(this.btnPlay, btnStop)
-        this.isPlaying = true
-        this.emit('play')
+      classAdd(this.btnStop, 'hidden')
+      classRemove(this.btnPlay, 'hidden')
+    }
+  }
+  
+  mixinDom(ControlsView)
+  mixinHandlers(ControlsView, {
+    click: function () {
+      if (bp.model.playing()) {
+        bp.model.dispatch('stop')
+      } else {
+        bp.model.dispatch('play')
       }
     }
-  }, {
-    click: function (ev, el) {
-      var btn = attr(el, 'id')
-      switch (btn) {
-        case 'ctrl-0':
-          this.emit('back')
-          break
-        case 'ctrl-1':
-          if (this.isPlaying) {
-            this.stop()
-          } else {
-            this.play()
-          }
-          break
-        case 'ctrl-2':
-          if (this.isPlaying) {
-            this.isPaused = true
-            this.emit('pause')
-          }
-          break
-        case 'ctrl-3':
-          this.emit('forward')
-          break
-        default:
-          console.warn('Badness?')
-      }
-    }
-  }, {
-    id: 'controls'
   })
+  
+  // TODO don't create this here
+  bp.live.controlsView1 = new ControlsView()
   
   // 1}}} ControlsView
   
@@ -1825,7 +1868,8 @@
     this.collection = {}
   }
   
-  createView(BeatsView, {
+  // TODO Make this  nicer
+  createView(bp, BeatsView, {
     tpl: function (o) {
       return $t('span', 'Beat',
         $t('select', { type: 'multi' },
@@ -1843,10 +1887,7 @@
     click: function (ev, el) {
       this.focus()
       if (el.value) {
-        this.model.loadBeat('data/' + el.value + '.beat', function (err, model) {
-          if (err) throw err
-          bp.live.playerView1.gotoPos(1)
-        })
+        this.emit('LoadBeat', 'data/' + el.value + '.beat')
       }
     }
   }, {
@@ -1859,7 +1900,7 @@
   function InstrumentsView (o) {
   }
   
-  createView(InstrumentsView, {
+  createView(bp, InstrumentsView, {
     tpl: function (o) {
       return [
         $t('h4', 'Instrument ' + o.number),
@@ -1873,9 +1914,9 @@
           )
       ].join('\n')
     },
-    renderModel: function () {
+    renderModel: function (o) {
       // TODO Render model
-      this.render({})
+      this.render(o)
     },
     selectInstrumentNumber: function (number) {
       this.update(this.model.instrument())
@@ -1897,7 +1938,7 @@
         ddEl = el
       }
       if (dtEl && ddEl) {
-        var r1 = rect(ddEl)
+        var r1 = elRect(ddEl)
         bp.live.textInput1.popup({
           top: r1.top,
           left: r1.left,
@@ -1913,6 +1954,38 @@
     id: 'instruments'
   })
   // 1}}} InstrumentsView
+  
+  // {{{1 SoundsView
+  function SoundsView () {
+  }
+  
+  createView(bp, SoundsView, {
+    tpl: function (o) {
+      console.warn('o', o)
+      return [
+        $t('h4', 'Sounds'),
+        $t('table',
+        eachPush(o.instruments, function (i, opt) {
+          return $t('tr', $ts('td', opt.name, opt.url))
+        }))].join('\n')
+    },
+    renderModel: function (o) {
+      this.render({
+        instruments: this.model.instruments()
+      })
+    },
+    afterAttach: function () {
+      if (!this.parentEl) throw new Error('Bad el ' + this.parentEl)
+    }
+  }, { // Handlers
+    click: function () {
+      console.warn('click')
+    }
+  }, {
+    id: 'sounds'
+  })
+  
+  // 1}}} SoundsView
   
   // {{{1 SliderInput
   function SliderInput (o) {
@@ -1985,42 +2058,57 @@
     this.parentEl = $id(o.id)
     if (!this.parentEl) throw new Error('Need parentEl')
     this.inputEl = qs('input', this.parentEl)
+    if (!this.inputEl) throw new Error('Need inputEl')
     this.eventsAttach()
   }
   
   TextInput.prototype = {
-    popup: function (o) {
-      console.warn('TextInput popup', o)
-      var value = o.value || this.inputEl.value
+    popup: function (o, cb) {
+      var value = o.value
       css(this.parentEl, {
         position: 'absolute',
         top: o.top + 'px',
-        left: o.left + 'px',
-        width: o.width + 'px'
+        left: o.left + 'px'
       })
-      this.setValue = o.set
-      this.lastValue = this.inputEl.value = value
-      // this.inputEl.focus()
-      this.inputEl.select()
-      this.value = ''
+      css(this.inputEl, {
+        width: o.width + 'px',
+        height: o.height + 'px'
+      })
+      this.once = o.once || false
+      this.cb = cb
+      // TODO Use dispatch instead
       this.show()
+      this.inputEl.value = value
+      this.parentEl.focus()
+      this.inputEl.select()
     },
     popdown: function () {
-      // this.inputEl.blur()
+      this.parentEl.blur()
       this.hide()
     },
-    isDone: function () {
-      return this.value.length === 1
+    setValue: function () {
+      this.cb(this.inputEl.value)
     },
-    setValue: function (val) {
-      console.warn('setValue', val)
-      this.value = val
+    handleKey: function (o) {
+      switch (this.state) {
+        case IH_INIT:
+          switch (o.key) {
+            case 'esc':
+              this.popdown()
+              break;
+            case 'enter':
+              this.popdown()
+              this.setValue()
+            default:
+              // code
+          }
+          break;
+  
+        default:
+          // code
+      }
+      this.inputEl.value += key
     }
-  
-  }
-  
-  TextInput.create = function (o) {
-    return new TextInput(o)
   }
   
   TextInput.create = function (o) {
@@ -2030,16 +2118,12 @@
   mixinHideShow(TextInput)
   
   mixinHandlers(TextInput, {
-    keyup: function (ev, el) {
+    keypress: function (ev, el) {
+      // TODO get the key from the global input handler to handle when focus lost
       var key = String.fromCharCode(ev.keyCode).toLowerCase()
       if (/^[\s\b]*$/.test(key)) key = '.'
-      if (this.setValue) this.setValue(key)
-      this.popdown()
-      console.warn('TextInput keyup', key)
-    },
-    keydown: function (ev) {
-      // Prevent InputHandler from changing instrument
-      return ev.stopPropagation()
+      this.setValue(key)
+      ev.preventDefault()
     }
   })
   // 1}}} TextInput
@@ -2059,24 +2143,20 @@
   
   // 1}}} Samples
   
-  bp.test.player = function () {
-    var bm1 = new BeatModel()
-    bm1.loadBeat('data/beat1.beat', function (err, model) {
-      if (err) throw err
-      var pl1 = PlayerView.create({
-        model: model
-      })
-      pl1.renderModel()
-      pl1.attach('#test1')
-    })
+  // {{{1 DebugView
+  function DebugView (o) {
+    this.parentEl = $id(o.id)
+    if (!this.parentEl) throw new Error('Need id')
+    this.parentEl.innerHTML = JSON.stringify(o.debug, 0, 2)
   }
-  /*global ready bp TextInput SliderInput InputHandler stepIter m*/
+  // 1}}}
+  /*global ready bp TextInput SliderInput InputHandler stepIter BeatAudio */
   
   // TODO use model for defaults
   var defaultOptions = {
-    beatsView1: {
-      id: 'beatView1',
-      options: ['beat0', 'beat1', 'beat2', 'beat3']
+    beatsView: {
+      id: 'beatView',
+      options: ['beat0', 'beat1', 'beat2', 'beat3', 'dundunba']
     },
     settingsView1: {
       tpb: 4,
@@ -2091,14 +2171,16 @@
     Object.keys(live).forEach(function (name) {
       console.warn('live', name)
       var l1 = live[name]
-      l1.renderModel(defaultOptions[name])
+      if (typeof l1.renderModel === 'function') {
+        l1.renderModel(defaultOptions[name])
+      }
       l1.attach()
     })
   
     live.inputHandler1 = new InputHandler({
       model: bp.model,
-      keyboardView: live.keyboardView1,
-      player: live.playerView1
+      keyboardView: live.keyboard,
+      player: live.player1
     })
     live.inputHandler1.eventsAttach()
   
@@ -2108,52 +2190,53 @@
     live.beatAudio1 = new BeatAudio(bp.model)
   
     // TODO handle focus with mouse
-    live.stepFocus = stepIter([
-      live.beatsView1,
-      live.settingsView1,
+    // TODO Put this in inputhandler
+    live.stepFocus = new IterElems([
+      live.beatsView,
+      live.settings,
       live.controlsView1,
-      live.playerView1,
-      live.keyboardView1,
-      live.instrumentsView1
+      live.player1,
+      live.keyboard,
+      live.instruments,
+      live.sounds
     ])
     live.stepFocus.get().focus()
   
-    // subscriptions
-    m.subscribe('SelectInstrument', function () {
-      live.instrumentsView1.selectInstrumentNumber()
-    })
+    // Load initial beat
+    m.dispatch('LoadBeat', 'data/beat0.beat')
   
-    m.subscribe('SelectInstrumentRange', function () {
-      live.instrumentsView1.selectInstrumentRange()
-    })
-  
-    m.subscribe('NewText', function () {
-      live.playerView1.update()
-  	live.settingsView1.update()
-    })
-  
-    m.subscribe('play', function () {
-      live.controlsView1.play()
-      live.beatAudio1.play()
-  	// live.playerView1.start()
-    })
-  
-    m.subscribe('stop', function () {
-      live.controlsView1.stop()
-      live.beatAudio1.stop()
-  	// live.playerView1.stop()
-    })
-  
-    m.loadBeat('data/beat1.beat', function (err, model) {
-      if (err) throw err
-      console.warn('Loaded beat1')
-      live.playerView1.detach()
-      live.playerView1.renderModel()
-      live.playerView1.attach()
-      live.playerView1.gotoPos(1)
-    })
   })
   
+  
+  var count = 1000
+  
+  function timeOuter() {
+    if (count > 0) {
+      count -= 1
+      setTimeout(timeOuter, 10)
+      console.warn('time')
+    }
+  }
+  
+  bp.test.beatModel = function () {
+    var bm1 = new BeatModel()
+    bm1.loadBeatUrl('data/beat0.beat', function (err, model) {
+      if (err) throw err
+      console.warn('Loaded', model)
+      console.warn('instruments', model.instruments())
+    })
+  }
+  bp.test.player = function () {
+    var bm1 = new BeatModel()
+    bm1.loadBeatUrl('data/beat1.beat', function (err, model) {
+      if (err) throw err
+      var pl1 = PlayerView.create({
+        model: model
+      })
+      pl1.renderModel()
+      pl1.attach('#test1')
+    })
+  }
   
   ready(function () {
     console.warn('Test')

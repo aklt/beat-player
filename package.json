@@ -4,14 +4,24 @@
   "version": "0.0.1",
   "author": "Anders Thøgersen <anders@bladre.dk>",
   "licenses": [
-    "MIT"
+    "GPL2"
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/aklt/"
+    "url": "git://github.com/aklt/beat-player.git"
+  },
+  "scripts": {
+    "build-test": "coffee --compile",
+    "build-tests": "coffee --compile test/*.coffee"
   },
   "dependencies": {
     "speaker": "^0.3.0",
     "web-audio-api": "^0.2.2"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.10.0",
+    "mocha": "^2.5.3",
+    "modernizr": "^3.3.1",
+    "unexpected": "^10.15.0"
   }
 }
