@@ -2,80 +2,83 @@
  * In this file you should write your main styles. (or centralize your imports)
  * Import this file using the following HTML or equivalent:
  * <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css" />
+ */
 
-@import normalize
-// @import compass/reset
-@import compass/css3
-@import compass/layout/sticky-footer
-@import bourbon/bourbon
-@import neat/neat
+@import "node_modules/normalizecss/normalize.css";
 
 // TODO Import skin colors
-$color-focus:     #AAA
-$color-active:    #AAC
-$color-bg:        #FFF
-$color-footer-bg: #DFD
+$color-focus:     #AAA;
+$color-active:    #AAC;
+$color-bg:        #FFF;
+$color-footer-bg: #DFD;
 
-$col-width: 1rem
-
-%row-container
-  @include outer-container
-
-%border
-  border: 1px solid #999999
-
-%view
-  @include row()
-  @include pad(0.1rem 1rem 0.1rem 0.5rem)
-  // border: 1px solid green
-
-%hidden
-  display: none
-
-%noselect
-  -webkit-touch-callout: none
-  -webkit-user-select: none
-  -khtml-user-select: none
-  -moz-user-select: none
-  -ms-user-select: none
-  user-select: none
+$col-width: 1rem;
 
 body
-  @extend %noselect
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 
 div
-  border: 2px solid $color-bg
-  background-color: $color-bg
+  border: 2px solid $color-bg;
+  background-color: $color-bg;
 
 h4
-  margin: 1.45rem 0 0 0
+  margin: 1.45rem 0 0 0;
 
 dl
-  margin: 0
+  margin: 0;
 
 .hidden
-  @extend %hidden
+  display: none;
 
 .row-container
-  @extend %row-container
+  margin: auto auto;
 
-%columns
-  @extend %view
-  div
-    float: left
+.beats::after,
+.controls::after,
+.instrumentsbar::after,
+.keyboard::after,
+.player::after,
+.row-container::after
+.settings::after,
+.sounds::after
+.topbar::after,
+  clear: both
+  content: ""
+  display: block
+
+.topbar,
+.instrumentsbar,
+.beats,
+.settings,
+.controls,
+.player,
+.keyboard,
+.sounds
+  display: block
+  padding: 0.1rem 1rem 0.1rem 0.5rem
+
 
 .topbar
-  @extend %columns
   font-size: 120%
+  &::after
+    clear: both
+    content: ""
+    display: block
+  & div
+    float: left
 
-.instrumentsbar
-  @extend %columns
-
-.beats
-  @extend %view
-
+// .instrumentsbar
+//   @extend %columns
+// 
+// .beats
+//   @extend %view
+// 
 .settings
-  @extend %view
   dl, dt, dd
     display: inline
   dt
@@ -84,7 +87,6 @@ dl
     margin: 0 0.3rem 0 0
 
 .controls
-  @extend %view
   & span.pause
     cursor: pointer
     font-size: 70%
@@ -96,7 +98,6 @@ dl
     width: 1rem
 
 .player
-  @extend %view
   font: 1rem "Lucida Sans Unicode", "Lucida Grande", sans-serif
   cursor: pointer
   overflow-x: auto
@@ -149,7 +150,6 @@ dl
     unicode-bidi: embed
     font-family: monospace
     white-space: pre
-  @extend %view
   cursor: pointer
   .color0
     i
@@ -182,13 +182,38 @@ dl
     i
       background-color: #bd9bc9
 
-.sounds
-  @extend %view
-
 .active-instrument
   background-color: lightgreen
 
-@include sticky-footer(48px, '.bp', '.footer-layout', '.footer-content')
+// {{{2 footer
+
+/* line 10, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/layout/_sticky-footer.scss */
+html,
+body
+  height: 100%;
+
+/* line 12, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/layout/_sticky-footer.scss */
+.bp
+  clear: both;
+  min-height: 100%;
+  height: auto !important;
+  height: 100%;
+  margin-bottom: -48px;
+
+/* line 18, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/layout/_sticky-footer.scss */
+.bp .footer-layout
+  height: 48px;
+
+/* line 20, .install/ruby/2.3.0/gems/compass-core-1.0.3/stylesheets/compass/layout/_sticky-footer.scss */
+.footer-content
+  clear: both;
+  position: relative;
+  height: 48px;
+
+/* line 193, sass/screen.sass */
+.footer-content
+  background-color: #DFD;
+// 2}}}
 
 .footer-content
   background-color: $color-footer-bg
@@ -203,12 +228,6 @@ input::-moz-focus-inner
     border: 0
     margin: 0
     padding: 0
-
-.input-slider
-  // @extend %hidden
-
-.popup
-  // @extend %hidden
 
 .focus
   border: 2px solid $color-focus
