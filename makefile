@@ -6,20 +6,7 @@ compassStats=bundle exec compass stats
 
 .PHONY: install clean dev tags distclean
 
-all: style.css screen.css bp.js $(TESTS)
-
-screen.css: sass/screen.sass
-	$(compassCompile)
-	$(compassStats)
-
-#print.css: sass/print.sass
-#	$(compassCompile)
-
-ie.css: sass/ie.sass
-	$(compassCompile)
-
-style.css: style.less
-	lessc $< > $@
+all: screen.css bp.js $(TESTS)
 
 bp.js: bp.sh $(JS)
 	./bp.sh $(JS) > $@
@@ -45,3 +32,7 @@ clean:
 
 distclean:
 	rm -frv .install .bundle .sass-cache
+
+%.css: %.sass
+	sassc --sass $< > $@
+
