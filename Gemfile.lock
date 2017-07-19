@@ -23,9 +23,11 @@ GEM
       sass (>= 3.3.0, < 3.5)
     compass-import-once (1.0.5)
       sass (>= 3.2, < 3.5)
+    compass-normalize (1.5)
+      compass (>= 0.12.0)
     css_parser (1.4.5)
       addressable
-    ffi (1.9.10)
+    ffi (1.9.14)
     multi_json (1.12.1)
     neat (1.8.0)
       sass (>= 3.3)
@@ -50,10 +52,11 @@ DEPENDENCIES
   breakpoint (~> 2.7)
   compass (~> 1.0)
   compass-colors (~> 0.3)
+  compass-normalize
   css_parser (~> 1.4)
   neat (~> 1.7)
   refills
-  sass (~> 3.3)
+  sass (~> 3.4)
   singularitygs (~> 1.4)
 
 BUNDLED WITH
