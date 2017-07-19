@@ -10,7 +10,8 @@ body {
   -khtml-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-  user-select: none; }
+  user-select: none;
+  overflow: hidden; }
 
 div {
   border: 2px solid #FFF;
